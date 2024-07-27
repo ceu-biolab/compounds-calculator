@@ -15,7 +15,6 @@ public class Adduct {
         adductMap_Pos.put("[M+C2H6N2+H]+", 58.05310d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+Na]+", 22.98977d - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+K]+", 38.96371d - PeriodicTable.electronMass);
-        adductMap_Pos.put("[M+Pb]+", 34.0239d - PeriodicTable.electronMass);
     }
 
     static {
