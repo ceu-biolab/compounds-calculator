@@ -3,6 +3,7 @@ package org.example.domain;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
+import java.sql.*;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -46,10 +47,29 @@ public class FattyAcid extends ChemicalCompound {
         return formula;
     }
 
+    public static FattyAcid getFattyAcidFromDatabase() {
+        String url = "jdbc:mysql://localhost:3306/compounds";
+        String user = "root";
+        String password = " ";
+        String sql = "SELECT num_carbons, double_bonds FROM chains WHERE mass LIKE '172.14%'";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password);
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int carbonAtoms = resultSet.getInt("carbon_atoms");
+                int doubleBonds = resultSet.getInt("double_bonds");
+                return new FattyAcid(carbonAtoms, doubleBonds);
+            }
+        } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
-        return "FattyAcid{" +
-                "formula=" + formula +
-                '}';
+        return carbonAtoms + ":" + doubleBonds;
     }
 }

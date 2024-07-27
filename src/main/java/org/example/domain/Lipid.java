@@ -55,6 +55,6 @@ public class Lipid {
 
     @Override
     public String toString() {
-        return getLipidSkeletalStructure().getLipidType().toString();
+        return getLipidSkeletalStructure().getLipidType().toString() + fattyAcids.toString();
     }
 }
