@@ -24,7 +24,7 @@ public class Adduct {
         adductMap_Neg.put("[M+Cl]-", PeriodicTable.elements_Map.get(Element.Cl) + PeriodicTable.electronMass);
         adductMap_Neg.put("[M+HCOOH-H]-", 46.00548 - PeriodicTable.elements_Map.get(Element.H) + PeriodicTable.electronMass);
         adductMap_Neg.put("[M+CH3COOH-H]-", 60.02113 - PeriodicTable.elements_Map.get(Element.H) + PeriodicTable.electronMass);
-        adductMap_Neg.put("[M-H-H2O]-", - PeriodicTable.electronMass.get(Element.H) - PeriodicTable.waterMass + PeriodicTable.electronMass);
+        adductMap_Neg.put("[M-H-H2O]-", - PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.waterMass + PeriodicTable.electronMass);
     }
 
     public static double getAdductMass(String adduct) {
