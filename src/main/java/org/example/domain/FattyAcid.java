@@ -47,28 +47,6 @@ public class FattyAcid extends ChemicalCompound {
         return formula;
     }
 
-    public static FattyAcid getFattyAcidFromDatabase() {
-        String url = "jdbc:mysql://localhost:3306/compounds";
-        String user = "root";
-        String password = " ";
-        String sql = "SELECT num_carbons, double_bonds FROM chains WHERE mass LIKE '172.14%'"; //! Update query
-
-        try (Connection connection = DriverManager.getConnection(url, user, password);
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
-            while (resultSet.next()) {
-                int carbonAtoms = resultSet.getInt("carbon_atoms");
-                int doubleBonds = resultSet.getInt("double_bonds");
-                // Set<FAs> and restrict later
-                return new FattyAcid(carbonAtoms, doubleBonds);
-            }
-        } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     @Override
     public String toString() {
         return carbonAtoms + ":" + doubleBonds;
