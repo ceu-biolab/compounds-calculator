@@ -1,7 +1,6 @@
 package org.example.domain;
 
 import org.example.exceptions.FattyAcidCreation_Exception;
-import org.example.exceptions.InvalidFattyAcidSize_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,7 @@ import java.util.LinkedHashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ShouldCalculateMassWithAdductTest {
+class MSLipidTest {
     private MSLipid msLipid = null;
 
     @BeforeEach

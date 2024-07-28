@@ -9,7 +9,8 @@ import java.util.LinkedHashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ShouldCalculateTotalFormulaTest {
+class LipidTest {
+
     private Lipid lipid;
 
     @BeforeEach
@@ -26,5 +27,15 @@ class ShouldCalculateTotalFormulaTest {
         Formula expectedFormula = new Formula("C35H66O6");
         Formula actualFormula = lipid.calculateFormula();
         assertEquals(expectedFormula.toString(), actualFormula.toString());
+    }
+
+    @Test
+    void calculateTotalMass() {
+        double expectedMass = ((3 * 12.00000) + (8 * 1.00783) + (3 * 15.99491)) +
+                ((12 * 12.00000) + (24 * 1.00783) + (2 * 15.99491)) +
+                ((10 * 12.00000) + (20 * 1.00783) + (2 * 15.99491)) +
+                ((10 * 12.00000) + (20 * 1.00783) + (2 * 15.99491)) - 3 * (PeriodicTable.waterMass);
+        double actualMass = lipid.calculateTotalMass();
+        assertEquals(expectedMass, actualMass, 0.00001);
     }
 }

@@ -4,11 +4,12 @@ import org.example.exceptions.InvalidFormula_Exception;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-class ShouldGetMassFromFormulaTest {
+class ChemicalCompoundTest {
     private ChemicalCompound chemicalCompound;
     private Formula formula;
+
     @BeforeEach
     void setUp() throws InvalidFormula_Exception {
         chemicalCompound = new ChemicalCompound();

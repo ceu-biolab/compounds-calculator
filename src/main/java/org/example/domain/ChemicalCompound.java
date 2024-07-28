@@ -1,7 +1,5 @@
 package org.example.domain;
 
-import org.example.exceptions.InvalidFormula_Exception;
-
 public class ChemicalCompound {
     protected Formula formula;
     protected double mass;
