@@ -22,8 +22,8 @@ public class Database {
         }
     }
 
-    public static Set<FattyAcid> getFattyAcidFromDatabase() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        String query = "SELECT chain_id, num_carbons, double_bonds FROM chains mass <= MASS + 0.01 and mass >= MASS -0.01 AND oxidation = ' '";
+    public static Set<FattyAcid> getFattyAcidFromDatabase(double fattyAcidMass) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        String query = "SELECT chain_id, num_carbons, double_bonds FROM chains mass <= " + fattyAcidMass + " + 0.01 and mass >= " + fattyAcidMass + "MASS -0.01 AND oxidation = ' '";
         PreparedStatement statement = connection.prepareStatement(query);
         ResultSet resultSet = statement.executeQuery();
 
@@ -32,7 +32,6 @@ public class Database {
         while (resultSet.next()) {
             int carbonAtoms = resultSet.getInt("carbon_atoms");
             int doubleBonds = resultSet.getInt("double_bonds");
-            // return a Set<FAs> and restrict later // check if matches with precursor ion
             fattyAcids.add(new FattyAcid(carbonAtoms, doubleBonds));
         }
         return fattyAcids;
