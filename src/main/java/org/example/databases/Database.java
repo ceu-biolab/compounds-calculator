@@ -1,17 +1,11 @@
 package org.example.databases;
 
-import com.itextpdf.layout.element.Link;
-import org.example.domain.Adduct;
-import org.example.domain.FattyAcid;
-import org.example.domain.Lipid;
+import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
 import java.sql.*;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 public class Database {
     private static Connection connection = null;
@@ -47,7 +41,7 @@ public class Database {
     }
 
     public Set<Lipid> getLipidsFromDatabase(double precursorIon) throws SQLException {
-        String query = "SELECT DISTINCT compound_name" +
+        String query = "SELECT DISTINCT compound_name, formula" +
                 "FROM compounds" +
                 "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id" +
                 "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id" +
@@ -61,11 +55,33 @@ public class Database {
         Set<Lipid> lipids = new LinkedHashSet<>();
 
         while (resultSet.next()) {
-            int carbonAtoms = resultSet.getInt("num_carbons");
-            int doubleBonds = resultSet.getInt("double_bonds");
-            //lipids.add(new Lipid());
+            String compoundName = resultSet.getString("compound_name");
+            try {
+                lipids.add(createLipidFromCompoundName(compoundName));
+            } catch (InvalidFormula_Exception | FattyAcidCreation_Exception e) {
+                e.printStackTrace();
+            }
         }
         return lipids;
+    }
+
+    public Lipid createLipidFromCompoundName(String compoundName) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
+        List<String> array = new ArrayList<>(List.of(compoundName.split("\\(|\\)")));
+        List<String> array2 = new ArrayList<>(List.of(array.get(1).split("\\/")));
+        List<Integer> array3 = new ArrayList<>();
+        LinkedHashSet fattyAcids = new LinkedHashSet<>();
+
+        for (int i = 0; i <= array.size(); i++) {
+            array3.add(Integer.parseInt(array2.get(i).split("\\:")[0]));
+            array3.add(Integer.parseInt(array2.get(i).split("\\:")[1]));
+        }
+
+        for (int i = 0; i < array3.size(); i += 2) {
+            fattyAcids.add(new FattyAcid(array3.get(i), array3.get(i + 1)));
+        }
+
+        LipidType lipidType = LipidType.valueOf(array.get(0));
+        return new Lipid(fattyAcids, new LipidSkeletalStructure(lipidType));
     }
 
     public Set<Double> calculateFattyAcidMasses(double precursorIon, Set<Double> fattyAcidMasses) throws SQLException, FattyAcidCreation_Exception {
@@ -73,7 +89,7 @@ public class Database {
         Iterator<Double> iterator = fattyAcidMasses.iterator();
 
         while (iterator.hasNext()) {
-            neutralLossAssociatedIonMasses.add(precursorIon - iterator.next() - 17.02655d);
+            neutralLossAssociatedIonMasses.add(precursorIon - iterator.next() - PeriodicTable.NH3Mass);
         }
 
         return neutralLossAssociatedIonMasses;

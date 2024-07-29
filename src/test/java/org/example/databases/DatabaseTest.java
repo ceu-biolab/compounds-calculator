@@ -1,11 +1,13 @@
 package org.example.databases;
 
 import org.example.domain.FattyAcid;
+import org.example.domain.Lipid;
+import org.example.domain.LipidSkeletalStructure;
+import org.example.domain.LipidType;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openscience.cdk.renderer.generators.AtomNumberGenerator;
 
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatabaseTest {
     private Database database;
     private Set<Double> fattyAcidMasses;
+    private LinkedHashSet<FattyAcid> fattyAcids;
 
     @BeforeEach
     void setUp() {
@@ -29,6 +32,14 @@ class DatabaseTest {
         fattyAcidMasses.add(439.3784);
         fattyAcidMasses.add(411.3458);
 
+        fattyAcids = new LinkedHashSet<>();
+        try {
+            fattyAcids.add(new FattyAcid(10, 0));
+            fattyAcids.add(new FattyAcid(10, 0));
+            fattyAcids.add(new FattyAcid(12, 0));
+        } catch (FattyAcidCreation_Exception | InvalidFormula_Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -55,14 +66,23 @@ class DatabaseTest {
             Set<Double> actualSet = database.calculateFattyAcidMasses(656.5862, fattyAcidMasses);
             Iterator<Double> expectedIterator = expectedSet.iterator();
             Iterator<Double> actualIterator = actualSet.iterator();
-
-            System.out.println(expectedSet);
-            System.out.println(actualSet.toString());
             while (expectedIterator.hasNext()) {
                 assertThat(actualIterator.next()).isCloseTo(expectedIterator.next(), offset(2d));
             }
         } catch (SQLException | FattyAcidCreation_Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void createLipidFromCompoundName() throws InvalidFormula_Exception, FattyAcidCreation_Exception {
+        Lipid expectedLipid = new Lipid(fattyAcids, new LipidSkeletalStructure(LipidType.TG));
+        Lipid actualLipid = database.createLipidFromCompoundName("TG(10:0/10:0/12:0)");
+        assertEquals(expectedLipid.toString(), actualLipid.toString());
+    }
+
+    @Test
+    void getLipidsFromDatabase() {
+
     }
 }

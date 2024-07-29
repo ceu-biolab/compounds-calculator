@@ -9,9 +9,10 @@ public class PeriodicTable {
     public static final double electronMass = 0.00054858d;
     public static final double waterMass = 18.01056d;
     public static final double protonMass = 1.00783 - electronMass;
+    public static final double NH3Mass = 14.003074d + (3 * 1.00783d);
 
     static {
-        elements_Map.put(Element.H, 1.00783);
+        elements_Map.put(Element.H, 1.00783d);
         elements_Map.put(Element.He, 4.002603d);
         elements_Map.put(Element.Li, 7.016005d);
         elements_Map.put(Element.Be, 9.012183d);
