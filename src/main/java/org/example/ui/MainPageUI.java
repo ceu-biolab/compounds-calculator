@@ -73,13 +73,13 @@ public class MainPageUI extends JPanel {
         PI_Label = new JLabel("    Precursor Ion");
         NLosses_Label = new JLabel("    Neutral Losses");
         ion_Label = new JLabel("    Ion Charge");
-        adducts_Label = new JLabel("    Possible Adducts");
+        adducts_Label = new JLabel("    Adducts");
         listModel = new DefaultListModel<>();
         adductsList = new JList<>(listModel);
-        updateListModel(Adduct.getAllAdducts());
+        updateListModel(Adduct.getPositiveAdducts());
         adductsScrollPane = new JScrollPane(adductsList);
-        adductsList.setCellRenderer(new CheckboxListCellRenderer()); // todo fix cell renderer
-        ionComboBox = new JComboBox(new String[]{"View All Possible Adducts", "+  Positively Charged Adducts", "-  Negatively Charged Adducts"});
+        adductsList.setCellRenderer(new CheckboxListCellRenderer());
+        ionComboBox = new JComboBox(new String[]{"+  Positively Charged Adducts", "-  Negatively Charged Adducts"});
 
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]",
                 "[grow, fill]25[grow, fill]"));
@@ -99,21 +99,18 @@ public class MainPageUI extends JPanel {
         subpanel1.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         subpanel1.setBackground(Color.WHITE);
         subpanel1.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        tableTitles = new String[]{"Lipid ID", "Common Name", "Systematic Name", "Adduct", "Precursor Ion, m/z", "Fatty Acid 1", "Fatty Acid 2",
-                "Fatty Acid 3"};
-        //String[][] lipidsString = lipids.toString();
-        //lipids = convertToStringArray(lipidsSet);
+        tableTitles = new String[]{"Compound ID", "Compound Name", "Formula", "Adduct", "Precursor Ion", "Neutral Loss Associated Ions"};
         lipids = new String[][]{
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "1-dodecanoyl-2-hexadecanoyl-3-octadecanoyl-sn-glycerol",
-                        "[M+NH4]", "834.7723", "243.7732", "245.7732", "257.7732"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "2-hexadecanoyl-3-octadecanoyl-sn-glycerol",
-                        "[M+NH4]", "834.7732", "243.7732", "245.7732", "257.7732"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "1-dodecanoyl-2-hexadecanoyl-3-octadecanoyl-sn-glycerol",
-                        "[M+NH4]", "834.7723", "243.7732", "245.7732", "257.7732"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "2-hexadecanoyl-3-octadecanoyl-sn-glycerol",
-                        "[M+NH4]", "834.7732", "243.7732", "245.7732", "257.7732"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "3-octadecanoyl-sn-glycerol",
-                        "[M+NH4]", "834.7723", "243.7732", "245.7732", "257.7732"}};
+                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C24H66O6",
+                        "[M+NH4]", "834.7723", "257.7732, 234.4356"},
+                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C24H66O4",
+                        "[M+H+]", "834.7732", "257.7732, 345.6443, 654.3456"},
+                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C24H66O2",
+                        "[M+NH4]", "834.7723", "257.7732"},
+                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C32H66O6",
+                        "[M+H+]", "834.7732", "257.7732"},
+                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C32H66O6",
+                        "[M+NH4]", "834.7723", "324.7732, 324.3453"}};
         table = new JTable(tableModel) {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component comp = super.prepareRenderer(renderer, row, column);
@@ -143,11 +140,7 @@ public class MainPageUI extends JPanel {
         table.setFont(new Font("Arial", Font.PLAIN, 13));
         table.getTableHeader().setReorderingAllowed(false);
         table.setModel(tableModel);
-        table.getColumnModel().getColumn(1).setPreferredWidth(75);
-        table.getColumnModel().getColumn(2).setPreferredWidth(200);
-        table.getColumnModel().getColumn(3).setPreferredWidth(40);
-        table.getColumnModel().getColumn(4).setPreferredWidth(105);
-
+        table.getColumnModel().getColumn(5).setPreferredWidth(200);
 
         table.addMouseListener(new MouseAdapter() {
             @Override
@@ -418,7 +411,7 @@ public class MainPageUI extends JPanel {
 
     public void updateUI_Ion(String charge) {
         if (charge.equals("+  Positively Charged Adducts")) {
-            String[] string = Adduct.getPositiveAdducts().toArray(new String[0]);
+            String[] string = Adduct.getPositiveAdducts();
             updateListModel(string);
         } else if (charge.equals("-  Negatively Charged Adducts")) {
             String[] string = Adduct.getNegativeAdducts().toArray(new String[0]);

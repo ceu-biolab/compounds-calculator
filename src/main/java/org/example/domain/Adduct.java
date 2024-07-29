@@ -35,8 +35,8 @@ public class Adduct {
         return 0;
     }
 
-    public static List<String> getPositiveAdducts() {
-        return new ArrayList<>(adductMap_Pos.keySet());
+    public static String[] getPositiveAdducts() {
+        return new ArrayList<>(adductMap_Pos.keySet()).toArray(new String[0]);
     }
 
     public static List<String> getNegativeAdducts() {
