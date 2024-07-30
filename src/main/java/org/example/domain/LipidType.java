@@ -3,12 +3,6 @@ package org.example.domain;
 import org.example.exceptions.InvalidFattyAcidSize_Exception;
 
 public enum LipidType {
-    /**
-     * CE, MG: 1
-     * DG, PA, PC, PE, PI, PG, PS: 2
-     * TG: 3
-     * CL: 4
-     **/
     CE, CER, DG, MG, PA, PC, PE, PI, PG, PS, SM, TG, CL;
     // ** CER y SM A FUTURO, el FA ES DIFERENTE
 
