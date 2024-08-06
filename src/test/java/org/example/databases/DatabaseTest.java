@@ -83,6 +83,10 @@ class DatabaseTest {
 
     @Test
     void getLipidsFromDatabase() {
+        // public Set<Lipid> getLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses)
+        Set<Lipid> expectedSet = new LinkedHashSet<>();
+        //!Set<Lipid> actualSet = database.getLipidsFromDatabase(LipidType.TG, );
+        //assertEquals(expectedSet.toString(), actualSet.toString());
 
     }
 }
