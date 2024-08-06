@@ -76,6 +76,6 @@ public class Formula {
 
     @Override
     public String toString() {
-        return "Formula{" + mapToString(mapFormula) + '}';
+        return mapToString(mapFormula);
     }
 }

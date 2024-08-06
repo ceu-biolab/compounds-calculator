@@ -29,9 +29,13 @@ public class Database {
         Set<FattyAcid> fattyAcids = new LinkedHashSet<>();
 
         while (resultSet.next()) {
-            int carbonAtoms = resultSet.getInt("num_carbons");
+            String carbonAtoms = resultSet.getString("num_carbons");
             int doubleBonds = resultSet.getInt("double_bonds");
-            fattyAcids.add(new FattyAcid(carbonAtoms, doubleBonds));
+            if (!carbonAtoms.matches("[0-9]+")) {
+                fattyAcids.add(new FattyAcid(carbonAtoms, doubleBonds));
+            } else {
+                fattyAcids.add(new FattyAcid(Integer.parseInt(carbonAtoms), doubleBonds));
+            }
         }
         return fattyAcids;
     }
@@ -40,7 +44,7 @@ public class Database {
         Set<Double> fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formula = new Formula(lipidSkeletalStructure.getFormula().toString());
-        String query = "SELECT DISTINCT compound_name, formula FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = ?";
+        String query = "SELECT DISTINCT compounds.compound_name, compounds.formula FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = ?";
 
         for (double fattyAcidMass : fattyAcidMasses) {
             FattyAcid fattyAcid = getFattyAcidsFromDatabase(fattyAcidMass).iterator().next();
@@ -75,7 +79,7 @@ public class Database {
         for (int i = 0; i <= array.size(); i++) {
             array3.add(Integer.parseInt(array2.get(i).split("\\:")[0]));
             array3.add(Integer.parseInt(array2.get(i).split("\\:")[1]));
-        }
+        } //* fix for string i-12:0
 
         for (int i = 0; i < array3.size(); i += 2) {
             fattyAcids.add(new FattyAcid(array3.get(i), array3.get(i + 1)));

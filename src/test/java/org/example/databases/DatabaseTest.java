@@ -1,5 +1,6 @@
 package org.example.databases;
 
+import org.apache.commons.lang3.StringUtils;
 import org.example.domain.FattyAcid;
 import org.example.domain.Lipid;
 import org.example.domain.LipidSkeletalStructure;
@@ -23,20 +24,26 @@ class DatabaseTest {
     private Database database;
     private Set<Double> fattyAcidMasses;
     private LinkedHashSet<FattyAcid> fattyAcids;
+    private LinkedHashSet<FattyAcid> fattyAcidsTG36;
 
     @BeforeEach
     void setUp() {
         database = new Database();
         fattyAcidMasses = new LinkedHashSet<>();
-        fattyAcidMasses.add(467.4092);
-        fattyAcidMasses.add(439.3784);
-        fattyAcidMasses.add(411.3458);
+        fattyAcidMasses.add(467.4092d);
+        fattyAcidMasses.add(439.3784d);
+        fattyAcidMasses.add(411.3458d);
 
         fattyAcids = new LinkedHashSet<>();
+        fattyAcidsTG36 = new LinkedHashSet<>();
         try {
             fattyAcids.add(new FattyAcid(10, 0));
             fattyAcids.add(new FattyAcid(10, 0));
             fattyAcids.add(new FattyAcid(12, 0));
+
+            fattyAcidsTG36.add(new FattyAcid(10, 0));
+            fattyAcidsTG36.add(new FattyAcid(12, 0));
+            fattyAcidsTG36.add(new FattyAcid(14, 0));
         } catch (FattyAcidCreation_Exception | InvalidFormula_Exception e) {
             throw new RuntimeException(e);
         }
@@ -83,10 +90,22 @@ class DatabaseTest {
 
     @Test
     void getLipidsFromDatabase() {
-        // public Set<Lipid> getLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses)
+        //* Should only check the common name of the lipid!
         Set<Lipid> expectedSet = new LinkedHashSet<>();
-        //!Set<Lipid> actualSet = database.getLipidsFromDatabase(LipidType.TG, );
-        //assertEquals(expectedSet.toString(), actualSet.toString());
-
+        expectedSet.add(new Lipid(fattyAcidsTG36, new LipidSkeletalStructure(LipidType.TG)));
+        String expectedName = expectedSet.toString();
+        String expectedNameFormatted = expectedName.replaceAll("\\W+", "");
+        System.out.println(expectedNameFormatted);
+        Set<Lipid> actualSet = null;
+        try {
+            actualSet = database.getLipidsFromDatabase(LipidType.TG, 656.5862d, fattyAcidMasses);
+            System.out.println(actualSet);
+        } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(actualSet.toString());
+        String actualName = actualSet.toString();
+        String actualNameFormatted = actualName.replaceAll("\\W+", "");
+        assertThat(actualSet.toString()).contains(expectedNameFormatted);
     }
 }
