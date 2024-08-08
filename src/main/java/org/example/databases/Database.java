@@ -73,16 +73,18 @@ public class Database {
     public Lipid createLipidFromCompoundName(String compoundName) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
         List<String> array = new ArrayList<>(List.of(compoundName.split("\\(|\\)")));
         List<String> array2 = new ArrayList<>(List.of(array.get(1).split("\\/")));
-        List<Integer> array3 = new ArrayList<>();
+        List<String> array3 = new ArrayList<>();
         LinkedHashSet fattyAcids = new LinkedHashSet<>();
 
         for (int i = 0; i <= array.size(); i++) {
-            array3.add(Integer.parseInt(array2.get(i).split("\\:")[0]));
-            array3.add(Integer.parseInt(array2.get(i).split("\\:")[1]));
-        } //* fix for string i-12:0
+            array3.add(array2.get(i).split("\\:")[0]);
+            array3.add(array2.get(i).split("\\:")[1]);
+        }
 
         for (int i = 0; i < array3.size(); i += 2) {
-            fattyAcids.add(new FattyAcid(array3.get(i), array3.get(i + 1)));
+            if (!array3.get(i).contains("[a-zA-Z]+")) {
+                fattyAcids.add(new FattyAcid(array3.get(i), Integer.parseInt(array3.get(i + 1))));
+            }
         }
 
         LipidType lipidType = LipidType.valueOf(array.get(0));

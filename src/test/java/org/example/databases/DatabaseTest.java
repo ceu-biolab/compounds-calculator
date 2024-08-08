@@ -24,6 +24,7 @@ class DatabaseTest {
     private Database database;
     private Set<Double> fattyAcidMasses;
     private LinkedHashSet<FattyAcid> fattyAcids;
+    private LinkedHashSet<FattyAcid> fattyAcidsIsoBranching;
     private LinkedHashSet<FattyAcid> fattyAcidsTG36;
 
     @BeforeEach
@@ -35,11 +36,16 @@ class DatabaseTest {
         fattyAcidMasses.add(411.3458d);
 
         fattyAcids = new LinkedHashSet<>();
+        fattyAcidsIsoBranching = new LinkedHashSet<>();
         fattyAcidsTG36 = new LinkedHashSet<>();
         try {
             fattyAcids.add(new FattyAcid(10, 0));
             fattyAcids.add(new FattyAcid(10, 0));
             fattyAcids.add(new FattyAcid(12, 0));
+
+            fattyAcidsIsoBranching.add(new FattyAcid("i-12", 0));
+            fattyAcidsIsoBranching.add(new FattyAcid(10, 0));
+            fattyAcidsIsoBranching.add(new FattyAcid(10, 0));
 
             fattyAcidsTG36.add(new FattyAcid(10, 0));
             fattyAcidsTG36.add(new FattyAcid(12, 0));
@@ -89,23 +95,28 @@ class DatabaseTest {
     }
 
     @Test
+    void createLipidFromCompoundNameWithIsoBranching() throws InvalidFormula_Exception, FattyAcidCreation_Exception {
+        Lipid expectedLipid = new Lipid(fattyAcidsIsoBranching, new LipidSkeletalStructure(LipidType.TG));
+        Lipid actualLipid = database.createLipidFromCompoundName("TG(i-12:0/10:0/10:0)");
+        assertEquals(expectedLipid.toString(), actualLipid.toString());
+    }
+
+    @Test
     void getLipidsFromDatabase() {
-        //* Should only check the common name of the lipid!
         Set<Lipid> expectedSet = new LinkedHashSet<>();
         expectedSet.add(new Lipid(fattyAcidsTG36, new LipidSkeletalStructure(LipidType.TG)));
         String expectedName = expectedSet.toString();
         String expectedNameFormatted = expectedName.replaceAll("\\W+", "");
         System.out.println(expectedNameFormatted);
+
         Set<Lipid> actualSet = null;
         try {
             actualSet = database.getLipidsFromDatabase(LipidType.TG, 656.5862d, fattyAcidMasses);
-            System.out.println(actualSet);
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception e) {
             throw new RuntimeException(e);
         }
-        System.out.println(actualSet.toString());
-        String actualName = actualSet.toString();
-        String actualNameFormatted = actualName.replaceAll("\\W+", "");
-        assertThat(actualSet.toString()).contains(expectedNameFormatted);
+        String stringOfCommonNames = actualSet.toString().replaceAll("\\W+", "");
+        System.out.println(stringOfCommonNames);
+        assertThat(stringOfCommonNames).contains(expectedNameFormatted);
     }
 }
