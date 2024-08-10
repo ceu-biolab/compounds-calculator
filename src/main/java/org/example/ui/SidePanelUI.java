@@ -3,12 +3,15 @@ package org.example.ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
+import org.example.exceptions.FattyAcidCreation_Exception;
+import org.example.exceptions.InvalidFormula_Exception;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.sql.SQLException;
 
 public class SidePanelUI {
     private static JFrame frame;
@@ -24,7 +27,11 @@ public class SidePanelUI {
     public SidePanelUI() {
         frame = new JFrame();
         frame.setLayout(new MigLayout("", "[grow,fill]", "[][grow, fill]"));
-        interfaceUI = new MainPageUI();
+        try {
+            interfaceUI = new MainPageUI();
+        } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
+            throw new RuntimeException(e);
+        }
         adductTransformerUI = new AdductTransformerUI();
         homeFrame();
         frame.add(sideBar_Panel);

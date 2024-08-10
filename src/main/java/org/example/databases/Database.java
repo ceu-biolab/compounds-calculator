@@ -13,6 +13,15 @@ public class Database {
     private final String username = "root";
     private final String password = "schoenstatt37";
 
+    public static void main(String[] args) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        Database database = new Database();
+        Set<Double> fattyAcidMasses = new LinkedHashSet<>();
+        fattyAcidMasses.add(467.4092d);
+        fattyAcidMasses.add(439.3784d);
+        fattyAcidMasses.add(411.3458d);
+        System.out.println(database.getLipidsFromDatabase(LipidType.TG, 656.5862d, fattyAcidMasses));
+    }
+
     public Database() {
         try {
             connection = DriverManager.getConnection(url, username, password);
@@ -40,38 +49,50 @@ public class Database {
         return fattyAcids;
     }
 
-    public Set<Lipid> getLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
+    public Set<MSLipid> getLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
         Set<Double> fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formula = new Formula(lipidSkeletalStructure.getFormula().toString());
-        String query = "SELECT DISTINCT compounds.compound_name, compounds.formula FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = ?";
-
+        StringBuilder queryBuilder = new StringBuilder(
+                "SELECT DISTINCT compounds.cas_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " +
+                        "FROM compounds " +
+                        "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " +
+                        "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " +
+                        "WHERE compounds.formula = ?");
         for (double fattyAcidMass : fattyAcidMasses) {
             FattyAcid fattyAcid = getFattyAcidsFromDatabase(fattyAcidMass).iterator().next();
             formula.addFattyAcidToFormula(fattyAcid);
-            query += " AND compounds.compound_name LIKE '%" + fattyAcid + "%'";
+            queryBuilder.append(" AND compounds.compound_name LIKE ?");
         }
-        query += ";";
+        queryBuilder.append(";");
+        String query = queryBuilder.toString();
+        LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, formula.toString());
-            ResultSet resultSet = statement.executeQuery();
-            Set<Lipid> lipids = new LinkedHashSet<>();
 
-            while (resultSet.next()) {
-                String compoundName = resultSet.getString("compound_name");
-                try {
-                    lipids.add(createLipidFromCompoundName(compoundName));
-                } catch (InvalidFormula_Exception | FattyAcidCreation_Exception e) {
-                    e.printStackTrace();
-                }
+            int index = 2;
+            for (double fattyAcidMass : fattyAcidMasses) {
+                statement.setString(index++, "%" + getFattyAcidsFromDatabase(fattyAcidMass).iterator().next() + "%");
             }
-            return lipids;
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    String compoundNameDatabase = resultSet.getString("compound_name");
+                    String casId = resultSet.getString("cas_id");
+                    String formulaString = resultSet.getString("formula");
+                    double mass = resultSet.getDouble("mass");
+                    lipidsWithInfo.add(createLipidFromCompoundName(compoundNameDatabase, casId, formulaString, mass));
+                }
+            } catch (InvalidFormula_Exception | FattyAcidCreation_Exception e) {
+                e.printStackTrace();
+            }
         }
+        return lipidsWithInfo;
     }
 
-    public Lipid createLipidFromCompoundName(String compoundName) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-        List<String> array = new ArrayList<>(List.of(compoundName.split("\\(|\\)")));
+    public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
+        List<String> array = new ArrayList<>(List.of(compoundNameDB.split("\\(|\\)")));
         List<String> array2 = new ArrayList<>(List.of(array.get(1).split("\\/")));
         List<String> array3 = new ArrayList<>();
         LinkedHashSet fattyAcids = new LinkedHashSet<>();
@@ -88,7 +109,7 @@ public class Database {
         }
 
         LipidType lipidType = LipidType.valueOf(array.get(0));
-        return new Lipid(fattyAcids, new LipidSkeletalStructure(lipidType));
+        return new MSLipid(fattyAcids, new LipidSkeletalStructure(lipidType), compoundNameDB, casId, formulaString, mass);
     }
 
     public Set<Double> calculateFattyAcidMasses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception {

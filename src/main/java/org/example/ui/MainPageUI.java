@@ -3,9 +3,13 @@ package org.example.ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
+import org.example.databases.Database;
 import org.example.domain.Adduct;
 import org.example.domain.Lipid;
 import org.example.domain.LipidType;
+import org.example.domain.MSLipid;
+import org.example.exceptions.FattyAcidCreation_Exception;
+import org.example.exceptions.InvalidFormula_Exception;
 import org.example.utils.PDFUtils;
 
 import javax.swing.*;
@@ -21,12 +25,14 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class MainPageUI extends JPanel {
     private JButton searchButton;
     private JButton exportButton = null;
-    private JPanel subpanel1 = null;
+    private JPanel tablePanel = null;
     private JPanel subpanel2 = null;
     private JPanel radioButtonsPanel = null;
     private JTable table = null;
@@ -50,8 +56,10 @@ public class MainPageUI extends JPanel {
     private DefaultListModel<String> listModel;
     private URL url = null;
     private LinkedHashSet<Lipid> lipidsSet;
+    private String[][] lipidData = null;
+    private Set<Double> neutralLossAssociatedIonsInput = null;
 
-    public MainPageUI() {
+    public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
         try {
             UIManager.setLookAndFeel(new FlatLightLaf());
@@ -61,7 +69,7 @@ public class MainPageUI extends JPanel {
 
         searchButton = new JButton("Search Database");
         exportButton = new JButton("Export to PDF");
-        subpanel1 = new JPanel();
+        tablePanel = new JPanel();
         subpanel2 = new JPanel();
         radioButtonsPanel = new JPanel();
         inputSubpanel = new JPanel();
@@ -79,68 +87,35 @@ public class MainPageUI extends JPanel {
         updateListModel(Adduct.getPositiveAdducts());
         adductsScrollPane = new JScrollPane(adductsList);
         adductsList.setCellRenderer(new CheckboxListCellRenderer());
+        neutralLossAssociatedIonsInput = new LinkedHashSet<>();
         ionComboBox = new JComboBox(new String[]{"+  Positively Charged Adducts", "-  Negatively Charged Adducts"});
 
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]",
                 "[grow, fill]25[grow, fill]"));
         setBackground(new Color(227, 235, 242));
-        createTable();
-        add(subpanel1);
+        createTable(lipidData);
         createRadioButtons();
-        add(radioButtonsPanel, "wrap");
         createInputPanel();
-        add(inputSubpanel);
         createButtons();
+
+        add(tablePanel);
+        add(radioButtonsPanel, "wrap");
+        add(inputSubpanel);
         add(subpanel2);
         setVisible(true);
     }
 
-    public void createTable() {
-        subpanel1.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        subpanel1.setBackground(Color.WHITE);
-        subpanel1.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        tableTitles = new String[]{"Compound ID", "Compound Name", "Formula", "Adduct", "Precursor Ion", "Neutral Loss Associated Ions"};
-        lipids = new String[][]{
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C24H66O6",
-                        "[M+NH4]", "834.7723", "257.7732, 234.4356"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C24H66O4",
-                        "[M+H+]", "834.7732", "257.7732, 345.6443, 654.3456"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C24H66O2",
-                        "[M+NH4]", "834.7723", "257.7732"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C32H66O6",
-                        "[M+H+]", "834.7732", "257.7732"},
-                {"LMGL03010007", "TG(12:0/16:0/18:0)", "C32H66O6",
-                        "[M+NH4]", "834.7723", "324.7732, 324.3453"}};
-        table = new JTable(tableModel) {
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component comp = super.prepareRenderer(renderer, row, column);
-                Color alternateColor = new Color(227, 235, 242);
-                Color whiteColor = Color.WHITE;
-                if (!comp.getBackground().equals(getSelectionBackground())) {
-                    Color color = (row % 2 == 0 ? alternateColor : whiteColor);
-                    comp.setBackground(color);
-                    color = null;
-                }
-                return comp;
-            }
-        };
+    public void createTable(String[][] lipidData) {
+        tablePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        tablePanel.setBackground(Color.WHITE);
+        tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
+        tableTitles = new String[]{"Compound ID", "Compound Name", "Compound Formula", "Compound Mass", "Adduct"};
+        configureTable(new String[0][]);
 
-        tableModel = new DefaultTableModel(lipids, tableTitles) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setBackground(Color.WHITE);
-        table.getTableHeader().setForeground(new Color(52, 94, 125));
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-        table.setForeground(new Color(52, 94, 125));
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        table.getTableHeader().setReorderingAllowed(false);
-        table.setModel(tableModel);
-        table.getColumnModel().getColumn(5).setPreferredWidth(200);
+        jScrollPane = new JScrollPane(table);
+        jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        jScrollPane.setPreferredSize(new Dimension(1090, 500));
+        jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
 
         table.addMouseListener(new MouseAdapter() {
             @Override
@@ -162,42 +137,10 @@ public class MainPageUI extends JPanel {
                         throw new RuntimeException(exception);
                     }
                 }
-
-                if (table.getSelectedColumn() == 2) {
-                    JFrame window = new JFrame();
-                    window.setLayout(new MigLayout());
-                    window.setSize(750, 100);
-                    window.setLocationRelativeTo(null);
-                    JLabel label = new JLabel(table.getValueAt(table.getSelectedRow(),
-                            table.getSelectedColumn()).toString());
-                    label.setForeground(new Color(52, 94, 125));
-                    label.setFont(new Font("Arial", Font.PLAIN, 14));
-                    window.add(label, "center");
-                    window.setVisible(true);
-                }
             }
         });
 
-        table.setRowHeight(table.getRowHeight() + 15);
-
-        jScrollPane = new JScrollPane(table);
-        jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        jScrollPane.setPreferredSize(new Dimension(1090, 500));
-        jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-
-        subpanel1.add(jScrollPane, "center");
-    }
-
-    private String[][] convertToStringArray() {
-        String[][] lipidsArray = new String[lipidsSet.size()][8];
-        int index = 0;
-        for (Lipid lipid : lipidsSet) {
-            //lipidsArray[index][0] = lipid.get();
-            //lipidsArray[index][1] = lipid.getAge();
-            // todo
-            index++;
-        }
-        return lipidsArray;
+        tablePanel.add(jScrollPane, "center, grow");
     }
 
     public void createButtons() {
@@ -211,7 +154,18 @@ public class MainPageUI extends JPanel {
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // todo
+                tablePanel.remove(jScrollPane);
+                try {
+                    JScrollPane lipidScrollPane = createLipidScrollPane();
+                    lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+                    lipidScrollPane.setPreferredSize(new Dimension(1090, 500));
+                    lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
+                    // table model
+                    tablePanel.add(lipidScrollPane, "center, grow");
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+                tablePanel.updateUI();
             }
         });
 
@@ -239,6 +193,84 @@ public class MainPageUI extends JPanel {
 
         subpanel2.add(searchButton, "wrap");
         subpanel2.add(exportButton);
+    }
+
+    public JScrollPane createLipidScrollPane() {
+        Database database = new Database();
+
+        if (checkIfTextFieldIsNotEmpty(NLoss1_Input.getText())) {
+            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss1_Input.getText()));
+        }
+        if (checkIfTextFieldIsNotEmpty(NLoss2_Input.getText())) {
+            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss2_Input.getText()));
+        }
+        if (checkIfTextFieldIsNotEmpty(NLoss3_Input.getText())) {
+            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss3_Input.getText()));
+        }
+        if (checkIfTextFieldIsNotEmpty(NLoss4_Input.getText())) {
+            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss4_Input.getText()));
+        }
+
+        Set<MSLipid> lipidSet;
+        try {
+            if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
+                lipidSet = database.getLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
+                lipidData = new String[lipidSet.size()][5];
+                int i = 0;
+                for (MSLipid lipid : lipidSet) {
+                    lipidData[i][0] = lipid.getCasID();
+                    lipidData[i][1] = lipid.getCompoundName();
+                    lipidData[i][2] = lipid.getFormula();
+                    lipidData[i][3] = String.valueOf(lipid.getMass());
+                    i++;
+                }
+            }
+        } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        tableModel = new DefaultTableModel(lipidData, tableTitles) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        configureTable(lipidData);
+        return new JScrollPane(table);
+    }
+
+    public void configureTable(String[][] data) {
+        tableModel = new DefaultTableModel(data, tableTitles) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        table = new JTable(tableModel) {
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component comp = super.prepareRenderer(renderer, row, column);
+                Color alternateColor = new Color(227, 235, 242);
+                Color whiteColor = Color.WHITE;
+                if (!comp.getBackground().equals(getSelectionBackground())) {
+                    Color color = (row % 2 == 0 ? alternateColor : whiteColor);
+                    comp.setBackground(color);
+                    color = null;
+                }
+                return comp;
+            }
+        };
+        table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setBackground(Color.WHITE);
+        table.getTableHeader().setForeground(new Color(52, 94, 125));
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
+        table.setForeground(new Color(52, 94, 125));
+        table.setFont(new Font("Arial", Font.PLAIN, 15));
+        table.getTableHeader().setReorderingAllowed(false);
+        table.setModel(tableModel);
+        table.getColumnModel().getColumn(1).setPreferredWidth(200);
+        table.setRowHeight(table.getRowHeight() + 15);
+        table.setPreferredSize(new Dimension(1090, 500));
+        table.setBorder(new LineBorder(Color.WHITE, 1));
     }
 
     public void createInputPanel() {
@@ -421,6 +453,14 @@ public class MainPageUI extends JPanel {
         }
         adductsScrollPane.revalidate();
         adductsScrollPane.repaint();
+    }
+
+    public boolean checkIfTextFieldIsNotEmpty(String textFieldInput) {
+        if (!textFieldInput.isEmpty()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void updateListModel(String[] data) {

@@ -1,6 +1,5 @@
 package org.example.databases;
 
-import org.apache.commons.lang3.StringUtils;
 import org.example.domain.FattyAcid;
 import org.example.domain.Lipid;
 import org.example.domain.LipidSkeletalStructure;
@@ -11,10 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.offset;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -87,19 +83,7 @@ class DatabaseTest {
         }
     }
 
-    @Test
-    void createLipidFromCompoundName() throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-        Lipid expectedLipid = new Lipid(fattyAcids, new LipidSkeletalStructure(LipidType.TG));
-        Lipid actualLipid = database.createLipidFromCompoundName("TG(10:0/10:0/12:0)");
-        assertEquals(expectedLipid.toString(), actualLipid.toString());
-    }
-
-    @Test
-    void createLipidFromCompoundNameWithIsoBranching() throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-        Lipid expectedLipid = new Lipid(fattyAcidsIsoBranching, new LipidSkeletalStructure(LipidType.TG));
-        Lipid actualLipid = database.createLipidFromCompoundName("TG(i-12:0/10:0/10:0)");
-        assertEquals(expectedLipid.toString(), actualLipid.toString());
-    }
+    //todo tests for createLipids with and without iso-branching
 
     @Test
     void getLipidsFromDatabase() {
