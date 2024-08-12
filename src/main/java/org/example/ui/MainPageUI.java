@@ -19,11 +19,6 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
@@ -37,7 +32,6 @@ public class MainPageUI extends JPanel {
     private JPanel radioButtonsPanel = null;
     private JTable table = null;
     private DefaultTableModel tableModel = null;
-    private String[][] lipids = null;
     private String[] tableTitles = null;
     private JScrollPane jScrollPane = null;
     private JPanel inputSubpanel = null;
@@ -50,8 +44,7 @@ public class MainPageUI extends JPanel {
     private JLabel NLosses_Label = null;
     private JLabel ion_Label = null;
     private JLabel adducts_Label = null;
-    private JList adductsList = null;
-    public JScrollPane adductsScrollPane = null;
+    public JPanel adductsPanel = null;
     private JComboBox ionComboBox = null;
     private DefaultListModel<String> listModel;
     private URL url = null;
@@ -83,17 +76,19 @@ public class MainPageUI extends JPanel {
         ion_Label = new JLabel("    Ion Charge");
         adducts_Label = new JLabel("    Adducts");
         listModel = new DefaultListModel<>();
-        adductsList = new JList<>(listModel);
-        updateListModel(Adduct.getPositiveAdducts());
-        adductsScrollPane = new JScrollPane(adductsList);
-        adductsList.setCellRenderer(new CheckboxListCellRenderer());
+        adductsPanel = new JPanel();
+        adductsPanel.setLayout(new MigLayout());
+        updateListPanel(Adduct.getPositiveAdducts());
+        adductsPanel.setPreferredSize(new Dimension(350, 250));
+        adductsPanel.setMinimumSize(new Dimension(350, 250));
+        adductsPanel.setMaximumSize(new Dimension(350, 250));
+
         neutralLossAssociatedIonsInput = new LinkedHashSet<>();
         ionComboBox = new JComboBox(new String[]{"+  Positively Charged Adducts", "-  Negatively Charged Adducts"});
-
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]",
                 "[grow, fill]25[grow, fill]"));
         setBackground(new Color(227, 235, 242));
-        createTable(lipidData);
+        createTable();
         createRadioButtons();
         createInputPanel();
         createButtons();
@@ -105,40 +100,17 @@ public class MainPageUI extends JPanel {
         setVisible(true);
     }
 
-    public void createTable(String[][] lipidData) {
+    public void createTable() {
         tablePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         tablePanel.setBackground(Color.WHITE);
         tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        tableTitles = new String[]{"Compound ID", "Compound Name", "Compound Formula", "Compound Mass", "Adduct"};
+        tableTitles = new String[]{"Compound ID", "Compound Name", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
         configureTable(new String[0][]);
 
         jScrollPane = new JScrollPane(table);
         jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         jScrollPane.setPreferredSize(new Dimension(1090, 500));
         jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (table.getSelectedColumn() == 0) {
-                    String urlstring = "https://lipidmaps.org/databases/lmsd/";
-                    try {
-                        url = new URL(urlstring + table.getValueAt(table.getSelectedRow(),
-                                table.getSelectedColumn()));
-                        if (Desktop.isDesktopSupported()) {
-                            Desktop desktop = Desktop.getDesktop();
-                            try {
-                                desktop.browse(url.toURI());
-                            } catch (IOException | URISyntaxException exception) {
-                                exception.printStackTrace();
-                            }
-                        }
-                    } catch (MalformedURLException exception) {
-                        throw new RuntimeException(exception);
-                    }
-                }
-            }
-        });
 
         tablePanel.add(jScrollPane, "center, grow");
     }
@@ -154,13 +126,12 @@ public class MainPageUI extends JPanel {
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tablePanel.remove(jScrollPane);
+                tablePanel.removeAll();
                 try {
                     JScrollPane lipidScrollPane = createLipidScrollPane();
                     lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
                     lipidScrollPane.setPreferredSize(new Dimension(1090, 500));
                     lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-                    // table model
                     tablePanel.add(lipidScrollPane, "center, grow");
                 } catch (Exception e1) {
                     e1.printStackTrace();
@@ -197,7 +168,6 @@ public class MainPageUI extends JPanel {
 
     public JScrollPane createLipidScrollPane() {
         Database database = new Database();
-
         if (checkIfTextFieldIsNotEmpty(NLoss1_Input.getText())) {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss1_Input.getText()));
         }
@@ -211,22 +181,26 @@ public class MainPageUI extends JPanel {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss4_Input.getText()));
         }
 
-        Set<MSLipid> lipidSet;
+        Set<MSLipid> uncheckedLipidSet;
+        Set<MSLipid> checkedLipidSet;
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
-                lipidSet = database.getLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
-                lipidData = new String[lipidSet.size()][5];
+                uncheckedLipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
+                checkedLipidSet = database.limitListOfLipidsAccordingToPrecursorIon(uncheckedLipidSet, Double.parseDouble(PI_Input.getText()), "[M+NH4]+");
+                lipidData = new String[checkedLipidSet.size()][6];
                 int i = 0;
-                for (MSLipid lipid : lipidSet) {
+                for (MSLipid lipid : checkedLipidSet) {
                     lipidData[i][0] = lipid.getCasID();
                     lipidData[i][1] = lipid.getCompoundName();
                     lipidData[i][2] = lipid.getFormula();
                     lipidData[i][3] = String.valueOf(lipid.getMass());
+                    lipidData[i][4] = "[M+NH4]+";
+                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH4]+", 1));
                     i++;
                 }
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception ex) {
-            throw new RuntimeException(ex);
+            ex.printStackTrace();
         }
 
         tableModel = new DefaultTableModel(lipidData, tableTitles) {
@@ -246,6 +220,7 @@ public class MainPageUI extends JPanel {
                 return false;
             }
         };
+
         table = new JTable(tableModel) {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component comp = super.prepareRenderer(renderer, row, column);
@@ -259,7 +234,8 @@ public class MainPageUI extends JPanel {
                 return comp;
             }
         };
-        table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(52, 94, 125));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
@@ -310,13 +286,12 @@ public class MainPageUI extends JPanel {
         ionComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                updateUI_Ion(ionComboBox.getSelectedItem().toString());
+                updateListOfAdductsAccordingToCharge(ionComboBox.getSelectedItem().toString());
             }
         });
-        configureComponents(adductsScrollPane);
-        configureComponents(adductsList);
-        adductsList.setFixedCellHeight(30);
-        adductsScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+
+        configureComponents(adductsPanel);
+        adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
         configureLabelComponents(PI_Label);
         configureLabelComponents(NLosses_Label);
@@ -328,7 +303,7 @@ public class MainPageUI extends JPanel {
         inputSubpanel.add(adducts_Label, "wrap");
         inputSubpanel.add(PI_Input);
         inputSubpanel.add(ionComboBox);
-        inputSubpanel.add(adductsScrollPane, "wrap, span 1 6");
+        inputSubpanel.add(adductsPanel, "wrap, span 1 6");
         inputSubpanel.add(NLosses_Label, "wrap, gaptop 15");
         inputSubpanel.add(NLoss1_Input, "wrap, span 2");
         inputSubpanel.add(NLoss2_Input, "wrap, span 2");
@@ -441,18 +416,27 @@ public class MainPageUI extends JPanel {
         }
     }
 
-    public void updateUI_Ion(String charge) {
+    public void updateListOfAdductsAccordingToCharge(String charge) {
         if (charge.equals("+  Positively Charged Adducts")) {
             String[] string = Adduct.getPositiveAdducts();
-            updateListModel(string);
+            updateListPanel(string);
         } else if (charge.equals("-  Negatively Charged Adducts")) {
-            String[] string = Adduct.getNegativeAdducts().toArray(new String[0]);
-            updateListModel(string);
-        } else {
-            updateListModel(Adduct.getAllAdducts());
+            String[] string = Adduct.getNegativeAdducts();
+            updateListPanel(string);
         }
-        adductsScrollPane.revalidate();
-        adductsScrollPane.repaint();
+        adductsPanel.revalidate();
+        adductsPanel.repaint();
+    }
+
+    private void updateListPanel(String[] adducts) {
+        adductsPanel.removeAll();
+        for (String adduct : adducts) {
+            JCheckBox checkBox = new JCheckBox(adduct);
+            configureLabelComponents(checkBox);
+            adductsPanel.add(checkBox, "wrap");
+        }
+        adductsPanel.revalidate();
+        adductsPanel.repaint();
     }
 
     public boolean checkIfTextFieldIsNotEmpty(String textFieldInput) {
@@ -460,29 +444,6 @@ public class MainPageUI extends JPanel {
             return true;
         } else {
             return false;
-        }
-    }
-
-    private void updateListModel(String[] data) {
-        listModel.clear();
-        for (String item : data) {
-            listModel.addElement(item);
-        }
-    }
-
-    public class CheckboxListCellRenderer extends JCheckBox implements ListCellRenderer {
-
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            setComponentOrientation(list.getComponentOrientation());
-            setFont(list.getFont());
-            setBackground(list.getBackground());
-            setForeground(list.getForeground());
-            setSelected(isSelected);
-            setEnabled(list.isEnabled());
-
-            setText(value == null ? "" : value.toString());
-
-            return this;
         }
     }
 

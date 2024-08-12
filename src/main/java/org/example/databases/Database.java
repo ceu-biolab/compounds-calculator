@@ -13,21 +13,23 @@ public class Database {
     private final String username = "root";
     private final String password = "schoenstatt37";
 
-    public static void main(String[] args) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        Database database = new Database();
-        Set<Double> fattyAcidMasses = new LinkedHashSet<>();
-        fattyAcidMasses.add(467.4092d);
-        fattyAcidMasses.add(439.3784d);
-        fattyAcidMasses.add(411.3458d);
-        System.out.println(database.getLipidsFromDatabase(LipidType.TG, 656.5862d, fattyAcidMasses));
-    }
-
     public Database() {
         try {
             connection = DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public Set<Double> calculateFattyAcidMasses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception {
+        Set<Double> fattyAcidMasses = new LinkedHashSet<>();
+        Iterator<Double> iterator = neutralLossAssociatedIonMasses.iterator();
+
+        while (iterator.hasNext()) {
+            fattyAcidMasses.add(precursorIon - iterator.next() - PeriodicTable.NH3Mass);
+        }
+
+        return fattyAcidMasses;
     }
 
     public Set<FattyAcid> getFattyAcidsFromDatabase(double fattyAcidMass) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
@@ -49,7 +51,7 @@ public class Database {
         return fattyAcids;
     }
 
-    public Set<MSLipid> getLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
+    public Set<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
         Set<Double> fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formula = new Formula(lipidSkeletalStructure.getFormula().toString());
@@ -60,10 +62,17 @@ public class Database {
                         "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " +
                         "WHERE compounds.formula = ?");
         for (double fattyAcidMass : fattyAcidMasses) {
-            FattyAcid fattyAcid = getFattyAcidsFromDatabase(fattyAcidMass).iterator().next();
-            formula.addFattyAcidToFormula(fattyAcid);
-            queryBuilder.append(" AND compounds.compound_name LIKE ?");
+            Iterator<FattyAcid> iterator = getFattyAcidsFromDatabase(fattyAcidMass).iterator();
+
+            if (iterator.hasNext()) {
+                FattyAcid fattyAcid = iterator.next();
+                formula.addFattyAcidToFormula(fattyAcid);
+                queryBuilder.append(" AND compounds.compound_name LIKE ?");
+            } else {
+                System.err.println("No fatty acids found for mass: " + fattyAcidMass);
+            }
         }
+            // todo add if(only 2 or 1 FAs){ ... } !!!
         queryBuilder.append(";");
         String query = queryBuilder.toString();
         LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
@@ -92,35 +101,52 @@ public class Database {
     }
 
     public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-        List<String> array = new ArrayList<>(List.of(compoundNameDB.split("\\(|\\)")));
-        List<String> array2 = new ArrayList<>(List.of(array.get(1).split("\\/")));
-        List<String> array3 = new ArrayList<>();
-        LinkedHashSet fattyAcids = new LinkedHashSet<>();
+        System.out.println(compoundNameDB);
+        List<String> array = new ArrayList<>(List.of(compoundNameDB.split("[()]")));
 
-        for (int i = 0; i <= array.size(); i++) {
-            array3.add(array2.get(i).split("\\:")[0]);
-            array3.add(array2.get(i).split("\\:")[1]);
+        if (array.size() < 2) {
+            throw new IllegalArgumentException("Invalid format.");
+        }
+
+        List<String> array2 = new ArrayList<>(List.of(array.get(1).split("\\/")));
+
+        List<String> array3 = new ArrayList<>();
+        LinkedHashSet<FattyAcid> fattyAcids = new LinkedHashSet<>();
+
+        for (int i = 0; i < array2.size(); i++) {
+            String[] splitArray = array2.get(i).split("\\:");
+            if (splitArray.length == 2) {
+                array3.add(splitArray[0]);
+                array3.add(splitArray[1]);
+            } else {
+                throw new FattyAcidCreation_Exception("Invalid fatty acid format.");
+            }
         }
 
         for (int i = 0; i < array3.size(); i += 2) {
-            if (!array3.get(i).contains("[a-zA-Z]+")) {
+            if (!array3.get(i).matches("[a-zA-Z]+")) {
                 fattyAcids.add(new FattyAcid(array3.get(i), Integer.parseInt(array3.get(i + 1))));
             }
         }
 
-        LipidType lipidType = LipidType.valueOf(array.get(0));
+        LipidType lipidType = LipidType.valueOf(array.get(0).trim());
         return new MSLipid(fattyAcids, new LipidSkeletalStructure(lipidType), compoundNameDB, casId, formulaString, mass);
     }
 
-    public Set<Double> calculateFattyAcidMasses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception {
-        Set<Double> fattyAcidMasses = new LinkedHashSet<>();
-        Iterator<Double> iterator = neutralLossAssociatedIonMasses.iterator();
-
-        while (iterator.hasNext()) {
-            fattyAcidMasses.add(precursorIon - iterator.next() - PeriodicTable.NH3Mass);
+    public Set<MSLipid> limitListOfLipidsAccordingToPrecursorIon(Set<MSLipid> msLipidSet, double precursorIon, String adduct) {
+        Set<MSLipid> finalLipidSet = new LinkedHashSet<>();
+        for (MSLipid msLipid : msLipidSet) {
+            if (valuesAreApproximate(msLipid, adduct, precursorIon)) {
+                finalLipidSet.add(msLipid);
+            }
         }
-
-        return fattyAcidMasses;
+        return finalLipidSet;
     }
+
+    public boolean valuesAreApproximate(MSLipid lipid, String adduct, Double precursorIon) {
+        int ppmIncrement = (int) Math.round(Math.abs(((lipid.getMass() + Adduct.getAdductMass(adduct)) - precursorIon) * 1000000 / precursorIon));
+        return ppmIncrement <= 10000;
+    }
+
 }
 

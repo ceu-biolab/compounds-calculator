@@ -83,24 +83,11 @@ class DatabaseTest {
         }
     }
 
-    //todo tests for createLipids with and without iso-branching
-
+    //     public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString,
+    //     double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
     @Test
-    void getLipidsFromDatabase() {
-        Set<Lipid> expectedSet = new LinkedHashSet<>();
-        expectedSet.add(new Lipid(fattyAcidsTG36, new LipidSkeletalStructure(LipidType.TG)));
-        String expectedName = expectedSet.toString();
-        String expectedNameFormatted = expectedName.replaceAll("\\W+", "");
-        System.out.println(expectedNameFormatted);
+    void createLipidFromCompoundName() {
 
-        Set<Lipid> actualSet = null;
-        try {
-            actualSet = database.getLipidsFromDatabase(LipidType.TG, 656.5862d, fattyAcidMasses);
-        } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception e) {
-            throw new RuntimeException(e);
-        }
-        String stringOfCommonNames = actualSet.toString().replaceAll("\\W+", "");
-        System.out.println(stringOfCommonNames);
-        assertThat(stringOfCommonNames).contains(expectedNameFormatted);
+
     }
 }

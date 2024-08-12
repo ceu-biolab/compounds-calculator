@@ -9,21 +9,6 @@ public class Lipid {
     private final LinkedHashSet<FattyAcid> fattyAcids;
     private final LipidSkeletalStructure lipidSkeletalStructure;
 
-    public static void main(String[] args) {
-        try {
-            LinkedHashSet<FattyAcid> fattyAcids = new LinkedHashSet<>();
-            fattyAcids.add(new FattyAcid(12, 0));
-            fattyAcids.add(new FattyAcid(10, 0));
-            fattyAcids.add(new FattyAcid(10, 0));
-            Lipid lipid = new Lipid(fattyAcids, new LipidSkeletalStructure(LipidType.TG));
-            System.out.println(lipid.getLipidSkeletalStructure().toString());
-        } catch (FattyAcidCreation_Exception e) {
-            throw new RuntimeException(e);
-        } catch (InvalidFormula_Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public Lipid(LinkedHashSet<FattyAcid> fattyAcids, LipidSkeletalStructure lipidSkeletalStructure) {
         this.lipidSkeletalStructure = lipidSkeletalStructure;
         this.fattyAcids = fattyAcids;
@@ -43,10 +28,6 @@ public class Lipid {
             mass += fattyAcid.getMass(fattyAcid.getFormula());
         }
         return mass - (fattyAcids.size() * (PeriodicTable.waterMass));
-    }
-
-    public LinkedHashSet<FattyAcid> getFattyAcids() {
-        return fattyAcids;
     }
 
     public LipidSkeletalStructure getLipidSkeletalStructure() {
