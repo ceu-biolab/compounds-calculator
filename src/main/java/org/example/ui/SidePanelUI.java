@@ -18,7 +18,6 @@ public class SidePanelUI {
     private static JFrame frame;
     private static JPanel sidePanel = null;
     private JButton homeButton = null;
-    private JButton upload_Button = null;
     private JButton exitButton = null;
     private JButton helpButton = null;
     private JButton adductTransformerButton = null;
@@ -27,7 +26,7 @@ public class SidePanelUI {
 
     public SidePanelUI() {
         frame = new JFrame();
-        frame.setLayout(new MigLayout("", "[grow,fill][grow, fill]", "[][grow, fill]"));
+        frame.setLayout(new MigLayout("", "[grow,fill]", "[grow, fill][grow, fill]"));
         try {
             interfaceUI = new MainPageUI();
         } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
@@ -35,9 +34,9 @@ public class SidePanelUI {
         }
         adductTransformerUI = new AdductTransformerUI();
         homeFrame();
-        frame.add(sidePanel, "wrap, center");
-        frame.add(interfaceUI);
-        frame.getContentPane().setBackground(new Color(227, 235, 242));
+        frame.add(sidePanel, "wrap, center, grow");
+        frame.add(interfaceUI, "center, grow");
+        frame.getContentPane().setBackground(new Color(195, 224, 229));
         frame.setLocationRelativeTo(null);
         frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
                 (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
@@ -56,9 +55,9 @@ public class SidePanelUI {
         sidePanel = new JPanel();
         sidePanel.setLayout(new MigLayout("", "[fill]", "[fill]"));
         sidePanel.setBackground(Color.WHITE);
-        sidePanel.setMaximumSize(new Dimension(1575, 65));
-        sidePanel.setPreferredSize(new Dimension(1575, 65));
-        sidePanel.setMinimumSize(new Dimension(1575, 65));
+        sidePanel.setMaximumSize(new Dimension(1615, 65));
+        sidePanel.setPreferredSize(new Dimension(1615, 65));
+        sidePanel.setMinimumSize(new Dimension(1615, 65));
         sidePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
         homeButton = new JButton("  Home");
@@ -116,12 +115,12 @@ public class SidePanelUI {
         sidePanel.add(homeButton, "gapright 50");
         sidePanel.add(adductTransformerButton, "gapright 900");
         sidePanel.add(helpButton, "gapleft 50");
-        sidePanel.add(exitButton, "gapleft 25");
+        sidePanel.add(exitButton, "gapleft 50");
     }
 
     public static void configureComponents(Component component) {
         component.setFont(new Font("Arial", Font.BOLD, 18));
         component.setBackground(new Color(227, 235, 242));
-        component.setForeground(new Color(52, 94, 125));
+        component.setForeground(new Color(65, 114, 159));
     }
 }
