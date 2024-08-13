@@ -26,7 +26,9 @@ import java.util.Set;
 
 public class MainPageUI extends JPanel {
     private JButton searchButton;
-    private JButton exportButton = null;
+    private JButton exportButton;
+    private JButton uploadButton;
+
     private JPanel tablePanel = null;
     private JPanel subpanel2 = null;
     private JPanel radioButtonsPanel = null;
@@ -60,8 +62,10 @@ public class MainPageUI extends JPanel {
             throw new RuntimeException(e);
         }
 
-        searchButton = new JButton("Search Database");
-        exportButton = new JButton("Export to PDF");
+        searchButton = new JButton("  Begin Search");
+        exportButton = new JButton("  Export to CSV");
+        uploadButton = new JButton("  Upload File");
+
         tablePanel = new JPanel();
         subpanel2 = new JPanel();
         radioButtonsPanel = new JPanel();
@@ -104,7 +108,7 @@ public class MainPageUI extends JPanel {
         tablePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         tablePanel.setBackground(Color.WHITE);
         tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        tableTitles = new String[]{"Compound ID", "Compound Name", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
+        tableTitles = new String[]{"Cas ID", "Compound Name", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
         configureTable(new String[0][]);
 
         jScrollPane = new JScrollPane(table);
@@ -122,7 +126,11 @@ public class MainPageUI extends JPanel {
                 "25[grow, fill]25[grow, fill]25"));
 
         configureComponents(searchButton);
+        searchButton.setBackground(Color.WHITE);
         searchButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        searchButton.setIcon(new ImageIcon("src/main/resources/Search_Icon.png"));
+        searchButton.setBorder(new LineBorder(Color.white));
+        searchButton.setHorizontalAlignment(SwingConstants.LEFT);
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -141,7 +149,11 @@ public class MainPageUI extends JPanel {
         });
 
         configureComponents(exportButton);
+        exportButton.setBackground(Color.WHITE);
         exportButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        exportButton.setIcon(new ImageIcon("src/main/resources/Download_Icon.png"));
+        exportButton.setBorder(new LineBorder(Color.white));
+        exportButton.setHorizontalAlignment(SwingConstants.LEFT);
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -162,8 +174,17 @@ public class MainPageUI extends JPanel {
             }
         });
 
+        configureComponents(uploadButton);
+        uploadButton.setBackground(Color.WHITE);
+        uploadButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        uploadButton.setIcon(new ImageIcon("src/main/resources/Upload_Icon.png"));
+        uploadButton.setBorder(new LineBorder(Color.white));
+        uploadButton.setHorizontalAlignment(SwingConstants.LEFT);
+
         subpanel2.add(searchButton, "wrap");
-        subpanel2.add(exportButton);
+        subpanel2.add(exportButton, "wrap");
+        subpanel2.add(uploadButton);
+
     }
 
     public JScrollPane createLipidScrollPane() {
@@ -171,12 +192,15 @@ public class MainPageUI extends JPanel {
         if (checkIfTextFieldIsNotEmpty(NLoss1_Input.getText())) {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss1_Input.getText()));
         }
+
         if (checkIfTextFieldIsNotEmpty(NLoss2_Input.getText())) {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss2_Input.getText()));
         }
+
         if (checkIfTextFieldIsNotEmpty(NLoss3_Input.getText())) {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss3_Input.getText()));
         }
+
         if (checkIfTextFieldIsNotEmpty(NLoss4_Input.getText())) {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss4_Input.getText()));
         }
@@ -186,16 +210,18 @@ public class MainPageUI extends JPanel {
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
                 uncheckedLipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
-                checkedLipidSet = database.limitListOfLipidsAccordingToPrecursorIon(uncheckedLipidSet, Double.parseDouble(PI_Input.getText()), "[M+NH4]+");
-                lipidData = new String[checkedLipidSet.size()][6];
+
+                checkedLipidSet = database.limitListOfLipidsAccordingToPrecursorIon(uncheckedLipidSet, Double.parseDouble(PI_Input.getText()), "[M+NH3]+");
+
+                lipidData = new String[uncheckedLipidSet.size()][6];
                 int i = 0;
-                for (MSLipid lipid : checkedLipidSet) {
+                for (MSLipid lipid : uncheckedLipidSet) {
                     lipidData[i][0] = lipid.getCasID();
                     lipidData[i][1] = lipid.getCompoundName();
                     lipidData[i][2] = lipid.getFormula();
                     lipidData[i][3] = String.valueOf(lipid.getMass());
-                    lipidData[i][4] = "[M+NH4]+";
-                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH4]+", 1));
+                    lipidData[i][4] = "[M+NH3]+";
+                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
                     i++;
                 }
             }
@@ -243,7 +269,7 @@ public class MainPageUI extends JPanel {
         table.setFont(new Font("Arial", Font.PLAIN, 15));
         table.getTableHeader().setReorderingAllowed(false);
         table.setModel(tableModel);
-        table.getColumnModel().getColumn(1).setPreferredWidth(200);
+        table.getColumnModel().getColumn(1).setPreferredWidth(150);
         table.setRowHeight(table.getRowHeight() + 15);
         table.setPreferredSize(new Dimension(1090, 500));
         table.setBorder(new LineBorder(Color.WHITE, 1));
@@ -379,13 +405,13 @@ public class MainPageUI extends JPanel {
     }
 
     public static void configureComponents(Component component) {
-        component.setFont(new Font("Arial", Font.BOLD, 16));
+        component.setFont(new Font("Arial", Font.BOLD, 15));
         component.setBackground(new Color(227, 235, 242));
         component.setForeground(new Color(52, 94, 125));
     }
 
     public static void configureLabelComponents(Component component) {
-        component.setFont(new Font("Arial", Font.BOLD, 18));
+        component.setFont(new Font("Arial", Font.BOLD, 17));
         component.setForeground(new Color(52, 94, 125));
     }
 

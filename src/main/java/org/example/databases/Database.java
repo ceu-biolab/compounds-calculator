@@ -61,10 +61,9 @@ public class Database {
     public static void main(String[] args) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         Database database = new Database();
         Set<Double> ionMasses = new HashSet<>();
-        ionMasses.add(411.3458);
-        ionMasses.add(439.3784);
-        ionMasses.add(467.4092);
-        System.out.println(database.getAllLipidsFromDatabase(LipidType.TG, 656.5862, ionMasses));
+        ionMasses.add(531.4924);
+
+        System.out.println(database.getAllLipidsFromDatabase(LipidType.TG, 804.747, ionMasses));
     }
 
     public Set<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
@@ -106,16 +105,19 @@ public class Database {
             secondFormula.addFattyAcidToFormula(fattyAcids.get(1));
             queryBuilder.append("SELECT DISTINCT compounds.cas_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " + "FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = '").append(secondFormula).append("' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(3)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(4)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(5)).append("%'");
         } else if (fattyAcids.size() == 1) {
+            fattyAcids.add(fattyAcids.get(0));
+            formula.addFattyAcidToFormula(fattyAcids.get(0));
+            fattyAcids.add(fattyAcids.get(0));
+            formula.addFattyAcidToFormula(fattyAcids.get(0));
 
+            queryBuilder.append(" AND compounds.compound_name LIKE '%").append(fattyAcids.get(0)).append("/").append(fattyAcids.get(0)).append("%' ");
         }
 
         queryBuilder.append(";");
         String query = queryBuilder.toString();
         LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
-        System.out.println(query);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, formula.toString());
-            System.out.println(formula);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
