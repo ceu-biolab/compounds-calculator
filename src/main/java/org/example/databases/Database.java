@@ -4,6 +4,7 @@ import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
+import javax.xml.crypto.Data;
 import java.sql.*;
 import java.util.*;
 
@@ -23,18 +24,24 @@ public class Database {
 
     public Set<Double> calculateFattyAcidMasses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception {
         Set<Double> fattyAcidMasses = new LinkedHashSet<>();
-        Iterator<Double> iterator = neutralLossAssociatedIonMasses.iterator();
 
-        while (iterator.hasNext()) {
-            fattyAcidMasses.add(precursorIon - iterator.next() - PeriodicTable.NH3Mass);
+        for (Double neutralLossAssociatedIonMass : neutralLossAssociatedIonMasses) {
+            fattyAcidMasses.add(precursorIon - neutralLossAssociatedIonMass - PeriodicTable.NH3Mass);
         }
 
         return fattyAcidMasses;
     }
 
     public Set<FattyAcid> getFattyAcidsFromDatabase(double fattyAcidMass) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        String query = "SELECT chain_id, num_carbons, double_bonds " + "FROM chains " + "WHERE mass <= " + fattyAcidMass + " + 0.01 " + "AND mass >= " + fattyAcidMass + " - 0.01 " + "AND oxidation = ''";
+        String query = "SELECT chain_id, num_carbons, double_bonds " +
+                "FROM chains " +
+                "WHERE mass <= ? + 0.05 " +
+                "AND mass >= ? - 0.04 " +
+                "AND oxidation = ?";
         PreparedStatement statement = connection.prepareStatement(query);
+        statement.setDouble(1, fattyAcidMass);
+        statement.setDouble(2, fattyAcidMass);
+        statement.setString(3, "");
         ResultSet resultSet = statement.executeQuery();
 
         Set<FattyAcid> fattyAcids = new LinkedHashSet<>();
@@ -51,6 +58,15 @@ public class Database {
         return fattyAcids;
     }
 
+    public static void main(String[] args) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        Database database = new Database();
+        Set<Double> ionMasses = new HashSet<>();
+        ionMasses.add(411.3458);
+        ionMasses.add(439.3784);
+        ionMasses.add(467.4092);
+        System.out.println(database.getAllLipidsFromDatabase(LipidType.TG, 656.5862, ionMasses));
+    }
+
     public Set<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
         Set<Double> fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
@@ -61,33 +77,50 @@ public class Database {
                         "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " +
                         "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " +
                         "WHERE compounds.formula = ?");
+
+        List<FattyAcid> fattyAcids = new ArrayList<>();
+
         for (double fattyAcidMass : fattyAcidMasses) {
             Iterator<FattyAcid> iterator = getFattyAcidsFromDatabase(fattyAcidMass).iterator();
-
             if (iterator.hasNext()) {
                 FattyAcid fattyAcid = iterator.next();
+                fattyAcids.add(fattyAcid);
                 formula.addFattyAcidToFormula(fattyAcid);
-                queryBuilder.append(" AND compounds.compound_name LIKE ?");
+                queryBuilder.append(" AND compounds.compound_name LIKE '%").append(fattyAcid).append("%' ");
             } else {
                 System.err.println("No fatty acids found for mass: " + fattyAcidMass);
             }
         }
-            // todo add if(only 2 or 1 FAs){ ... } !!!
+
+        List<FattyAcid> repeatedFattyAcids = fattyAcids;
+        if (fattyAcids.size() == 2) {
+            Formula secondFormula = new Formula(formula.toString());
+            repeatedFattyAcids.add(fattyAcids.get(0));
+            formula.addFattyAcidToFormula(fattyAcids.get(0));
+            queryBuilder.append(" AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(2)).append("%' UNION ");
+
+            repeatedFattyAcids.add(fattyAcids.get(0));
+            repeatedFattyAcids.add(fattyAcids.get(1));
+            repeatedFattyAcids.add(fattyAcids.get(1));
+
+            secondFormula.addFattyAcidToFormula(fattyAcids.get(1));
+            queryBuilder.append("SELECT DISTINCT compounds.cas_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " + "FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = '").append(secondFormula).append("' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(3)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(4)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(5)).append("%'");
+        } else if (fattyAcids.size() == 1) {
+
+        }
+
         queryBuilder.append(";");
         String query = queryBuilder.toString();
         LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
-
+        System.out.println(query);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, formula.toString());
-
-            int index = 2;
-            for (double fattyAcidMass : fattyAcidMasses) {
-                statement.setString(index++, "%" + getFattyAcidsFromDatabase(fattyAcidMass).iterator().next() + "%");
-            }
+            System.out.println(formula);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     String compoundNameDatabase = resultSet.getString("compound_name");
+                    System.out.println(compoundNameDatabase);
                     String casId = resultSet.getString("cas_id");
                     String formulaString = resultSet.getString("formula");
                     double mass = resultSet.getDouble("mass");
@@ -96,6 +129,8 @@ public class Database {
             } catch (InvalidFormula_Exception | FattyAcidCreation_Exception e) {
                 e.printStackTrace();
             }
+        } catch (NoSuchElementException exception) {
+            System.err.println("No fatty acids found for the formula: " + formula.toString());
         }
         return lipidsWithInfo;
     }
