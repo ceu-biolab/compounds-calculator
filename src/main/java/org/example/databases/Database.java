@@ -122,7 +122,6 @@ public class Database {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     String compoundNameDatabase = resultSet.getString("compound_name");
-                    System.out.println(compoundNameDatabase);
                     String casId = resultSet.getString("cas_id");
                     String formulaString = resultSet.getString("formula");
                     double mass = resultSet.getDouble("mass");
@@ -132,9 +131,13 @@ public class Database {
                 e.printStackTrace();
             }
         } catch (NoSuchElementException exception) {
-            System.err.println("No fatty acids found for the formula: " + formula.toString());
+            System.err.println("No fatty acids found for the formula: " + formula);
         }
-        return lipidsWithInfo;
+        if (fattyAcids.size() == 2) {
+            return limitListOfLipidsAccordingToPrecursorIon(lipidsWithInfo, precursorIon, "[M+NH3]+");
+        } else {
+            return lipidsWithInfo;
+        }
     }
 
     public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
@@ -171,17 +174,17 @@ public class Database {
     }
 
     public Set<MSLipid> limitListOfLipidsAccordingToPrecursorIon(Set<MSLipid> msLipidSet, double precursorIon, String adduct) {
-        Set<MSLipid> finalLipidSet = new LinkedHashSet<>();
+        Set<MSLipid> checkedLipidSet = new LinkedHashSet<>();
         for (MSLipid msLipid : msLipidSet) {
-            if (valuesAreApproximate(msLipid, adduct, precursorIon)) {
-                finalLipidSet.add(msLipid);
+            if (valuesAreApproximate(msLipid.getMass(), adduct, precursorIon)) {
+                checkedLipidSet.add(msLipid);
             }
         }
-        return finalLipidSet;
+        return checkedLipidSet;
     }
 
-    public boolean valuesAreApproximate(MSLipid lipid, String adduct, Double precursorIon) {
-        int ppmIncrement = (int) Math.round(Math.abs(((lipid.getMass() + Adduct.getAdductMass(adduct)) - precursorIon) * 1000000 / precursorIon));
+    public boolean valuesAreApproximate(double lipidMass, String adduct, Double precursorIon) {
+        int ppmIncrement = (int) Math.round(Math.abs(((lipidMass + Adduct.getAdductMass(adduct)) - precursorIon) * 1000000 / precursorIon));
         return ppmIncrement <= 10000;
     }
 

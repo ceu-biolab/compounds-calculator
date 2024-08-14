@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -55,6 +56,7 @@ public class MainPageUI extends JPanel {
     private LinkedHashSet<Lipid> lipidsSet;
     private String[][] lipidData = null;
     private Set<Double> neutralLossAssociatedIonsInput = null;
+    private DefaultTableModel model;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -82,33 +84,22 @@ public class MainPageUI extends JPanel {
         adducts_Label = new JLabel("    Adducts");
         listModel = new DefaultListModel<>();
         adductsPanel = new JPanel();
-        adductsPanel.setLayout(new MigLayout("", "[]", ""));
         neutralLossAssociatedIonsInput = new LinkedHashSet<>();
-        ionComboBox = new JComboBox(new String[]{"   Positive Adducts  ", "   Negative Adducts  "});
-        configureLabelComponents(ionComboBox);
-        ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        ionComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateListOfAdductsAccordingToCharge(ionComboBox.getSelectedItem().toString());
-            }
-        });
+        ionComboBox = new JComboBox(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
 
-        adductsPanel.add(ionComboBox, "grow");
-        updateAdductPanel(Adduct.getPositiveAdducts());
-
-        setLayout(new MigLayout("", "[grow, fill]25[grow, fill]",
+        setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]",
                 "[grow, fill]25[grow, fill]"));
         setBackground(new Color(195, 224, 229));
         createTable();
         createRadioButtons();
         createInputPanel();
         createButtons();
+        createAdductsPanel();
 
         add(tablePanel, "span 2");
         add(radioButtonsPanel, "wrap");
         add(inputSubpanel);
-        add(adductsPanel, "grow");
+        add(adductsPanel);
         add(subpanel2);
         setVisible(true);
     }
@@ -116,14 +107,22 @@ public class MainPageUI extends JPanel {
     public void createTable() {
         tablePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         tablePanel.setBackground(Color.WHITE);
+        tablePanel.setPreferredSize(new Dimension(1250, 500));
+        tablePanel.setSize(1250, 500);
         tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
         tableTitles = new String[]{"Cas ID", "Compound Name", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
-        configureTable(new String[0][]);
 
+        model = new DefaultTableModel(tableTitles, 0);
+        table = new JTable(model);
         jScrollPane = new JScrollPane(table);
+        table.getTableHeader().setBackground(Color.WHITE);
+        table.getTableHeader().setForeground(new Color(65, 114, 159));
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
+
+        configureTable(new String[0][]);
         jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        jScrollPane.setPreferredSize(new Dimension(1250, 500));
         jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
+        jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         tablePanel.add(jScrollPane, "center, grow");
     }
@@ -147,13 +146,14 @@ public class MainPageUI extends JPanel {
                 try {
                     JScrollPane lipidScrollPane = createLipidScrollPane();
                     lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-                    lipidScrollPane.setPreferredSize(new Dimension(1090, 500));
+                    lipidScrollPane.setPreferredSize(new Dimension(1250, 500));
                     lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
                     tablePanel.add(lipidScrollPane, "center, grow");
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }
-                tablePanel.updateUI();
+                tablePanel.revalidate();
+                tablePanel.repaint();
             }
         });
 
@@ -204,10 +204,6 @@ public class MainPageUI extends JPanel {
                 NLoss3_Input.setText(null);
                 NLoss4_Input.setText(null);
                 PI_Input.setText(null);
-
-                tablePanel.remove(jScrollPane);
-                configureTable(new String[0][]);
-                tablePanel.updateUI();
             }
         });
 
@@ -235,23 +231,23 @@ public class MainPageUI extends JPanel {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss4_Input.getText()));
         }
 
-        Set<MSLipid> uncheckedLipidSet;
+        Set<MSLipid> lipidSet;
         Set<MSLipid> checkedLipidSet;
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
-                uncheckedLipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
-
-                checkedLipidSet = database.limitListOfLipidsAccordingToPrecursorIon(uncheckedLipidSet, Double.parseDouble(PI_Input.getText()), "[M+NH3]+");
-
-                lipidData = new String[uncheckedLipidSet.size()][6];
+                lipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
+                checkedLipidSet = database.limitListOfLipidsAccordingToPrecursorIon(lipidSet, Double.parseDouble(PI_Input.getText()), "[M+NH4]+");
+                System.out.println(lipidSet.size());
+                // todo fix checkedLipidSet ... it doesn't work
+                lipidData = new String[lipidSet.size()][6];
                 int i = 0;
-                for (MSLipid lipid : uncheckedLipidSet) {
+                for (MSLipid lipid : lipidSet) {
                     lipidData[i][0] = lipid.getCasID();
                     lipidData[i][1] = lipid.getCompoundName();
                     lipidData[i][2] = lipid.getFormula();
                     lipidData[i][3] = String.valueOf(lipid.getMass());
-                    lipidData[i][4] = "[M+NH3]+";
-                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
+                    lipidData[i][4] = "[M+NH4]+";
+                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH4]+", 1));
                     i++;
                 }
             }
@@ -299,15 +295,19 @@ public class MainPageUI extends JPanel {
         table.setFont(new Font("Arial", Font.PLAIN, 15));
         table.getTableHeader().setReorderingAllowed(false);
         table.setModel(tableModel);
-        table.getColumnModel().getColumn(1).setPreferredWidth(150);
         table.setRowHeight(table.getRowHeight() + 15);
-        table.setPreferredSize(new Dimension(1250, 500));
         table.setBorder(new LineBorder(Color.WHITE, 1));
+
     }
 
     public void createInputPanel() {
-        inputSubpanel.setLayout(new MigLayout("", "[grow, fill]15[grow, fill]15[grow,fill]",
-                "15[grow, fill]15[grow, fill]15[grow, fill]15[grow,fill]15"));
+        inputSubpanel.setPreferredSize(new Dimension(1000, 300));
+        inputSubpanel.setSize(new Dimension(1000, 300));
+        inputSubpanel.setMinimumSize(new Dimension(1000, 300));
+        inputSubpanel.setMaximumSize(new Dimension(1000, 300));
+
+        inputSubpanel.setLayout(new MigLayout("", "[grow, fill]15[grow, fill]15",
+                "15[grow, fill]10[grow, fill]15[grow, fill]10[grow,fill]15"));
         inputSubpanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         inputSubpanel.setBackground(Color.WHITE);
 
@@ -336,16 +336,20 @@ public class MainPageUI extends JPanel {
         PI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         PI_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT,
                 "  Precursor Ion, m/z");
-
-        adductsPanel.setBackground(Color.WHITE);
-        adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-
+        configureComponents(ionComboBox);
+        ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        ionComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateListOfAdductsAccordingToCharge(ionComboBox.getSelectedItem().toString());
+            }
+        });
         configureLabelComponents(PI_Label);
         configureLabelComponents(NLosses_Label);
-        configureLabelComponents(adducts_Label);
 
         inputSubpanel.add(PI_Label, "wrap");
-        inputSubpanel.add(PI_Input, "wrap");
+        inputSubpanel.add(PI_Input);
+        inputSubpanel.add(ionComboBox, "wrap, gapleft 75");
         inputSubpanel.add(NLosses_Label, "wrap, gaptop 15");
         inputSubpanel.add(NLoss1_Input, "wrap, span 2");
         inputSubpanel.add(NLoss2_Input, "wrap, span 2");
@@ -409,20 +413,35 @@ public class MainPageUI extends JPanel {
         group.add(buttonUNKNOWN);
 
         radioButtonsPanel.add(radioButtonsLabel, "wrap");
-        radioButtonsPanel.add(buttonCE, "wrap");
-        radioButtonsPanel.add(buttonCER, "wrap");
-        radioButtonsPanel.add(buttonDG, "wrap");
-        radioButtonsPanel.add(buttonMG, "wrap");
-        radioButtonsPanel.add(buttonPA, "wrap");
-        radioButtonsPanel.add(buttonPC, "wrap");
-        radioButtonsPanel.add(buttonPE, "wrap");
-        radioButtonsPanel.add(buttonPI, "wrap");
-        radioButtonsPanel.add(buttonPG, "wrap");
-        radioButtonsPanel.add(buttonPS, "wrap");
-        radioButtonsPanel.add(buttonSM, "wrap");
-        radioButtonsPanel.add(buttonTG, "wrap");
-        radioButtonsPanel.add(buttonCL, "wrap");
-        radioButtonsPanel.add(buttonUNKNOWN, "wrap");
+        radioButtonsPanel.add(buttonCE, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonCER, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonDG, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonMG, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonPA, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonPC, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonPE, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonPI, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonPG, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonPS, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonSM, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonTG, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonCL, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonUNKNOWN, "wrap, gapleft 10");
+    }
+
+    public void createAdductsPanel() {
+        configureLabelComponents(adducts_Label);
+        adductsPanel.setLayout(new MigLayout("", "[]", ""));
+        adductsPanel.setBackground(Color.WHITE);
+        adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        adductsPanel.setPreferredSize(new Dimension(350, 300));
+        adductsPanel.setSize(new Dimension(350, 300));
+        adductsPanel.setMinimumSize(new Dimension(350, 300));
+        adductsPanel.setMaximumSize(new Dimension(350, 300));
+
+        adductsPanel.add(adducts_Label, "wrap, gapbottom 4");
+        updateAdductPanel(Adduct.getPositiveAdducts());
+        adductsPanel.setVisible(true);
     }
 
     public static void configureComponents(Component component) {
@@ -443,7 +462,7 @@ public class MainPageUI extends JPanel {
 
     public void updateUI_LipidType(LipidType lipidType) {
         switch (lipidType) {
-            case CE: // todo search database for CE(16:0/16:0)
+            case CE:
                 updateUI();
             case DG:
                 updateUI();
@@ -469,10 +488,10 @@ public class MainPageUI extends JPanel {
     }
 
     public void updateListOfAdductsAccordingToCharge(String charge) {
-        if (charge.equals("   Positive Adducts  ")) {
+        if (charge.equals("   View Positive Adducts  ")) {
             String[] string = Adduct.getPositiveAdducts();
             updateAdductPanel(string);
-        } else if (charge.equals("   Negative Adducts  ")) {
+        } else if (charge.equals("   View Negative Adducts  ")) {
             String[] string = Adduct.getNegativeAdducts();
             updateAdductPanel(string);
         }
@@ -481,15 +500,21 @@ public class MainPageUI extends JPanel {
     }
 
     public void updateAdductPanel(String[] adducts) {
-        for(Component component : adductsPanel.getComponents()){
-            if(component instanceof JCheckBox){
+        for (Component component : adductsPanel.getComponents()) {
+            if (component instanceof JCheckBox) {
                 adductsPanel.remove(component);
             }
         }
+        int i = 0;
         for (String adduct : adducts) {
             JCheckBox checkBox = new JCheckBox(adduct);
             configureTextComponents(checkBox);
-            adductsPanel.add(checkBox, "wrap");
+            if (i % 2 == 0) {
+                adductsPanel.add(checkBox, "gapleft 10, gaptop 5, gapbottom 5");
+            } else {
+                adductsPanel.add(checkBox, "wrap, gapleft 10, gaptop 5, gapbottom 5");
+            }
+            i++;
         }
         adductsPanel.revalidate();
         adductsPanel.repaint();
