@@ -236,9 +236,6 @@ public class MainPageUI extends JPanel {
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
                 lipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
-                checkedLipidSet = database.limitListOfLipidsAccordingToPrecursorIon(lipidSet, Double.parseDouble(PI_Input.getText()), "[M+NH4]+");
-                System.out.println(lipidSet.size());
-                // todo fix checkedLipidSet ... it doesn't work
                 lipidData = new String[lipidSet.size()][6];
                 int i = 0;
                 for (MSLipid lipid : lipidSet) {
@@ -247,7 +244,7 @@ public class MainPageUI extends JPanel {
                     lipidData[i][2] = lipid.getFormula();
                     lipidData[i][3] = String.valueOf(lipid.getMass());
                     lipidData[i][4] = "[M+NH4]+";
-                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH4]+", 1));
+                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
                     i++;
                 }
             }
@@ -338,6 +335,7 @@ public class MainPageUI extends JPanel {
                 "  Precursor Ion, m/z");
         configureComponents(ionComboBox);
         ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        ionComboBox.setToolTipText("Choose the list of adducts based on charge.");
         ionComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

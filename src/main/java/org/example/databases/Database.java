@@ -58,14 +58,6 @@ public class Database {
         return fattyAcids;
     }
 
-    public static void main(String[] args) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        Database database = new Database();
-        Set<Double> ionMasses = new HashSet<>();
-        ionMasses.add(531.4924);
-
-        System.out.println(database.getAllLipidsFromDatabase(LipidType.TG, 804.747, ionMasses));
-    }
-
     public Set<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
         Set<Double> fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
@@ -133,15 +125,14 @@ public class Database {
         } catch (NoSuchElementException exception) {
             System.err.println("No fatty acids found for the formula: " + formula);
         }
-        if (fattyAcids.size() == 2) {
-            return limitListOfLipidsAccordingToPrecursorIon(lipidsWithInfo, precursorIon, "[M+NH3]+");
+        if (neutralLossAssociatedIonMasses.size() == 2) {
+            return checkForRepeatedLipids(limitListOfLipidsAccordingToPrecursorIon(lipidsWithInfo, precursorIon, "[M+NH3]+"));
         } else {
-            return lipidsWithInfo;
+            return checkForRepeatedLipids(lipidsWithInfo);
         }
     }
 
     public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-        System.out.println(compoundNameDB);
         List<String> array = new ArrayList<>(List.of(compoundNameDB.split("[()]")));
 
         if (array.size() < 2) {
@@ -188,5 +179,16 @@ public class Database {
         return ppmIncrement <= 10000;
     }
 
+    public Set<MSLipid> checkForRepeatedLipids(Set<MSLipid> msLipidSet) {
+        Set<MSLipid> checkedLipidSet = new LinkedHashSet<>();
+        Set<String> lipidCompoundNames = new HashSet<>();
+
+        for (MSLipid msLipid : msLipidSet) {
+            if(lipidCompoundNames.add(msLipid.getCompoundName())) {
+                checkedLipidSet.add(msLipid);
+            }
+        }
+        return checkedLipidSet;
+    }
 }
 
