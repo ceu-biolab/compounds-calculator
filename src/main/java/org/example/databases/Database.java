@@ -4,7 +4,6 @@ import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
-import javax.xml.crypto.Data;
 import java.sql.*;
 import java.util.*;
 
@@ -23,13 +22,14 @@ public class Database {
     }
 
     public Set<Double> calculateFattyAcidMasses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception {
-        Set<Double> fattyAcidMasses = new LinkedHashSet<>();
-
+        Double[] fattyAcidMassesArray = new Double[neutralLossAssociatedIonMasses.size()];
+        int i = 0;
         for (Double neutralLossAssociatedIonMass : neutralLossAssociatedIonMasses) {
-            fattyAcidMasses.add(precursorIon - neutralLossAssociatedIonMass - PeriodicTable.NH3Mass);
+            fattyAcidMassesArray[i] = precursorIon - neutralLossAssociatedIonMass - PeriodicTable.NH3Mass;
+            i++;
         }
 
-        return fattyAcidMasses;
+        return orderSetSmallestToLargest(fattyAcidMassesArray);
     }
 
     public Set<FattyAcid> getFattyAcidsFromDatabase(double fattyAcidMass) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
@@ -59,7 +59,8 @@ public class Database {
     }
 
     public Set<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
-        Set<Double> fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses);
+        Set<Double> fattyAcidMasses = new LinkedHashSet<>();
+        fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formula = new Formula(lipidSkeletalStructure.getFormula().toString());
         StringBuilder queryBuilder = new StringBuilder(
@@ -67,7 +68,7 @@ public class Database {
                         "FROM compounds " +
                         "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " +
                         "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " +
-                        "WHERE compounds.formula = ?");
+                        "WHERE compounds.formula = ? ");
 
         List<FattyAcid> fattyAcids = new ArrayList<>();
 
@@ -82,6 +83,7 @@ public class Database {
                 System.err.println("No fatty acids found for mass: " + fattyAcidMass);
             }
         }
+        fattyAcidMasses.clear();
 
         List<FattyAcid> repeatedFattyAcids = fattyAcids;
         if (fattyAcids.size() == 2) {
@@ -128,7 +130,7 @@ public class Database {
         if (neutralLossAssociatedIonMasses.size() == 2) {
             return checkForRepeatedLipids(limitListOfLipidsAccordingToPrecursorIon(lipidsWithInfo, precursorIon, "[M+NH3]+"));
         } else {
-            return checkForRepeatedLipids(lipidsWithInfo);
+            return lipidsWithInfo;
         }
     }
 
@@ -184,11 +186,15 @@ public class Database {
         Set<String> lipidCompoundNames = new HashSet<>();
 
         for (MSLipid msLipid : msLipidSet) {
-            if(lipidCompoundNames.add(msLipid.getCompoundName())) {
+            if (lipidCompoundNames.add(msLipid.getCompoundName())) {
                 checkedLipidSet.add(msLipid);
             }
         }
         return checkedLipidSet;
     }
-}
 
+    public Set<Double> orderSetSmallestToLargest(Double[] doubleList) {
+        Arrays.sort(doubleList);
+        return new LinkedHashSet<>(Arrays.asList(doubleList));
+    }
+}

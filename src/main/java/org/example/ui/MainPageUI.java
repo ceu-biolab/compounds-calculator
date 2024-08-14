@@ -57,6 +57,7 @@ public class MainPageUI extends JPanel {
     private String[][] lipidData = null;
     private Set<Double> neutralLossAssociatedIonsInput = null;
     private DefaultTableModel model;
+    private Database database;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -84,8 +85,8 @@ public class MainPageUI extends JPanel {
         adducts_Label = new JLabel("    Adducts");
         listModel = new DefaultListModel<>();
         adductsPanel = new JPanel();
-        neutralLossAssociatedIonsInput = new LinkedHashSet<>();
         ionComboBox = new JComboBox(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
+        database = new Database();
 
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]",
                 "[grow, fill]25[grow, fill]"));
@@ -214,7 +215,7 @@ public class MainPageUI extends JPanel {
     }
 
     public JScrollPane createLipidScrollPane() {
-        Database database = new Database();
+        neutralLossAssociatedIonsInput = new LinkedHashSet<>();
         if (checkIfTextFieldIsNotEmpty(NLoss1_Input.getText())) {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss1_Input.getText()));
         }
@@ -232,10 +233,10 @@ public class MainPageUI extends JPanel {
         }
 
         Set<MSLipid> lipidSet;
-        Set<MSLipid> checkedLipidSet;
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
                 lipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
+
                 lipidData = new String[lipidSet.size()][6];
                 int i = 0;
                 for (MSLipid lipid : lipidSet) {
