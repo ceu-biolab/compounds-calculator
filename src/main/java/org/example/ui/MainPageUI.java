@@ -4,10 +4,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
 import org.example.databases.Database;
-import org.example.domain.Adduct;
-import org.example.domain.Lipid;
-import org.example.domain.LipidType;
-import org.example.domain.MSLipid;
+import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 import org.example.utils.PDFUtils;
@@ -111,7 +108,7 @@ public class MainPageUI extends JPanel {
         tablePanel.setPreferredSize(new Dimension(1250, 500));
         tablePanel.setSize(1250, 500);
         tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        tableTitles = new String[]{"Cas ID", "Compound Name", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
+        tableTitles = new String[]{"Cas ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
 
         model = new DefaultTableModel(tableTitles, 0);
         table = new JTable(model);
@@ -237,15 +234,16 @@ public class MainPageUI extends JPanel {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
                 lipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
 
-                lipidData = new String[lipidSet.size()][6];
+                lipidData = new String[lipidSet.size()][7];
                 int i = 0;
                 for (MSLipid lipid : lipidSet) {
                     lipidData[i][0] = lipid.getCasID();
                     lipidData[i][1] = lipid.getCompoundName();
-                    lipidData[i][2] = lipid.getFormula();
-                    lipidData[i][3] = String.valueOf(lipid.getMass());
-                    lipidData[i][4] = "[M+NH4]+";
-                    lipidData[i][5] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
+                    lipidData[i][2] = calculateSpeciesShorthand(lipid);
+                    lipidData[i][3] = lipid.getFormula();
+                    lipidData[i][4] = String.valueOf(lipid.getMass());
+                    lipidData[i][5] = "[M+NH4]+";
+                    lipidData[i][6] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
                     i++;
                 }
             }
@@ -378,7 +376,7 @@ public class MainPageUI extends JPanel {
         JRadioButton buttonSM = new JRadioButton(" SM");
         JRadioButton buttonTG = new JRadioButton(" TG");
         JRadioButton buttonCL = new JRadioButton(" CL");
-        JRadioButton buttonUNKNOWN = new JRadioButton(" UNK");
+        JRadioButton buttonUNKNOWN = new JRadioButton(" UNKNOWN", true);
 
         configureTextComponents(buttonCE);
         configureTextComponents(buttonCER);
@@ -527,5 +525,14 @@ public class MainPageUI extends JPanel {
         }
     }
 
+    public String calculateSpeciesShorthand(MSLipid lipid) {
+        int carbonAtoms = 0;
+        int doubleBonds = 0;
+        for (FattyAcid fattyAcid : lipid.getFattyAcids()) {
+            carbonAtoms += fattyAcid.getCarbonAtoms();
+            doubleBonds += fattyAcid.getDoubleBonds();
+        }
+        return lipid.getLipidSkeletalStructure().getLipidType().toString() + " " + carbonAtoms + ":" + doubleBonds;
+    }
 }
 

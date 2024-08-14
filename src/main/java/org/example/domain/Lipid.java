@@ -30,6 +30,10 @@ public class Lipid {
         return mass - (fattyAcids.size() * (PeriodicTable.waterMass));
     }
 
+    public LinkedHashSet<FattyAcid> getFattyAcids() {
+        return fattyAcids;
+    }
+
     public LipidSkeletalStructure getLipidSkeletalStructure() {
         return lipidSkeletalStructure;
     }

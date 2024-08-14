@@ -59,6 +59,14 @@ public class FattyAcid extends ChemicalCompound {
         return "C" + carbonAtoms + "H" + (2 * carbonAtoms - (doubleBonds * 2)) + "O" + 2;
     }
 
+    public int getCarbonAtoms() {
+        return carbonAtoms;
+    }
+
+    public int getDoubleBonds() {
+        return doubleBonds;
+    }
+
     public Formula getFormula() {
         return formula;
     }
