@@ -1,6 +1,5 @@
 package org.example.domain;
 
-import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
 import java.util.LinkedHashSet;

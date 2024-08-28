@@ -1,7 +1,6 @@
 package org.example.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
 import org.example.databases.Database;
@@ -12,17 +11,14 @@ import org.example.utils.CSVUtils;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URL;
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -35,6 +31,7 @@ public class MainPageUI extends JPanel {
     private JPanel tablePanel = null;
     private JPanel subpanel2 = null;
     private JPanel radioButtonsPanel = null;
+
     private JTable table = null;
     private DefaultTableModel tableModel = null;
     private String[] tableTitles = null;
@@ -44,6 +41,7 @@ public class MainPageUI extends JPanel {
     public JTextField NLoss2_Input = null;
     public JTextField NLoss3_Input = null;
     public JTextField NLoss4_Input = null;
+
     public JTextField PI_Input = null;
     private JLabel PI_Label = null;
     private JLabel NLosses_Label = null;
@@ -51,12 +49,11 @@ public class MainPageUI extends JPanel {
     public JPanel adductsPanel = null;
     private JComboBox ionComboBox = null;
     private DefaultListModel<String> listModel;
-    private URL url = null;
-    private LinkedHashSet<Lipid> lipidsSet;
     private String[][] lipidData = null;
     private Set<Double> neutralLossAssociatedIonsInput = null;
     private DefaultTableModel model;
     private Database database;
+    private Set<MSLipid> lipidSet = null;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -87,8 +84,7 @@ public class MainPageUI extends JPanel {
         ionComboBox = new JComboBox(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
         database = new Database();
 
-        setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]",
-                "[grow, fill]25[grow, fill]"));
+        setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]", "[grow, fill]25[grow, fill]"));
         setBackground(new Color(195, 224, 229));
         createTable();
         createRadioButtons();
@@ -130,8 +126,7 @@ public class MainPageUI extends JPanel {
     public void createButtons() {
         subpanel2.setBackground(Color.WHITE);
         subpanel2.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        subpanel2.setLayout(new MigLayout("", "25[grow, fill]25",
-                "25[grow, fill]25[grow, fill]25"));
+        subpanel2.setLayout(new MigLayout("", "25[grow, fill]25", "25[grow, fill]25[grow, fill]25"));
 
         configureComponents(searchButton);
         searchButton.setBackground(Color.WHITE);
@@ -166,17 +161,16 @@ public class MainPageUI extends JPanel {
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int choice = JOptionPane.showConfirmDialog(null, "Do you wish to export this information to PDF format?",
-                        "Export to PDF", JOptionPane.YES_NO_CANCEL_OPTION);
+                int choice = JOptionPane.showConfirmDialog(null, "Do you wish to export this information to CSV format?", "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
                 if (choice == JOptionPane.YES_OPTION) {
                     try {
-                        // todo replace with CSVUtils
-                        new CSVUtils();
-                        JOptionPane.showMessageDialog(null, "File created successfully!");
+                        CSVUtils csvUtils = new CSVUtils();
+                        csvUtils.createAndWriteCSV(lipidData);
+                        JOptionPane.showMessageDialog(null, "File created successfully.");
                     } catch (Exception ex) {
-                        throw new RuntimeException(ex);
+                        JOptionPane.showMessageDialog(null, "Current data set is empty. Please introduce data before attempting to create a new file.");
                     }
-                } else if (choice == JOptionPane.NO_OPTION | choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) {
+                } else if (choice == JOptionPane.NO_OPTION || choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) {
                     JOptionPane.showMessageDialog(null, "Operation cancelled.");
                 } else {
                     JOptionPane.showMessageDialog(null, "File already exists.");
@@ -193,28 +187,37 @@ public class MainPageUI extends JPanel {
         uploadButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                int r = j.showOpenDialog(null);
-                if (r == JFileChooser.APPROVE_OPTION) {
-                    //l.setText(j.getSelectedFile().getAbsolutePath());
+                CSVUtils csvUtils = new CSVUtils();
+                FileDialog fd = new FileDialog(new Frame(), "Choose a file", FileDialog.LOAD);
+                fd.setDirectory("C:\\");
+                fd.setFile("*.xml");
+                fd.setVisible(true);
+                String filename = fd.getFile();
+                if (filename == null) {
+                    System.out.println("You cancelled the choice");
+                } else {
+                    System.out.println("You chose " + filename);
+                    try {
+                        csvUtils.readCSV(new File(fd.getFile()));
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
         });
+
         configureComponents(clearButton);
         clearButton.setBackground(Color.WHITE);
         clearButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         clearButton.setIcon(new ImageIcon("src/main/resources/Clear_Icon.png"));
         clearButton.setBorder(new LineBorder(Color.white));
         clearButton.setHorizontalAlignment(SwingConstants.LEFT);
-        clearButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                NLoss1_Input.setText(null);
-                NLoss2_Input.setText(null);
-                NLoss3_Input.setText(null);
-                NLoss4_Input.setText(null);
-                PI_Input.setText(null);
-            }
+        clearButton.addActionListener(e -> {
+            NLoss1_Input.setText(null);
+            NLoss2_Input.setText(null);
+            NLoss3_Input.setText(null);
+            NLoss4_Input.setText(null);
+            PI_Input.setText(null);
         });
 
         subpanel2.add(searchButton, "wrap");
@@ -241,7 +244,6 @@ public class MainPageUI extends JPanel {
             neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss4_Input.getText()));
         }
 
-        Set<MSLipid> lipidSet;
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
                 lipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
@@ -314,36 +316,30 @@ public class MainPageUI extends JPanel {
         inputSubpanel.setMinimumSize(new Dimension(1000, 300));
         inputSubpanel.setMaximumSize(new Dimension(1000, 300));
 
-        inputSubpanel.setLayout(new MigLayout("", "[grow, fill]15[grow, fill]15",
-                "15[grow, fill]10[grow, fill]15[grow, fill]10[grow,fill]15"));
+        inputSubpanel.setLayout(new MigLayout("", "[grow, fill]15[grow, fill]15", "15[grow, fill]10[grow, fill]15[grow, fill]10[grow,fill]15"));
         inputSubpanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         inputSubpanel.setBackground(Color.WHITE);
 
         NLoss1_Input.setColumns(30);
         configureComponents(NLoss1_Input);
         NLoss1_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss1_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT,
-                "  Neutral Loss Associated Ion 1");
+        NLoss1_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 1");
         NLoss2_Input.setColumns(30);
         configureComponents(NLoss2_Input);
         NLoss2_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss2_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT,
-                "  Neutral Loss Associated Ion 2 (optional)");
+        NLoss2_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 2 (optional)");
         NLoss3_Input.setColumns(30);
         configureComponents(NLoss3_Input);
         NLoss3_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss3_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT,
-                "  Neutral Loss Associated Ion 3 (optional)");
+        NLoss3_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 3 (optional)");
         NLoss4_Input.setColumns(30);
         configureComponents(NLoss4_Input);
         NLoss4_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss4_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT,
-                "  Neutral Loss Associated Ion 4 (optional)");
+        NLoss4_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 4 (optional)");
         PI_Input.setColumns(15);
         configureComponents(PI_Input);
         PI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        PI_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT,
-                "  Precursor Ion, m/z");
+        PI_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Precursor Ion, m/z");
         configureComponents(ionComboBox);
         ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         ionComboBox.setToolTipText("Choose the list of adducts based on charge.");

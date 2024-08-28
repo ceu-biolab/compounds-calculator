@@ -1,12 +1,6 @@
 package org.example.domain;
 
-import org.example.exceptions.FattyAcidCreation_Exception;
-import org.example.exceptions.InvalidFormula_Exception;
-
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 public class MSLipid extends Lipid {
     public String casID;
