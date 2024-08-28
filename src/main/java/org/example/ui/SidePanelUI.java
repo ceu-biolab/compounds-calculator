@@ -17,10 +17,6 @@ import java.sql.SQLException;
 public class SidePanelUI {
     private static JFrame frame;
     private static JPanel sidePanel = null;
-    private JButton homeButton = null;
-    private JButton exitButton = null;
-    private JButton helpButton = null;
-    private JButton adductTransformerButton = null;
     private static MainPageUI interfaceUI;
     private static AdductTransformerUI adductTransformerUI;
 
@@ -40,7 +36,6 @@ public class SidePanelUI {
         frame.setLocationRelativeTo(null);
         frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
                 (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-
         frame.setVisible(true);
     }
 
@@ -60,7 +55,7 @@ public class SidePanelUI {
         sidePanel.setMinimumSize(new Dimension(1615, 65));
         sidePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
-        homeButton = new JButton("  Home");
+        JButton homeButton = new JButton("  Home");
         configureComponents(homeButton);
         homeButton.setBackground(Color.WHITE);
         homeButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
@@ -72,11 +67,14 @@ public class SidePanelUI {
             public void actionPerformed(ActionEvent e) {
                 frame.remove(adductTransformerUI);
                 frame.add(interfaceUI);
-                frame.pack();
+                frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                        (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+                frame.revalidate();
+                frame.repaint();
             }
         });
 
-        adductTransformerButton = new JButton("  Adduct Transformer");
+        JButton adductTransformerButton = new JButton("  Adduct Transformer");
         configureComponents(adductTransformerButton);
         adductTransformerButton.setBackground(Color.WHITE);
         adductTransformerButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
@@ -88,11 +86,14 @@ public class SidePanelUI {
             public void actionPerformed(ActionEvent e) {
                 frame.remove(interfaceUI);
                 frame.add(adductTransformerUI);
-                frame.pack();
+                frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                        (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+                frame.revalidate();
+                frame.repaint();
             }
         });
 
-        helpButton = new JButton("  Help");
+        JButton helpButton = new JButton("  Help");
         configureComponents(helpButton);
         helpButton.setBackground(Color.WHITE);
         helpButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
@@ -100,7 +101,7 @@ public class SidePanelUI {
         helpButton.setBorder(new LineBorder(Color.white));
         helpButton.setHorizontalAlignment(SwingConstants.LEFT);
 
-        exitButton = new JButton("  Exit");
+        JButton exitButton = new JButton("  Exit");
         configureComponents(exitButton);
         exitButton.setBackground(Color.WHITE);
         exitButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");

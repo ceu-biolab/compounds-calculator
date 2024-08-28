@@ -17,11 +17,11 @@ public class AdductTransformerUI extends JPanel {
         }
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]",
                 "[grow, fill]25[grow, fill]"));
-        setBackground(new Color(227, 235, 242));
+        setBackground(new Color(195, 224, 229));
         JPanel panel1 = new JPanel();
-        panel1.setMinimumSize(new Dimension(1350, 865));
-        panel1.setMaximumSize(new Dimension(1350, 865));
-        panel1.setPreferredSize(new Dimension(1350, 865));
+        panel1.setMinimumSize(new Dimension(1450, 800));
+        panel1.setMaximumSize(new Dimension(1450, 800));
+        panel1.setPreferredSize(new Dimension(1450, 800));
         panel1.setBackground(Color.WHITE);
         panel1.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         add(panel1);

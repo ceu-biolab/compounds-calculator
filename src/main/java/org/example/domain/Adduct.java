@@ -8,8 +8,8 @@ public class Adduct {
     protected static final Map<String, Double> adductMap_Neg = new LinkedHashMap<>();
 
     static {
-        adductMap_Pos.put("[M+H-H2O]+", - 18.01056d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+H]+", 1.00783d - PeriodicTable.electronMass);
+        adductMap_Pos.put("[M+H-H2O]+", - 18.01056d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+NH4]+", 18.03437d - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+NH3]+", 17.02655d - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+C2H6N2+H]+", 58.05310d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);

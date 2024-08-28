@@ -1,18 +1,20 @@
 package org.example.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
 import org.example.databases.Database;
 import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
-import org.example.utils.PDFUtils;
+import org.example.utils.CSVUtils;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
@@ -168,7 +170,8 @@ public class MainPageUI extends JPanel {
                         "Export to PDF", JOptionPane.YES_NO_CANCEL_OPTION);
                 if (choice == JOptionPane.YES_OPTION) {
                     try {
-                        new PDFUtils(JOptionPane.showInputDialog("Introduce File Name:"));
+                        // todo replace with CSVUtils
+                        new CSVUtils();
                         JOptionPane.showMessageDialog(null, "File created successfully!");
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
@@ -187,7 +190,16 @@ public class MainPageUI extends JPanel {
         uploadButton.setIcon(new ImageIcon("src/main/resources/Upload_Icon.png"));
         uploadButton.setBorder(new LineBorder(Color.white));
         uploadButton.setHorizontalAlignment(SwingConstants.LEFT);
-
+        uploadButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                int r = j.showOpenDialog(null);
+                if (r == JFileChooser.APPROVE_OPTION) {
+                    //l.setText(j.getSelectedFile().getAbsolutePath());
+                }
+            }
+        });
         configureComponents(clearButton);
         clearButton.setBackground(Color.WHITE);
         clearButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
@@ -362,7 +374,7 @@ public class MainPageUI extends JPanel {
         JLabel radioButtonsLabel = new JLabel("Lipid Head Groups");
         configureLabelComponents(radioButtonsLabel);
 
-        //     CE, CER, DG, MG, PA, PC, PE, PI, PG, PS, SM, TG, CL;
+        JRadioButton buttonUNKNOWN = new JRadioButton(" UNKNOWN", true);
         JRadioButton buttonCE = new JRadioButton(" CE");
         JRadioButton buttonCER = new JRadioButton(" CER");
         JRadioButton buttonDG = new JRadioButton(" DG");
@@ -376,8 +388,8 @@ public class MainPageUI extends JPanel {
         JRadioButton buttonSM = new JRadioButton(" SM");
         JRadioButton buttonTG = new JRadioButton(" TG");
         JRadioButton buttonCL = new JRadioButton(" CL");
-        JRadioButton buttonUNKNOWN = new JRadioButton(" UNKNOWN", true);
 
+        configureTextComponents(buttonUNKNOWN);
         configureTextComponents(buttonCE);
         configureTextComponents(buttonCER);
         configureTextComponents(buttonDG);
@@ -391,9 +403,9 @@ public class MainPageUI extends JPanel {
         configureTextComponents(buttonSM);
         configureTextComponents(buttonTG);
         configureTextComponents(buttonCL);
-        configureTextComponents(buttonUNKNOWN);
 
         ButtonGroup group = new ButtonGroup();
+        group.add(buttonUNKNOWN);
         group.add(buttonCE);
         group.add(buttonCER);
         group.add(buttonDG);
@@ -407,9 +419,9 @@ public class MainPageUI extends JPanel {
         group.add(buttonSM);
         group.add(buttonTG);
         group.add(buttonCL);
-        group.add(buttonUNKNOWN);
-
+        //** consider unknown for switch() lipidtypes
         radioButtonsPanel.add(radioButtonsLabel, "wrap");
+        radioButtonsPanel.add(buttonUNKNOWN, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonCE, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonCER, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonDG, "wrap, gapleft 10");
@@ -423,7 +435,6 @@ public class MainPageUI extends JPanel {
         radioButtonsPanel.add(buttonSM, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonTG, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonCL, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonUNKNOWN, "wrap, gapleft 10");
     }
 
     public void createAdductsPanel() {
