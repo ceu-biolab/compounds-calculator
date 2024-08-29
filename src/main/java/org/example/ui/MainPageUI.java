@@ -188,17 +188,13 @@ public class MainPageUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 CSVUtils csvUtils = new CSVUtils();
-                FileDialog fd = new FileDialog(new Frame(), "Choose a file", FileDialog.LOAD);
-                fd.setDirectory("C:\\");
-                fd.setFile("*.xml");
-                fd.setVisible(true);
-                String filename = fd.getFile();
-                if (filename == null) {
-                    System.out.println("You cancelled the choice");
-                } else {
-                    System.out.println("You chose " + filename);
+                FileDialog fileDialog = new FileDialog(new Frame(), "Choose a file in CSV format.", FileDialog.LOAD);
+                fileDialog.setVisible(true);
+                String fileName = fileDialog.getFile();
+                String fileDirectory = fileDialog.getDirectory();
+                if (fileName != null && fileDirectory != null) {
                     try {
-                        csvUtils.readCSV(new File(fd.getFile()));
+                        csvUtils.readCSVForBatchProcessing(new File(fileDirectory + fileName));
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -253,7 +249,7 @@ public class MainPageUI extends JPanel {
                 for (MSLipid lipid : lipidSet) {
                     lipidData[i][0] = lipid.getCasID();
                     lipidData[i][1] = lipid.getCompoundName();
-                    lipidData[i][2] = calculateSpeciesShorthand(lipid);
+                    lipidData[i][2] = lipid.calculateSpeciesShorthand(lipid);
                     lipidData[i][3] = lipid.getFormula();
                     lipidData[i][4] = String.valueOf(lipid.getMass());
                     lipidData[i][5] = "[M+NH4]+";
@@ -532,14 +528,5 @@ public class MainPageUI extends JPanel {
         }
     }
 
-    public String calculateSpeciesShorthand(MSLipid lipid) {
-        int carbonAtoms = 0;
-        int doubleBonds = 0;
-        for (FattyAcid fattyAcid : lipid.getFattyAcids()) {
-            carbonAtoms += fattyAcid.getCarbonAtoms();
-            doubleBonds += fattyAcid.getDoubleBonds();
-        }
-        return lipid.getLipidSkeletalStructure().getLipidType().toString() + " " + carbonAtoms + ":" + doubleBonds;
-    }
 }
 

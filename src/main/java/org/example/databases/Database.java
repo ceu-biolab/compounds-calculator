@@ -4,7 +4,6 @@ import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
-import javax.xml.crypto.Data;
 import java.sql.*;
 import java.util.*;
 
@@ -26,10 +25,11 @@ public class Database {
         Double[] fattyAcidMassesArray = new Double[neutralLossAssociatedIonMasses.size()];
         int i = 0;
         for (Double neutralLossAssociatedIonMass : neutralLossAssociatedIonMasses) {
-            fattyAcidMassesArray[i] = precursorIon - neutralLossAssociatedIonMass - PeriodicTable.NH3Mass;
-            i++;
+            if (neutralLossAssociatedIonMass != 0.0d) {
+                fattyAcidMassesArray[i] = precursorIon - neutralLossAssociatedIonMass - PeriodicTable.NH3Mass;
+                i++;
+            }
         }
-
         return orderSetSmallestToLargest(fattyAcidMassesArray);
     }
 
@@ -44,9 +44,7 @@ public class Database {
         statement.setDouble(2, fattyAcidMass);
         statement.setString(3, "");
         ResultSet resultSet = statement.executeQuery();
-
         Set<FattyAcid> fattyAcids = new LinkedHashSet<>();
-
         while (resultSet.next()) {
             String carbonAtoms = resultSet.getString("num_carbons");
             int doubleBonds = resultSet.getInt("double_bonds");
@@ -57,15 +55,6 @@ public class Database {
             }
         }
         return fattyAcids;
-    }
-
-    public static void main(String[] args) throws SQLException, FattyAcidCreation_Exception, InvalidFormula_Exception {
-        Database database = new Database();
-        Set<Double> neutralLossAssociatedIonMasses = new HashSet<>();
-        neutralLossAssociatedIonMasses.add(271.2623);
-        Set<Double> temp = database.calculateFattyAcidMasses(642.6181, neutralLossAssociatedIonMasses);
-        double fattyAcidMass = temp.iterator().next();
-        System.out.println(database.getFattyAcidsFromDatabase(fattyAcidMass));
     }
 
     public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
@@ -115,7 +104,7 @@ public class Database {
         return ppmIncrement <= 10000;
     }
 
-    public Set<MSLipid> checkForRepeatedLipids(Set<MSLipid> msLipidSet) {
+    public Set<MSLipid> checkForRepeatedLipids(Set<MSLipid> msLipidSet) { //** Fix this. It should consider lipids with different orders as the same
         Set<MSLipid> checkedLipidSet = new LinkedHashSet<>();
         Set<String> lipidCompoundNames = new HashSet<>();
 
@@ -143,9 +132,7 @@ public class Database {
                         "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " +
                         "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " +
                         "WHERE compounds.formula = ? ");
-
         List<FattyAcid> fattyAcids = new ArrayList<>();
-
         for (double fattyAcidMass : fattyAcidMasses) {
             Iterator<FattyAcid> iterator = getFattyAcidsFromDatabase(fattyAcidMass).iterator();
             if (iterator.hasNext()) {
@@ -218,6 +205,8 @@ public class Database {
         } else {
             // min 1, max 2 case
             // How do I know when it should be 1 and when it should be 2?...
+            // It should just look for both of these cases then, first if there's only 1 FA then if there's 2 FA.
+            // If there's 2 NL ions, then its always 2 FAs, if there's only 1 NL ion, then its 1 or 2 FAs
         }
         queryBuilder.append(";");
         String query = queryBuilder.toString();
@@ -244,5 +233,22 @@ public class Database {
         } else {
             return lipidsWithInfo;
         }
+    }
+
+    public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        Set<MSLipid> lipidSet = getAllLipidsFromDatabase(lipidType, precursorIon, neutralLossAssociatedIons);
+        String[][] lipidData = new String[lipidSet.size()][7];
+        int i = 0;
+        for (MSLipid lipid : lipidSet) {
+            lipidData[i][0] = lipid.getCasID();
+            lipidData[i][1] = lipid.getCompoundName();
+            lipidData[i][2] = lipid.calculateSpeciesShorthand(lipid);
+            lipidData[i][3] = lipid.getFormula();
+            lipidData[i][4] = String.valueOf(lipid.getMass());
+            lipidData[i][5] = "[M+NH4]+";
+            lipidData[i][6] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
+            i++;
+        }
+        return lipidData;
     }
 }
