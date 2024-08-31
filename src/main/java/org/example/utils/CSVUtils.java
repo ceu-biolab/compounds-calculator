@@ -21,16 +21,20 @@ public class CSVUtils {
     public void createAndWriteCSV(String[][] lipidData) throws IOException {
         if (!(lipidData == null) || !(lipidData.length == 0)) {
             File file = new File(System.getProperty("user.home"), "Lipids " + (10000 + (int) (Math.random() * 90000)) + ".csv");
-            try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(file.getAbsolutePath()));
-                 CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("CAS ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z"))) {
-                for (String[] lipidDataString : lipidData) {
-                    csvPrinter.printRecord(Arrays.asList(lipidDataString));
-                }
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(file);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Desktop is not supported.");
-                }
+            writeCSV(lipidData, file);
+        }
+    }
+
+    private void writeCSV(String[][] lipidData, File file) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(file.getAbsolutePath()));
+             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("CAS ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z"))) {
+            for (String[] lipidDataString : lipidData) {
+                csvPrinter.printRecord(Arrays.asList(lipidDataString));
+            }
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(file);
+            } else {
+                JOptionPane.showMessageDialog(null, "Desktop is not supported.");
             }
         }
     }
@@ -38,17 +42,7 @@ public class CSVUtils {
     public void createAndWriteCSVBatchProcessing(String[][] lipidData, String precursorIon) throws IOException {
         if (!(lipidData == null) || !(lipidData.length == 0)) {
             File file = new File(System.getProperty("user.home"), "Lipids " + precursorIon + " " + (10000 + (int) (Math.random() * 90000)) + ".csv");
-            try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(file.getAbsolutePath()));
-                 CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("CAS ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z"))) {
-                for (String[] lipidDataString : lipidData) {
-                    csvPrinter.printRecord(Arrays.asList(lipidDataString));
-                }
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(file);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Desktop is not supported.");
-                }
-            }
+            writeCSV(lipidData, file);
         }
     }
 
@@ -67,7 +61,6 @@ public class CSVUtils {
                     }
                 }
                 try {
-                    System.out.println(neutralLossAssociatedIons);
                     createAndWriteCSVBatchProcessing(database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)), neutralLossAssociatedIons), String.valueOf(NumberUtils.toDouble(record.get(0))));
                     neutralLossAssociatedIons.clear();
                 } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {

@@ -16,8 +16,13 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -114,8 +119,9 @@ public class MainPageUI extends JPanel {
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(65, 114, 159));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-
-        configureTable(new String[0][]);
+        table.getColumnModel().getColumn(0).setPreferredWidth(30);
+        table.getColumnModel().getColumn(1).setPreferredWidth(175);
+        table.getTableHeader().setReorderingAllowed(false);
         jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
         jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -166,7 +172,6 @@ public class MainPageUI extends JPanel {
                     try {
                         CSVUtils csvUtils = new CSVUtils();
                         csvUtils.createAndWriteCSV(lipidData);
-                        JOptionPane.showMessageDialog(null, "File created successfully.");
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null, "Current data set is empty. Please introduce data before attempting to create a new file.");
                     }
@@ -293,6 +298,31 @@ public class MainPageUI extends JPanel {
             }
         };
 
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (table.getSelectedColumn() == 0) {
+                    try {
+                        String casID = String.valueOf(table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()));
+                        URL url = new URL("https://webbook.nist.gov/cgi/cbook.cgi?ID=" + table.getValueAt(table.getSelectedRow(),
+                                table.getSelectedColumn()) + "&Units=SI");
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop desktop = Desktop.getDesktop();
+                            try {
+                                desktop.browse(url.toURI());
+                            } catch (IOException | URISyntaxException exception) {
+                                exception.printStackTrace();
+                            }
+                        }
+                    } catch (MalformedURLException exception) {
+                        throw new RuntimeException(exception);
+                    }
+                }
+            }
+        });
+
+        table.getColumnModel().getColumn(0).setPreferredWidth(30);
+        table.getColumnModel().getColumn(1).setPreferredWidth(175);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(65, 114, 159));
@@ -303,7 +333,6 @@ public class MainPageUI extends JPanel {
         table.setModel(tableModel);
         table.setRowHeight(table.getRowHeight() + 15);
         table.setBorder(new LineBorder(Color.WHITE, 1));
-
     }
 
     public void createInputPanel() {
