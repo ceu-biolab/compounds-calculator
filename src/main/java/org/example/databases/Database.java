@@ -58,34 +58,15 @@ public class Database {
     }
 
     public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-        List<String> array = new ArrayList<>(List.of(compoundNameDB.split("[()]")));
-
-        if (array.size() < 2) {
-            throw new IllegalArgumentException("Invalid format.");
-        }
-
-        List<String> array2 = new ArrayList<>(List.of(array.get(1).split("\\/")));
-
-        List<String> array3 = new ArrayList<>();
+        List<String> compoundNamesInDatabase = new ArrayList<>(List.of(compoundNameDB.split("[()]")));
         LinkedHashSet<FattyAcid> fattyAcids = new LinkedHashSet<>();
-
-        for (int i = 0; i < array2.size(); i++) {
-            String[] splitArray = array2.get(i).split("\\:");
-            if (splitArray.length == 2) {
-                array3.add(splitArray[0]);
-                array3.add(splitArray[1]);
-            } else {
-                throw new FattyAcidCreation_Exception("Invalid fatty acid format.");
+        List<String> fattyAcidsOnly = getFattyAcidsOnly(compoundNamesInDatabase);
+        for (int i = 0; i < fattyAcidsOnly.size(); i += 2) {
+            if (!fattyAcidsOnly.get(i).matches("[a-zA-Z]+")) {
+                fattyAcids.add(new FattyAcid(fattyAcidsOnly.get(i), Integer.parseInt(fattyAcidsOnly.get(i + 1))));
             }
         }
-
-        for (int i = 0; i < array3.size(); i += 2) {
-            if (!array3.get(i).matches("[a-zA-Z]+")) {
-                fattyAcids.add(new FattyAcid(array3.get(i), Integer.parseInt(array3.get(i + 1))));
-            }
-        }
-
-        LipidType lipidType = LipidType.valueOf(array.get(0).trim());
+        LipidType lipidType = LipidType.valueOf(compoundNamesInDatabase.get(0).trim());
         return new MSLipid(fattyAcids, new LipidSkeletalStructure(lipidType), compoundNameDB, casId, formulaString, mass);
     }
 
@@ -104,16 +85,41 @@ public class Database {
         return ppmIncrement <= 10000;
     }
 
-    public Set<MSLipid> checkForRepeatedLipids(Set<MSLipid> msLipidSet) { //** Fix this. It should consider lipids with different orders as the same
+    public Set<MSLipid> checkForRepeatedLipids(Set<MSLipid> msLipidSet) throws FattyAcidCreation_Exception {
         Set<MSLipid> checkedLipidSet = new LinkedHashSet<>();
-        Set<String> lipidCompoundNames = new HashSet<>();
-
+        Map<MSLipid, List<String>> lipidAndFattyAcidsMap = new HashMap<>();
         for (MSLipid msLipid : msLipidSet) {
-            if (lipidCompoundNames.add(msLipid.getCompoundName())) {
+            List<String> compoundNamesInDatabase = new ArrayList<>(List.of(msLipid.getCompoundName().split("[()]")));
+            List<String> fattyAcidsOnly = getFattyAcidsOnly(compoundNamesInDatabase);
+            fattyAcidsOnly.sort(Comparator.naturalOrder());
+            lipidAndFattyAcidsMap.put(msLipid, fattyAcidsOnly);
+        }
+        for (MSLipid msLipid : msLipidSet) {
+            List<String> fattyAcidsOfCurrentLipid = lipidAndFattyAcidsMap.get(msLipid);
+            if (fattyAcidsOfCurrentLipid != null) {
                 checkedLipidSet.add(msLipid);
+                lipidAndFattyAcidsMap.values().removeIf(fattyAcids -> fattyAcids.equals(fattyAcidsOfCurrentLipid));
             }
         }
         return checkedLipidSet;
+    }
+
+    private static List<String> getFattyAcidsOnly(List<String> compoundNamesInDatabase) throws FattyAcidCreation_Exception {
+        if (compoundNamesInDatabase.size() < 2) {
+            throw new IllegalArgumentException("Invalid format.");
+        }
+        List<String> namesWithoutLipidType = new ArrayList<>(List.of(compoundNamesInDatabase.get(1).split("\\/")));
+        List<String> fattyAcidsOnly = new ArrayList<>();
+        for (String s : namesWithoutLipidType) {
+            String[] splitArray = s.split("\\:");
+            if (splitArray.length == 2) {
+                fattyAcidsOnly.add(splitArray[0]);
+                fattyAcidsOnly.add(splitArray[1]);
+            } else {
+                throw new FattyAcidCreation_Exception("Invalid fatty acid format.");
+            }
+        }
+        return fattyAcidsOnly;
     }
 
     public Set<Double> orderSetSmallestToLargest(Double[] doubleList) {
@@ -203,6 +209,13 @@ public class Database {
                     break;
             }
         } else {
+            if (fattyAcids.size() == 1) {
+                // ** Put 2 cases together here, create a UNION of both of these events so that the final
+                // ** list contains ALL of the lipids, whether it be 1 or 2
+            } else if (fattyAcids.size() == 2) {
+                // ** ONLY OCCURS IF 2 NL IONS ARE GIVEN...
+            }
+
             // min 1, max 2 case
             // How do I know when it should be 1 and when it should be 2?...
             // It should just look for both of these cases then, first if there's only 1 FA then if there's 2 FA.
@@ -213,7 +226,6 @@ public class Database {
         LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, formula.toString());
-
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     String compoundNameDatabase = resultSet.getString("compound_name");
@@ -231,7 +243,7 @@ public class Database {
         if (neutralLossAssociatedIonMasses.size() == 2) {
             return checkForRepeatedLipids(limitListOfLipidsAccordingToPrecursorIon(lipidsWithInfo, precursorIon, adduct));
         } else {
-            return lipidsWithInfo;
+            return checkForRepeatedLipids(lipidsWithInfo);
         }
     }
 
