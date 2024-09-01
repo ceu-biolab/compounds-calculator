@@ -24,6 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -46,8 +47,8 @@ public class MainPageUI extends JPanel {
     public JTextField NLoss2_Input = null;
     public JTextField NLoss3_Input = null;
     public JTextField NLoss4_Input = null;
-
     public JTextField PI_Input = null;
+
     private JLabel PI_Label = null;
     private JLabel NLosses_Label = null;
     private JLabel adducts_Label = null;
@@ -59,6 +60,7 @@ public class MainPageUI extends JPanel {
     private DefaultTableModel model;
     private Database database;
     private Set<MSLipid> lipidSet = null;
+    private ButtonGroup buttonGroup = null;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -88,7 +90,7 @@ public class MainPageUI extends JPanel {
         adductsPanel = new JPanel();
         ionComboBox = new JComboBox(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
         database = new Database();
-
+        buttonGroup = new ButtonGroup();
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]", "[grow, fill]25[grow, fill]"));
         setBackground(new Color(195, 224, 229));
         createTable();
@@ -247,8 +249,7 @@ public class MainPageUI extends JPanel {
 
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
-                lipidSet = database.getAllLipidsFromDatabase(LipidType.TG, Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
-
+                lipidSet = database.getAllLipidsFromDatabase(getSelectedRadioButton(), Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
                 lipidData = new String[lipidSet.size()][7];
                 int i = 0;
                 for (MSLipid lipid : lipidSet) {
@@ -303,7 +304,6 @@ public class MainPageUI extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 if (table.getSelectedColumn() == 0) {
                     try {
-                        String casID = String.valueOf(table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()));
                         URL url = new URL("https://webbook.nist.gov/cgi/cbook.cgi?ID=" + table.getValueAt(table.getSelectedRow(),
                                 table.getSelectedColumn()) + "&Units=SI");
                         if (Desktop.isDesktopSupported()) {
@@ -328,7 +328,7 @@ public class MainPageUI extends JPanel {
         table.getTableHeader().setForeground(new Color(65, 114, 159));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
         table.setForeground(new Color(65, 114, 159));
-        table.setFont(new Font("Arial", Font.PLAIN, 15));
+        table.setFont(new Font("Arial", Font.BOLD, 15));
         table.getTableHeader().setReorderingAllowed(false);
         table.setModel(tableModel);
         table.setRowHeight(table.getRowHeight() + 15);
@@ -395,7 +395,6 @@ public class MainPageUI extends JPanel {
         JLabel radioButtonsLabel = new JLabel("Lipid Head Groups");
         configureLabelComponents(radioButtonsLabel);
 
-        JRadioButton buttonUNKNOWN = new JRadioButton(" UNKNOWN", true);
         JRadioButton buttonCE = new JRadioButton(" CE");
         JRadioButton buttonCER = new JRadioButton(" CER");
         JRadioButton buttonDG = new JRadioButton(" DG");
@@ -407,10 +406,9 @@ public class MainPageUI extends JPanel {
         JRadioButton buttonPG = new JRadioButton(" PG");
         JRadioButton buttonPS = new JRadioButton(" PS");
         JRadioButton buttonSM = new JRadioButton(" SM");
-        JRadioButton buttonTG = new JRadioButton(" TG");
+        JRadioButton buttonTG = new JRadioButton(" TG", true);
         JRadioButton buttonCL = new JRadioButton(" CL");
 
-        configureTextComponents(buttonUNKNOWN);
         configureTextComponents(buttonCE);
         configureTextComponents(buttonCER);
         configureTextComponents(buttonDG);
@@ -425,24 +423,21 @@ public class MainPageUI extends JPanel {
         configureTextComponents(buttonTG);
         configureTextComponents(buttonCL);
 
-        ButtonGroup group = new ButtonGroup();
-        group.add(buttonUNKNOWN);
-        group.add(buttonCE);
-        group.add(buttonCER);
-        group.add(buttonDG);
-        group.add(buttonMG);
-        group.add(buttonPA);
-        group.add(buttonPC);
-        group.add(buttonPE);
-        group.add(buttonPI);
-        group.add(buttonPG);
-        group.add(buttonPS);
-        group.add(buttonSM);
-        group.add(buttonTG);
-        group.add(buttonCL);
-        //** consider unknown for switch() lipidtypes
+        buttonGroup.add(buttonCE);
+        buttonGroup.add(buttonCER);
+        buttonGroup.add(buttonDG);
+        buttonGroup.add(buttonMG);
+        buttonGroup.add(buttonPA);
+        buttonGroup.add(buttonPC);
+        buttonGroup.add(buttonPE);
+        buttonGroup.add(buttonPI);
+        buttonGroup.add(buttonPG);
+        buttonGroup.add(buttonPS);
+        buttonGroup.add(buttonSM);
+        buttonGroup.add(buttonTG);
+        buttonGroup.add(buttonCL);
+
         radioButtonsPanel.add(radioButtonsLabel, "wrap");
-        radioButtonsPanel.add(buttonUNKNOWN, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonCE, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonCER, "wrap, gapleft 10");
         radioButtonsPanel.add(buttonDG, "wrap, gapleft 10");
@@ -485,35 +480,8 @@ public class MainPageUI extends JPanel {
     }
 
     public static void configureTextComponents(Component component) {
-        component.setFont(new Font("Arial", Font.PLAIN, 17));
+        component.setFont(new Font("Arial", Font.BOLD, 17));
         component.setForeground(new Color(65, 114, 159));
-    }
-
-    public void updateUI_LipidType(LipidType lipidType) {
-        switch (lipidType) {
-            case CE:
-                updateUI();
-            case DG:
-                updateUI();
-            case MG:
-                updateUI();
-            case PA:
-                updateUI();
-            case PC:
-                updateUI();
-            case PE:
-                updateUI();
-            case PI:
-                updateUI();
-            case PG:
-                updateUI();
-            case PS:
-                updateUI();
-            case TG:
-                updateUI();
-            case CL:
-                updateUI();
-        }
     }
 
     public void updateListOfAdductsAccordingToCharge(String charge) {
@@ -550,12 +518,18 @@ public class MainPageUI extends JPanel {
     }
 
     public boolean checkIfTextFieldIsNotEmpty(String textFieldInput) {
-        if (!textFieldInput.isEmpty()) {
-            return true;
-        } else {
-            return false;
-        }
+        return !textFieldInput.isEmpty();
     }
 
+    public LipidType getSelectedRadioButton() {
+        for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements();) {
+            AbstractButton button = buttons.nextElement();
+            if (button.isSelected()) {
+                System.out.println(button.getText().replaceAll(" ", ""));
+                return LipidType.valueOf(button.getText().replaceAll(" ", ""));
+            }
+        }
+        return null;
+    }
 }
 
