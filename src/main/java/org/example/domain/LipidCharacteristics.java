@@ -32,7 +32,7 @@ public class LipidCharacteristics {
                 '}';
     }
 
-    public Formula getFormula(LipidType lipidType) {
+    public Formula getFormula() {
         return formula;
     }
 }

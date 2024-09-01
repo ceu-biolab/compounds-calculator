@@ -3,10 +3,6 @@ package org.example.domain;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
-import java.sql.*;
-import java.util.Map;
-import java.util.TreeMap;
-
 public class FattyAcid extends ChemicalCompound {
 
     private final int carbonAtoms;
@@ -26,16 +22,6 @@ public class FattyAcid extends ChemicalCompound {
         ensureValidFattyAcid(doubleBonds);
     }
 
-    public static FattyAcid createFattyAcid(Object carbonAtoms, int doubleBonds) throws FattyAcidCreation_Exception, InvalidFormula_Exception {
-        if (carbonAtoms instanceof Integer) {
-            return new FattyAcid((Integer) carbonAtoms, doubleBonds);
-        } else if (carbonAtoms instanceof String) {
-            return new FattyAcid((String) carbonAtoms, doubleBonds);
-        } else {
-            throw new InvalidFormula_Exception("Invalid type for carbonAtoms. Must be Integer or String.");
-        }
-    }
-
     public void ensureValidFattyAcid(int doubleBonds) throws FattyAcidCreation_Exception, InvalidFormula_Exception {
         if (doubleBonds > this.carbonAtoms - 1)
             throw new FattyAcidCreation_Exception(
@@ -47,10 +33,6 @@ public class FattyAcid extends ChemicalCompound {
             throw new FattyAcidCreation_Exception("The fatty acid can't have more than 36 carbon atoms.");
         if (doubleBonds > 6)
             throw new FattyAcidCreation_Exception("The fatty acid can't have more than 6 double bonds.");
-        Map<Element, Integer> fattyAcidChain = new TreeMap<Element, Integer>();
-        fattyAcidChain.put(Element.C, this.carbonAtoms);
-        fattyAcidChain.put(Element.H, 2 * this.carbonAtoms - (doubleBonds * 2));
-        fattyAcidChain.put(Element.O, 2);
         this.formula = new Formula(chainToString());
         this.mass = getMass(this.formula);
     }
@@ -65,10 +47,6 @@ public class FattyAcid extends ChemicalCompound {
 
     public int getDoubleBonds() {
         return doubleBonds;
-    }
-
-    public Formula getFormula() {
-        return formula;
     }
 
     @Override

@@ -5,10 +5,9 @@ import java.util.HashMap;
 
 public class PeriodicTable {
 
-    public static final Map<Element, Double> elements_Map = new HashMap<Element, Double>();
+    public static final Map<Element, Double> elements_Map = new HashMap<>();
     public static final double electronMass = 0.00054858d;
     public static final double waterMass = 18.01056d;
-    public static final double protonMass = 1.00783 - electronMass;
     public static final double NH3Mass = 14.003074d + (3 * 1.00783d);
 
     static {

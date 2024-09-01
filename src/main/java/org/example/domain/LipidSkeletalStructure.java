@@ -5,12 +5,8 @@ public class LipidSkeletalStructure extends ChemicalCompound {
 
     public LipidSkeletalStructure(LipidType lipidType) {
         this.lipidType = lipidType;
-        this.formula = LipidTypeCharacteristics.lipidHeadStructure.get(lipidType).getFormula(lipidType);
+        this.formula = LipidTypeCharacteristics.lipidHeadStructure.get(lipidType).getFormula();
         mass = getMass(this.formula);
-    }
-
-    public Formula getFormula() {
-        return formula;
     }
 
     public LipidType getLipidType() {

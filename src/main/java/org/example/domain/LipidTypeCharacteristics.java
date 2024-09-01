@@ -1,10 +1,11 @@
 package org.example.domain;
 
+import javax.swing.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class LipidTypeCharacteristics extends ChemicalCompound {
-    public static final Map<LipidType, LipidCharacteristics> lipidHeadStructure = new HashMap<LipidType, LipidCharacteristics>();
+    public static final Map<LipidType, LipidCharacteristics> lipidHeadStructure = new HashMap<>();
     protected LipidType lipidType;
     protected LipidCharacteristics lipidCharacteristics;
 
@@ -22,7 +23,7 @@ public class LipidTypeCharacteristics extends ChemicalCompound {
             lipidHeadStructure.put(LipidType.PS, new LipidCharacteristics(new Formula("C6H14NO8P"), 1, 2));
             lipidHeadStructure.put(LipidType.CL, new LipidCharacteristics(new Formula("C9H22O13P2"), 4));
         } catch (Exception e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Invalid lipid structure. Please try again.");
         }
     }
 

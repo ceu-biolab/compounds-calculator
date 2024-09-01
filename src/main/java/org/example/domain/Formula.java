@@ -2,10 +2,11 @@ package org.example.domain;
 
 import org.example.exceptions.InvalidFormula_Exception;
 
+import javax.swing.*;
 import java.util.*;
 
 public class Formula {
-    private final TreeMap<Element, Integer> mapFormula = new TreeMap<Element, Integer>();
+    private final TreeMap<Element, Integer> mapFormula = new TreeMap<>();
 
     public Formula(String formula) throws InvalidFormula_Exception {
         createFormulaFromString(formula);
@@ -48,7 +49,7 @@ public class Formula {
             mapFormula.replace(Element.H, mapFormula.get(Element.H) - 2);
             mapFormula.replace(Element.O, mapFormula.get(Element.O) - 1);
         } catch (ArrayIndexOutOfBoundsException exception) {
-            exception.printStackTrace();
+            JOptionPane.showMessageDialog(null, "An error occurred while creating the lipid's formula. Please try again.");
         }
         return new Formula(mapToString(mapFormula));
     }
