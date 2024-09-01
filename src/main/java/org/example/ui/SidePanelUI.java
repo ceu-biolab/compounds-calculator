@@ -9,8 +9,6 @@ import org.example.exceptions.InvalidFormula_Exception;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 
@@ -56,45 +54,29 @@ public class SidePanelUI {
         sidePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
         JButton homeButton = new JButton("  Home");
-        configureComponents(homeButton);
-        homeButton.setBackground(Color.WHITE);
-        homeButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        homeButton.setIcon(new ImageIcon("src/main/resources/Home_Icon.png"));
-        homeButton.setBorder(new LineBorder(Color.white));
-        homeButton.setHorizontalAlignment(SwingConstants.LEFT);
-        homeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.remove(adductTransformerUI);
-                frame.add(interfaceUI);
-                frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                        (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-                frame.revalidate();
-                frame.repaint();
-            }
+        configureComponents(homeButton, "src/main/resources/Home_Icon.png");
+        homeButton.addActionListener(e -> {
+            frame.remove(adductTransformerUI);
+            frame.add(interfaceUI);
+            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+            frame.revalidate();
+            frame.repaint();
         });
 
         JButton adductTransformerButton = new JButton("  Adduct Transformer");
-        configureComponents(adductTransformerButton);
-        adductTransformerButton.setBackground(Color.WHITE);
-        adductTransformerButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        adductTransformerButton.setIcon(new ImageIcon("src/main/resources/Transformer_icon.png"));
-        adductTransformerButton.setBorder(new LineBorder(Color.white));
-        adductTransformerButton.setHorizontalAlignment(SwingConstants.LEFT);
-        adductTransformerButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.remove(interfaceUI);
-                frame.add(adductTransformerUI);
-                frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                        (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-                frame.revalidate();
-                frame.repaint();
-            }
+        configureComponents(adductTransformerButton, "src/main/resources/Transformer_icon.png");
+        adductTransformerButton.addActionListener(e -> {
+            frame.remove(interfaceUI);
+            frame.add(adductTransformerUI);
+            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+            frame.revalidate();
+            frame.repaint();
         });
 
         JButton helpButton = new JButton("  Help");
-        configureComponents(helpButton);
+        configureComponents(helpButton, "src/main/resources/Help_Icon.png");
         helpButton.setBackground(Color.WHITE);
         helpButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         helpButton.setIcon(new ImageIcon("src/main/resources/Help_Icon.png"));
@@ -102,12 +84,7 @@ public class SidePanelUI {
         helpButton.setHorizontalAlignment(SwingConstants.LEFT);
 
         JButton exitButton = new JButton("  Exit");
-        configureComponents(exitButton);
-        exitButton.setBackground(Color.WHITE);
-        exitButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        exitButton.setIcon(new ImageIcon("src/main/resources/Exit_Icon.png"));
-        exitButton.setBorder(new LineBorder(Color.white));
-        exitButton.setHorizontalAlignment(SwingConstants.LEFT);
+        configureComponents(exitButton, "src/main/resources/Exit_Icon.png");
         exitButton.addActionListener(e -> {
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
@@ -119,9 +96,13 @@ public class SidePanelUI {
         sidePanel.add(exitButton, "gapleft 50");
     }
 
-    public static void configureComponents(Component component) {
+    public static void configureComponents(JButton component, String fileName) {
         component.setFont(new Font("Arial", Font.BOLD, 18));
-        component.setBackground(new Color(227, 235, 242));
+        component.setBackground(Color.WHITE);
         component.setForeground(new Color(65, 114, 159));
+        component.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        component.setIcon(new ImageIcon(fileName));
+        component.setBorder(new LineBorder(Color.white));
+        component.setHorizontalAlignment(SwingConstants.LEFT);
     }
 }

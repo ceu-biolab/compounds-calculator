@@ -13,35 +13,53 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.*;
 
 public class CSVUtils {
-    public void createAndWriteCSV(String[][] lipidData) throws IOException {
-        if (!(lipidData == null) || !(lipidData.length == 0)) {
-            File file = new File(System.getProperty("user.home"), "Lipids " + (10000 + (int) (Math.random() * 90000)) + ".csv");
-            writeCSV(lipidData, file);
+    private final Path fileDirectory;
+
+    public CSVUtils() {
+        try {
+            fileDirectory = Files.createDirectories(Paths.get(System.getProperty("user.home") + "/lipids"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private void writeCSV(String[][] lipidData, File file) throws IOException {
+    public void createAndWriteCSV(String[][] lipidData) {
+        if (!(lipidData == null) && !(lipidData.length == 0)) {
+            File file = new File(String.valueOf(fileDirectory), "Lipids " + (10000 + (int) (Math.random() * 90000)) + ".csv");
+            writeCSV(lipidData, file);
+            if (Desktop.isDesktopSupported()) {
+                try {
+                    Desktop.getDesktop().open(file);
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(null, "Failed to open the file: " + file.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Desktop is not supported. The file was saved at: " + file.getAbsolutePath(), "Info", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    private void writeCSV(String[][] lipidData, File file) {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(file.getAbsolutePath()));
-             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("CAS ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z"))) {
+             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader("CAS ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z").build())) {
             for (String[] lipidDataString : lipidData) {
                 csvPrinter.printRecord(Arrays.asList(lipidDataString));
             }
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(file);
-            } else {
-                JOptionPane.showMessageDialog(null, "Desktop is not supported.");
-            }
+        } catch (IOException exception) {
+            JOptionPane.showMessageDialog(null, "An error occurred while writing to the CSV file "
+                    + file.getAbsolutePath() + ". Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    public void createAndWriteCSVBatchProcessing(String[][] lipidData, String precursorIon) throws IOException {
-        if (!(lipidData == null) || !(lipidData.length == 0)) {
-            File file = new File(System.getProperty("user.home"), "Lipids " + precursorIon + " " + (10000 + (int) (Math.random() * 90000)) + ".csv");
+    public void createAndWriteCSVBatchProcessing(String[][] lipidData, String precursorIon) {
+        if (!(lipidData == null) && !(lipidData.length == 0)) {
+            File file = new File(String.valueOf(fileDirectory), "Lipids " + precursorIon + " " + (10000 + (int) (Math.random() * 90000)) + ".csv");
             writeCSV(lipidData, file);
         }
     }
@@ -52,7 +70,7 @@ public class CSVUtils {
             Iterable<CSVRecord> records = csvFormat.parse(reader);
             Set<Double> neutralLossAssociatedIons = new HashSet<>();
             Database database = new Database();
-
+            int numberOfRecords = 0;
             for (CSVRecord record : records) {
                 for (int i = 1; i < record.size(); i++) {
                     double number = NumberUtils.toDouble(record.get(i));
@@ -62,12 +80,13 @@ public class CSVUtils {
                 }
                 try {
                     createAndWriteCSVBatchProcessing(database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)), neutralLossAssociatedIons), String.valueOf(NumberUtils.toDouble(record.get(0))));
+                    numberOfRecords++;
                     neutralLossAssociatedIons.clear();
                 } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
                     throw new RuntimeException(e);
                 }
-
             }
+            JOptionPane.showMessageDialog(null, numberOfRecords + " files were created in " + fileDirectory);
         }
     }
 }

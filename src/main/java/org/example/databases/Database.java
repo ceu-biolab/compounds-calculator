@@ -3,6 +3,7 @@ package org.example.databases;
 import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
+import org.example.ui.MainPageUI;
 
 import java.sql.*;
 import java.util.*;
@@ -250,17 +251,7 @@ public class Database {
     public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         Set<MSLipid> lipidSet = getAllLipidsFromDatabase(lipidType, precursorIon, neutralLossAssociatedIons);
         String[][] lipidData = new String[lipidSet.size()][7];
-        int i = 0;
-        for (MSLipid lipid : lipidSet) {
-            lipidData[i][0] = lipid.getCasID();
-            lipidData[i][1] = lipid.getCompoundName();
-            lipidData[i][2] = lipid.calculateSpeciesShorthand(lipid);
-            lipidData[i][3] = lipid.getFormula();
-            lipidData[i][4] = String.valueOf(lipid.getMass());
-            lipidData[i][5] = "[M+NH4]+";
-            lipidData[i][6] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
-            i++;
-        }
+        MainPageUI.createLipidDataForTable(lipidSet, lipidData);
         return lipidData;
     }
 }

@@ -14,8 +14,6 @@ import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -26,41 +24,38 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class MainPageUI extends JPanel {
-    private JButton searchButton;
-    private JButton exportButton;
-    private JButton uploadButton;
-    private JButton clearButton;
+    private final JButton searchButton;
+    private final JButton exportButton;
+    private final JButton uploadButton;
+    private final JButton clearButton;
 
-    private JPanel tablePanel = null;
-    private JPanel subpanel2 = null;
-    private JPanel radioButtonsPanel = null;
+    private final JPanel tablePanel;
+    private final JPanel searchButtonsPanel;
+    private final JPanel radioButtonsPanel;
+    private final JPanel inputSubpanel;
+    public JPanel adductsPanel;
+
+    public JTextField NLoss1_Input;
+    public JTextField NLoss2_Input;
+    public JTextField NLoss3_Input;
+    public JTextField NLoss4_Input;
+    public JTextField PI_Input;
+
+    private final JLabel precursorIonLabel;
+    private final JLabel neutralLossesLabel;
+    private final JLabel adductsLabel;
 
     private JTable table = null;
     private DefaultTableModel tableModel = null;
     private String[] tableTitles = null;
-    private JScrollPane jScrollPane = null;
-    private JPanel inputSubpanel = null;
-    public JTextField NLoss1_Input = null;
-    public JTextField NLoss2_Input = null;
-    public JTextField NLoss3_Input = null;
-    public JTextField NLoss4_Input = null;
-    public JTextField PI_Input = null;
-
-    private JLabel PI_Label = null;
-    private JLabel NLosses_Label = null;
-    private JLabel adducts_Label = null;
-    public JPanel adductsPanel = null;
-    private JComboBox ionComboBox = null;
-    private DefaultListModel<String> listModel;
     private String[][] lipidData = null;
-    private Set<Double> neutralLossAssociatedIonsInput = null;
-    private DefaultTableModel model;
-    private Database database;
-    private Set<MSLipid> lipidSet = null;
-    private ButtonGroup buttonGroup = null;
+    private final Database database;
+    private final ButtonGroup buttonGroup;
+    private final JComboBox<String> ionComboBox;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -75,7 +70,7 @@ public class MainPageUI extends JPanel {
         uploadButton = new JButton("  Upload File");
         clearButton = new JButton("  Clear Input");
         tablePanel = new JPanel();
-        subpanel2 = new JPanel();
+        searchButtonsPanel = new JPanel();
         radioButtonsPanel = new JPanel();
         inputSubpanel = new JPanel();
         NLoss1_Input = new JTextField();
@@ -83,12 +78,11 @@ public class MainPageUI extends JPanel {
         NLoss3_Input = new JTextField();
         NLoss4_Input = new JTextField();
         PI_Input = new JTextField();
-        PI_Label = new JLabel("    Precursor Ion");
-        NLosses_Label = new JLabel("    Neutral Losses");
-        adducts_Label = new JLabel("    Adducts");
-        listModel = new DefaultListModel<>();
+        precursorIonLabel = new JLabel("    Precursor Ion");
+        neutralLossesLabel = new JLabel("    Neutral Losses");
+        adductsLabel = new JLabel("    Adducts");
         adductsPanel = new JPanel();
-        ionComboBox = new JComboBox(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
+        ionComboBox = new JComboBox<>(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
         database = new Database();
         buttonGroup = new ButtonGroup();
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]", "[grow, fill]25[grow, fill]"));
@@ -103,7 +97,7 @@ public class MainPageUI extends JPanel {
         add(radioButtonsPanel, "wrap");
         add(inputSubpanel);
         add(adductsPanel);
-        add(subpanel2);
+        add(searchButtonsPanel);
         setVisible(true);
     }
 
@@ -115,9 +109,9 @@ public class MainPageUI extends JPanel {
         tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
         tableTitles = new String[]{"Cas ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
 
-        model = new DefaultTableModel(tableTitles, 0);
+        DefaultTableModel model = new DefaultTableModel(tableTitles, 0);
         table = new JTable(model);
-        jScrollPane = new JScrollPane(table);
+        JScrollPane jScrollPane = new JScrollPane(table);
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(65, 114, 159));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
@@ -132,9 +126,9 @@ public class MainPageUI extends JPanel {
     }
 
     public void createButtons() {
-        subpanel2.setBackground(Color.WHITE);
-        subpanel2.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        subpanel2.setLayout(new MigLayout("", "25[grow, fill]25", "25[grow, fill]25[grow, fill]25"));
+        searchButtonsPanel.setBackground(Color.WHITE);
+        searchButtonsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        searchButtonsPanel.setLayout(new MigLayout("", "25[grow, fill]25", "25[grow, fill]25[grow, fill]25"));
 
         configureComponents(searchButton);
         searchButton.setBackground(Color.WHITE);
@@ -142,22 +136,15 @@ public class MainPageUI extends JPanel {
         searchButton.setIcon(new ImageIcon("src/main/resources/Search_Icon.png"));
         searchButton.setBorder(new LineBorder(Color.white));
         searchButton.setHorizontalAlignment(SwingConstants.LEFT);
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                tablePanel.removeAll();
-                try {
-                    JScrollPane lipidScrollPane = createLipidScrollPane();
-                    lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-                    lipidScrollPane.setPreferredSize(new Dimension(1250, 500));
-                    lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-                    tablePanel.add(lipidScrollPane, "center, grow");
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
-                tablePanel.revalidate();
-                tablePanel.repaint();
-            }
+        searchButton.addActionListener(e -> {
+            tablePanel.removeAll();
+            JScrollPane lipidScrollPane = createLipidScrollPane();
+            lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+            lipidScrollPane.setPreferredSize(new Dimension(1250, 500));
+            lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
+            tablePanel.add(lipidScrollPane, "center, grow");
+            tablePanel.revalidate();
+            tablePanel.repaint();
         });
 
         configureComponents(exportButton);
@@ -166,22 +153,19 @@ public class MainPageUI extends JPanel {
         exportButton.setIcon(new ImageIcon("src/main/resources/Download_Icon.png"));
         exportButton.setBorder(new LineBorder(Color.white));
         exportButton.setHorizontalAlignment(SwingConstants.LEFT);
-        exportButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int choice = JOptionPane.showConfirmDialog(null, "Do you wish to export this information to CSV format?", "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
-                if (choice == JOptionPane.YES_OPTION) {
-                    try {
-                        CSVUtils csvUtils = new CSVUtils();
-                        csvUtils.createAndWriteCSV(lipidData);
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Current data set is empty. Please introduce data before attempting to create a new file.");
-                    }
-                } else if (choice == JOptionPane.NO_OPTION || choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) {
-                    JOptionPane.showMessageDialog(null, "Operation cancelled.");
-                } else {
-                    JOptionPane.showMessageDialog(null, "File already exists.");
+        exportButton.addActionListener(e -> {
+            int choice = JOptionPane.showConfirmDialog(null, "Do you wish to export this information to CSV format?", "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                try {
+                    CSVUtils csvUtils = new CSVUtils();
+                    csvUtils.createAndWriteCSV(lipidData);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Current data set is empty. Please introduce data before attempting to create a new file.");
                 }
+            } else if (choice == JOptionPane.NO_OPTION || choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) {
+                JOptionPane.showMessageDialog(null, "Operation cancelled.");
+            } else {
+                JOptionPane.showMessageDialog(null, "File already exists.");
             }
         });
 
@@ -191,20 +175,17 @@ public class MainPageUI extends JPanel {
         uploadButton.setIcon(new ImageIcon("src/main/resources/Upload_Icon.png"));
         uploadButton.setBorder(new LineBorder(Color.white));
         uploadButton.setHorizontalAlignment(SwingConstants.LEFT);
-        uploadButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                CSVUtils csvUtils = new CSVUtils();
-                FileDialog fileDialog = new FileDialog(new Frame(), "Choose a file in CSV format.", FileDialog.LOAD);
-                fileDialog.setVisible(true);
-                String fileName = fileDialog.getFile();
-                String fileDirectory = fileDialog.getDirectory();
-                if (fileName != null && fileDirectory != null) {
-                    try {
-                        csvUtils.readCSVForBatchProcessing(new File(fileDirectory + fileName));
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+        uploadButton.addActionListener(e -> {
+            CSVUtils csvUtils = new CSVUtils();
+            FileDialog fileDialog = new FileDialog(new Frame(), "Choose a file in CSV format.", FileDialog.LOAD);
+            fileDialog.setVisible(true);
+            String fileName = fileDialog.getFile();
+            String fileDirectory = fileDialog.getDirectory();
+            if (fileName != null && fileDirectory != null) {
+                try {
+                    csvUtils.readCSVForBatchProcessing(new File(fileDirectory + fileName));
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         });
@@ -223,48 +204,32 @@ public class MainPageUI extends JPanel {
             PI_Input.setText(null);
         });
 
-        subpanel2.add(searchButton, "wrap");
-        subpanel2.add(clearButton, "wrap");
-        subpanel2.add(exportButton, "wrap");
-        subpanel2.add(uploadButton, "wrap");
+        searchButtonsPanel.add(searchButton, "wrap");
+        searchButtonsPanel.add(clearButton, "wrap");
+        searchButtonsPanel.add(exportButton, "wrap");
+        searchButtonsPanel.add(uploadButton, "wrap");
     }
 
     public JScrollPane createLipidScrollPane() {
-        neutralLossAssociatedIonsInput = new LinkedHashSet<>();
-        if (checkIfTextFieldIsNotEmpty(NLoss1_Input.getText())) {
-            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss1_Input.getText()));
-        }
-
-        if (checkIfTextFieldIsNotEmpty(NLoss2_Input.getText())) {
-            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss2_Input.getText()));
-        }
-
-        if (checkIfTextFieldIsNotEmpty(NLoss3_Input.getText())) {
-            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss3_Input.getText()));
-        }
-
-        if (checkIfTextFieldIsNotEmpty(NLoss4_Input.getText())) {
-            neutralLossAssociatedIonsInput.add(Double.parseDouble(NLoss4_Input.getText()));
+        Set<Double> neutralLossAssociatedIonsInput = new LinkedHashSet<>();
+        JTextField[] neutralLossInputFields = {NLoss1_Input, NLoss2_Input, NLoss3_Input, NLoss4_Input};
+        for (JTextField field : neutralLossInputFields) {
+            addNeutralLossInput(neutralLossAssociatedIonsInput, field);
         }
 
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
-                lipidSet = database.getAllLipidsFromDatabase(getSelectedRadioButton(), Double.parseDouble(PI_Input.getText()), neutralLossAssociatedIonsInput);
+                Set<MSLipid> lipidSet = database.getAllLipidsFromDatabase(
+                        getSelectedRadioButton(),
+                        Double.parseDouble(PI_Input.getText()),
+                        neutralLossAssociatedIonsInput
+                );
                 lipidData = new String[lipidSet.size()][7];
-                int i = 0;
-                for (MSLipid lipid : lipidSet) {
-                    lipidData[i][0] = lipid.getCasID();
-                    lipidData[i][1] = lipid.getCompoundName();
-                    lipidData[i][2] = lipid.calculateSpeciesShorthand(lipid);
-                    lipidData[i][3] = lipid.getFormula();
-                    lipidData[i][4] = String.valueOf(lipid.getMass());
-                    lipidData[i][5] = "[M+NH4]+";
-                    lipidData[i][6] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
-                    i++;
-                }
+                createLipidDataForTable(lipidSet, lipidData);
             }
-        } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception ex) {
-            ex.printStackTrace();
+        } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception exception) {
+            JOptionPane.showMessageDialog(null, "An error occurred while searching the database. " +
+                    "Please review data inputs and try again.");
         }
 
         tableModel = new DefaultTableModel(lipidData, tableTitles) {
@@ -275,6 +240,32 @@ public class MainPageUI extends JPanel {
         };
         configureTable(lipidData);
         return new JScrollPane(table);
+    }
+
+    private void addNeutralLossInput(Set<Double> inputSet, JTextField textField) {
+        if (checkIfTextFieldIsNotEmpty(textField.getText())) {
+            try {
+                inputSet.add(Double.parseDouble(textField.getText()));
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Please enter a valid number. Remember values " +
+                        "should maintain the international standard for digits. For example, " +
+                        "824.0293.");
+            }
+        }
+    }
+
+    public static void createLipidDataForTable(Set<MSLipid> lipidSet, String[][] lipidData) {
+        int i = 0;
+        for (MSLipid lipid : lipidSet) {
+            lipidData[i][0] = lipid.getCasID();
+            lipidData[i][1] = lipid.getCompoundName();
+            lipidData[i][2] = lipid.calculateSpeciesShorthand(lipid);
+            lipidData[i][3] = lipid.getFormula();
+            lipidData[i][4] = String.valueOf(lipid.getMass());
+            lipidData[i][5] = "[M+NH4]+";
+            lipidData[i][6] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
+            i++;
+        }
     }
 
     public void configureTable(String[][] data) {
@@ -293,7 +284,6 @@ public class MainPageUI extends JPanel {
                 if (!comp.getBackground().equals(getSelectionBackground())) {
                     Color color = (row % 2 == 0 ? alternateColor : whiteColor);
                     comp.setBackground(color);
-                    color = null;
                 }
                 return comp;
             }
@@ -311,7 +301,8 @@ public class MainPageUI extends JPanel {
                             try {
                                 desktop.browse(url.toURI());
                             } catch (IOException | URISyntaxException exception) {
-                                exception.printStackTrace();
+                                JOptionPane.showMessageDialog(null, "An error occurred while trying to direct you to" +
+                                        " the webpage. Please try again.");
                             }
                         }
                     } catch (MalformedURLException exception) {
@@ -368,19 +359,14 @@ public class MainPageUI extends JPanel {
         configureComponents(ionComboBox);
         ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         ionComboBox.setToolTipText("Choose the list of adducts based on charge.");
-        ionComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateListOfAdductsAccordingToCharge(ionComboBox.getSelectedItem().toString());
-            }
-        });
-        configureLabelComponents(PI_Label);
-        configureLabelComponents(NLosses_Label);
+        ionComboBox.addActionListener(e -> updateListOfAdductsAccordingToCharge(Objects.requireNonNull(ionComboBox.getSelectedItem()).toString()));
+        configureTextComponents(precursorIonLabel);
+        configureTextComponents(neutralLossesLabel);
 
-        inputSubpanel.add(PI_Label, "wrap");
+        inputSubpanel.add(precursorIonLabel, "wrap");
         inputSubpanel.add(PI_Input);
         inputSubpanel.add(ionComboBox, "wrap, gapleft 75");
-        inputSubpanel.add(NLosses_Label, "wrap, gaptop 15");
+        inputSubpanel.add(neutralLossesLabel, "wrap, gaptop 15");
         inputSubpanel.add(NLoss1_Input, "wrap, span 2");
         inputSubpanel.add(NLoss2_Input, "wrap, span 2");
         inputSubpanel.add(NLoss3_Input, "wrap, span 2");
@@ -393,7 +379,7 @@ public class MainPageUI extends JPanel {
         radioButtonsPanel.setLayout(new MigLayout());
 
         JLabel radioButtonsLabel = new JLabel("Lipid Head Groups");
-        configureLabelComponents(radioButtonsLabel);
+        configureTextComponents(radioButtonsLabel);
 
         JRadioButton buttonCE = new JRadioButton(" CE");
         JRadioButton buttonCER = new JRadioButton(" CER");
@@ -454,7 +440,7 @@ public class MainPageUI extends JPanel {
     }
 
     public void createAdductsPanel() {
-        configureLabelComponents(adducts_Label);
+        configureTextComponents(adductsLabel);
         adductsPanel.setLayout(new MigLayout("", "[]", ""));
         adductsPanel.setBackground(Color.WHITE);
         adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
@@ -463,7 +449,7 @@ public class MainPageUI extends JPanel {
         adductsPanel.setMinimumSize(new Dimension(350, 300));
         adductsPanel.setMaximumSize(new Dimension(350, 300));
 
-        adductsPanel.add(adducts_Label, "wrap, gapbottom 4");
+        adductsPanel.add(adductsLabel, "wrap, gapbottom 4");
         updateAdductPanel(Adduct.getPositiveAdducts());
         adductsPanel.setVisible(true);
     }
@@ -471,11 +457,6 @@ public class MainPageUI extends JPanel {
     public static void configureComponents(Component component) {
         component.setFont(new Font("Arial", Font.BOLD, 16));
         component.setBackground(new Color(231, 242, 245));
-        component.setForeground(new Color(65, 114, 159));
-    }
-
-    public static void configureLabelComponents(Component component) {
-        component.setFont(new Font("Arial", Font.BOLD, 17));
         component.setForeground(new Color(65, 114, 159));
     }
 
@@ -522,10 +503,9 @@ public class MainPageUI extends JPanel {
     }
 
     public LipidType getSelectedRadioButton() {
-        for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements();) {
+        for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements(); ) {
             AbstractButton button = buttons.nextElement();
             if (button.isSelected()) {
-                System.out.println(button.getText().replaceAll(" ", ""));
                 return LipidType.valueOf(button.getText().replaceAll(" ", ""));
             }
         }
