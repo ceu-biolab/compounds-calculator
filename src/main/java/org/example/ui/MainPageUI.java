@@ -224,6 +224,9 @@ public class MainPageUI extends JPanel {
                         Double.parseDouble(PI_Input.getText()),
                         neutralLossAssociatedIonsInput
                 );
+                if(lipidSet.isEmpty()){
+                    JOptionPane.showMessageDialog(null, "No results found in database.");
+                }
                 lipidData = new String[lipidSet.size()][7];
                 createLipidDataForTable(lipidSet, lipidData);
             }
@@ -262,10 +265,17 @@ public class MainPageUI extends JPanel {
             lipidData[i][2] = lipid.calculateSpeciesShorthand(lipid);
             lipidData[i][3] = lipid.getFormula();
             lipidData[i][4] = String.valueOf(lipid.getMass());
-            lipidData[i][5] = "[M+NH4]+";
+            lipidData[i][5] = determineAdduct(lipid.getLipidSkeletalStructure().getLipidType());
             lipidData[i][6] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
             i++;
         }
+    }
+
+    private static String determineAdduct(LipidType lipidType) {
+        if (lipidType.equals(LipidType.TG)) {
+            return "[M+NH4]+";
+        }
+        return "[M+H]+";
     }
 
     public void configureTable(String[][] data) {
@@ -424,19 +434,17 @@ public class MainPageUI extends JPanel {
         buttonGroup.add(buttonCL);
 
         radioButtonsPanel.add(radioButtonsLabel, "wrap");
-        radioButtonsPanel.add(buttonCE, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonCER, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonDG, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonMG, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonPA, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonPC, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonPE, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonPI, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonPG, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonPS, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonSM, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonTG, "wrap, gapleft 10");
-        radioButtonsPanel.add(buttonCL, "wrap, gapleft 10");
+        radioButtonsPanel.add(buttonCE, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonDG, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonMG, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonPA, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonPC, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonPE, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonPI, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonPG, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonPS, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonTG, "wrap, gapleft 15, gaptop 5");
+        radioButtonsPanel.add(buttonCL, "wrap, gapleft 15, gaptop 5");
     }
 
     public void createAdductsPanel() {

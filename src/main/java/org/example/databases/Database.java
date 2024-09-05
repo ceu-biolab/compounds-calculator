@@ -132,7 +132,7 @@ public class Database {
     public Set<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         Set<Double> fattyAcidMasses;
         String adduct = "[M+H]+";
-        if(lipidType.equals(LipidType.TG)){
+        if (lipidType.equals(LipidType.TG)) {
             adduct = "[M+NH3]+";
         }
         fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses, adduct);
@@ -144,7 +144,7 @@ public class Database {
                         "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " +
                         "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " +
                         "WHERE compounds.formula = ? " +
-                        "AND compounds.compound_name LIKE '%" + lipidType + "%'");
+                        "AND compounds.compound_name LIKE '" + lipidType + "%'");
         List<FattyAcid> fattyAcids = new ArrayList<>();
         for (double fattyAcidMass : fattyAcidMasses) {
             Iterator<FattyAcid> iterator = getFattyAcidsFromDatabase(fattyAcidMass).iterator();
@@ -162,16 +162,13 @@ public class Database {
         List<FattyAcid> repeatedFattyAcids = new ArrayList<>(fattyAcids);
         if (minimumFattyAcids == maximumFattyAcids) {
             switch (maximumFattyAcids) {
-                case 1: // CE case€
+                case 1:
                     break;
                 case 2:
                     if (fattyAcids.size() == 1) {
                         fattyAcids.add(fattyAcids.get(0));
                         formula.addFattyAcidToFormula(fattyAcids.get(0));
                         queryBuilder.append(" AND compounds.compound_name LIKE '%").append(fattyAcids.get(0)).append("%' ");
-                        // ** Add 2nd case
-                    } else if (fattyAcids.size() == 2) {
-
                     }
                     break;
                 case 3:

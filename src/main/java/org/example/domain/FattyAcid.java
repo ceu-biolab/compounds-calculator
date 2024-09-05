@@ -12,27 +12,14 @@ public class FattyAcid extends ChemicalCompound {
         super();
         this.carbonAtoms = carbonAtoms;
         this.doubleBonds = doubleBonds;
-        ensureValidFattyAcid(doubleBonds);
+        this.formula = new Formula(chainToString());
+        this.mass = getMass(this.formula);
     }
 
     public FattyAcid(String carbonAtoms, Integer doubleBonds) throws FattyAcidCreation_Exception, InvalidFormula_Exception {
         super();
         this.carbonAtoms = Integer.parseInt(carbonAtoms.replaceAll("[^0-9]", ""));
         this.doubleBonds = doubleBonds;
-        ensureValidFattyAcid(doubleBonds);
-    }
-
-    public void ensureValidFattyAcid(int doubleBonds) throws FattyAcidCreation_Exception, InvalidFormula_Exception {
-        if (doubleBonds > this.carbonAtoms - 1)
-            throw new FattyAcidCreation_Exception(
-                    "Double bonds of the molecule must be at least lower than the number of Carbon atoms-1.");
-        if (doubleBonds < 0 || this.carbonAtoms < 2)
-            throw new FattyAcidCreation_Exception(
-                    "The fatty acid can't have a negative number of double bonds or less than 3 carbon atoms.");
-        if (this.carbonAtoms > 36)
-            throw new FattyAcidCreation_Exception("The fatty acid can't have more than 36 carbon atoms.");
-        if (doubleBonds > 6)
-            throw new FattyAcidCreation_Exception("The fatty acid can't have more than 6 double bonds.");
         this.formula = new Formula(chainToString());
         this.mass = getMass(this.formula);
     }
