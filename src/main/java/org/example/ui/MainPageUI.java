@@ -22,16 +22,16 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.List;
 
 public class MainPageUI extends JPanel {
     private final JButton searchButton;
     private final JButton exportButton;
     private final JButton uploadButton;
     private final JButton clearButton;
+    private final JButton getTemplateButton;
 
     private final JPanel tablePanel;
     private final JPanel searchButtonsPanel;
@@ -56,6 +56,7 @@ public class MainPageUI extends JPanel {
     private final Database database;
     private final ButtonGroup buttonGroup;
     private final JComboBox<String> ionComboBox;
+    private final List<JCheckBox> checkBoxList;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -69,6 +70,7 @@ public class MainPageUI extends JPanel {
         exportButton = new JButton("  Export to CSV");
         uploadButton = new JButton("  Upload File");
         clearButton = new JButton("  Clear Input");
+        getTemplateButton = new JButton("  File Template");
         tablePanel = new JPanel();
         searchButtonsPanel = new JPanel();
         radioButtonsPanel = new JPanel();
@@ -85,6 +87,7 @@ public class MainPageUI extends JPanel {
         ionComboBox = new JComboBox<>(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
         database = new Database();
         buttonGroup = new ButtonGroup();
+        checkBoxList = new ArrayList<>();
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]", "[grow, fill]25[grow, fill]"));
         setBackground(new Color(195, 224, 229));
         createTable();
@@ -107,7 +110,7 @@ public class MainPageUI extends JPanel {
         tablePanel.setPreferredSize(new Dimension(1250, 500));
         tablePanel.setSize(1250, 500);
         tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        tableTitles = new String[]{"Cas ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z"};
+        tableTitles = new String[]{"Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "m/z", "CMM ID"};
 
         DefaultTableModel model = new DefaultTableModel(tableTitles, 0);
         table = new JTable(model);
@@ -115,8 +118,8 @@ public class MainPageUI extends JPanel {
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(65, 114, 159));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-        table.getColumnModel().getColumn(0).setPreferredWidth(30);
-        table.getColumnModel().getColumn(1).setPreferredWidth(175);
+        table.getColumnModel().getColumn(0).setPreferredWidth(175);
+        table.getColumnModel().getColumn(1).setPreferredWidth(45);
         table.getTableHeader().setReorderingAllowed(false);
         jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
@@ -142,9 +145,14 @@ public class MainPageUI extends JPanel {
             lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
             lipidScrollPane.setPreferredSize(new Dimension(1250, 500));
             lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-            tablePanel.add(lipidScrollPane, "center, grow");
-            tablePanel.revalidate();
-            tablePanel.repaint();
+            List<JCheckBox> checkBoxesForSearch = getSelectedCheckBoxes();
+            if (checkBoxesForSearch == null || checkBoxesForSearch.isEmpty()) {
+                JOptionPane.showMessageDialog(tablePanel, "Please select at least one adduct");
+            } else {
+                tablePanel.add(lipidScrollPane, "center, grow");
+                tablePanel.revalidate();
+                tablePanel.repaint();
+            }
         });
 
         configureComponents(exportButton);
@@ -183,6 +191,9 @@ public class MainPageUI extends JPanel {
             String fileDirectory = fileDialog.getDirectory();
             if (fileName != null && fileDirectory != null) {
                 try {
+                    // todo: idk if this works
+                    // FileDialog folderDirectory = new FileDialog(new Frame(), "Choose a folder to store files.", FileDialog.LOAD);
+                    // , String.valueOf(folderDirectory.getDirectory())
                     csvUtils.readCSVForBatchProcessing(new File(fileDirectory + fileName));
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
@@ -204,10 +215,22 @@ public class MainPageUI extends JPanel {
             PI_Input.setText(null);
         });
 
+        configureComponents(getTemplateButton);
+        getTemplateButton.setBackground(Color.WHITE);
+        getTemplateButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        getTemplateButton.setIcon(new ImageIcon("src/main/resources/Template_Icon.png"));
+        getTemplateButton.setBorder(new LineBorder(Color.white));
+        getTemplateButton.setHorizontalAlignment(SwingConstants.LEFT);
+        getTemplateButton.addActionListener(e -> {
+            // todo
+            JOptionPane.showMessageDialog(null, "Not sure what the template should look like yet...");
+        });
+
         searchButtonsPanel.add(searchButton, "wrap");
         searchButtonsPanel.add(clearButton, "wrap");
         searchButtonsPanel.add(exportButton, "wrap");
         searchButtonsPanel.add(uploadButton, "wrap");
+        searchButtonsPanel.add(getTemplateButton, "wrap");
     }
 
     public JScrollPane createLipidScrollPane() {
@@ -224,13 +247,14 @@ public class MainPageUI extends JPanel {
                         Double.parseDouble(PI_Input.getText()),
                         neutralLossAssociatedIonsInput
                 );
-                if(lipidSet.isEmpty()){
+                if (lipidSet.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "No results found in database.");
                 }
                 lipidData = new String[lipidSet.size()][7];
                 createLipidDataForTable(lipidSet, lipidData);
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception exception) {
+            exception.printStackTrace();
             JOptionPane.showMessageDialog(null, "An error occurred while searching the database. " +
                     "Please review data inputs and try again.");
         }
@@ -259,19 +283,21 @@ public class MainPageUI extends JPanel {
 
     public static void createLipidDataForTable(Set<MSLipid> lipidSet, String[][] lipidData) {
         int i = 0;
+        DecimalFormat numberFormat = new DecimalFormat("#.0000");
         for (MSLipid lipid : lipidSet) {
-            lipidData[i][0] = lipid.getCasID();
-            lipidData[i][1] = lipid.getCompoundName();
-            lipidData[i][2] = lipid.calculateSpeciesShorthand(lipid);
-            lipidData[i][3] = lipid.getFormula();
-            lipidData[i][4] = String.valueOf(lipid.getMass());
-            lipidData[i][5] = determineAdduct(lipid.getLipidSkeletalStructure().getLipidType());
-            lipidData[i][6] = String.valueOf(lipid.calculateMZWithAdduct("[M+NH3]+", 1));
+            lipidData[i][0] = lipid.getCompoundName();
+            lipidData[i][1] = lipid.calculateSpeciesShorthand(lipid);
+            lipidData[i][2] = lipid.getFormula();
+            lipidData[i][3] = numberFormat.format(lipid.getMass());
+            lipidData[i][4] = determineAdduct(lipid.getLipidSkeletalStructure().getLipidType()); // ** adduct should actually come from the JCheckBox
+            lipidData[i][5] = lipid.calculateMZWithAdduct(determineAdduct(lipid.getLipidSkeletalStructure().getLipidType()), 1);
+            lipidData[i][6] = lipid.getCompoundID();
             i++;
         }
     }
 
     private static String determineAdduct(LipidType lipidType) {
+        // todo, fix method and link it to the list of adducts/jcheckboxes
         if (lipidType.equals(LipidType.TG)) {
             return "[M+NH4]+";
         }
@@ -494,6 +520,7 @@ public class MainPageUI extends JPanel {
         int i = 0;
         for (String adduct : adducts) {
             JCheckBox checkBox = new JCheckBox(adduct);
+            checkBoxList.add(checkBox);
             configureTextComponents(checkBox);
             if (i % 2 == 0) {
                 adductsPanel.add(checkBox, "gapleft 10, gaptop 5, gapbottom 5");
@@ -518,6 +545,16 @@ public class MainPageUI extends JPanel {
             }
         }
         return null;
+    }
+
+    public List<JCheckBox> getSelectedCheckBoxes() {
+        List<JCheckBox> checkBoxes = new ArrayList<>();
+        for (JCheckBox checkBox : checkBoxList) {
+            if (checkBox.isSelected()) {
+                checkBoxes.add(checkBox);
+            }
+        }
+        return checkBoxes;
     }
 }
 

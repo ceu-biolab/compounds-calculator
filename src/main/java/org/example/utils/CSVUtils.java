@@ -79,7 +79,8 @@ public class CSVUtils {
                     }
                 }
                 try {
-                    createAndWriteCSVBatchProcessing(database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)), neutralLossAssociatedIons), String.valueOf(NumberUtils.toDouble(record.get(0))));
+                    createAndWriteCSVBatchProcessing(database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)),
+                            neutralLossAssociatedIons), String.valueOf(NumberUtils.toDouble(record.get(0))));
                     numberOfRecords++;
                     neutralLossAssociatedIons.clear();
                 } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {

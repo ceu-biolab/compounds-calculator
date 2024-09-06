@@ -59,7 +59,7 @@ public class Database {
         return fattyAcids;
     }
 
-    public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
+    public MSLipid createLipidFromCompoundName(String compoundNameDB, String compoundID, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
         List<String> compoundNamesInDatabase = new ArrayList<>(List.of(compoundNameDB.split("[()]")));
         LinkedHashSet<FattyAcid> fattyAcids = new LinkedHashSet<>();
         List<String> fattyAcidsOnly = getFattyAcidsOnly(compoundNamesInDatabase);
@@ -69,7 +69,7 @@ public class Database {
             }
         }
         LipidType lipidType = LipidType.valueOf(compoundNamesInDatabase.get(0).trim());
-        return new MSLipid(fattyAcids, new LipidSkeletalStructure(lipidType), compoundNameDB, casId, formulaString, mass);
+        return new MSLipid(fattyAcids, new LipidSkeletalStructure(lipidType), compoundNameDB, compoundID, formulaString, mass);
     }
 
     public Set<MSLipid> limitListOfLipidsAccordingToPrecursorIon(Set<MSLipid> msLipidSet, double precursorIon, String adduct) {
@@ -133,13 +133,13 @@ public class Database {
         Set<Double> fattyAcidMasses;
         String adduct = "[M+H]+";
         if (lipidType.equals(LipidType.TG)) {
-            adduct = "[M+NH3]+";
+            adduct = "[M+NH4]+";
         }
         fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses, adduct);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formula = new Formula(lipidSkeletalStructure.getFormula().toString());
         StringBuilder queryBuilder = new StringBuilder(
-                "SELECT DISTINCT compounds.cas_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " +
+                "SELECT DISTINCT compounds.compound_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " +
                         "FROM compounds " +
                         "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " +
                         "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " +
@@ -172,7 +172,7 @@ public class Database {
                     }
                     break;
                 case 3:
-                    adduct = "[M+NH3]+";
+                    adduct = "[M+NH4]+";
                     whenTwoFattyAcids(formula, queryBuilder, fattyAcids, repeatedFattyAcids);
                     break;
                 case 4:
@@ -205,10 +205,10 @@ public class Database {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     String compoundNameDatabase = resultSet.getString("compound_name");
-                    String casId = resultSet.getString("cas_id");
+                    String compoundID = resultSet.getString("compound_id");
                     String formulaString = resultSet.getString("formula");
                     double mass = resultSet.getDouble("mass");
-                    lipidsWithInfo.add(createLipidFromCompoundName(compoundNameDatabase, casId, formulaString, mass));
+                    lipidsWithInfo.add(createLipidFromCompoundName(compoundNameDatabase, compoundID, formulaString, mass));
                 }
             } catch (InvalidFormula_Exception | FattyAcidCreation_Exception e) {
                 JOptionPane.showMessageDialog(null, "An error occurred when configuring the lipid structure. Please try again.");
@@ -233,7 +233,7 @@ public class Database {
             repeatedFattyAcids.add(fattyAcids.get(1));
             repeatedFattyAcids.add(fattyAcids.get(1));
             secondFormula.addFattyAcidToFormula(fattyAcids.get(1));
-            queryBuilder.append("SELECT DISTINCT compounds.cas_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " + "FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = '").append(secondFormula).append("' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(3)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(4)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(5)).append("%'");
+            queryBuilder.append("SELECT DISTINCT compounds.compound_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " + "FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = '").append(secondFormula).append("' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(3)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(4)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(5)).append("%'");
         } else if (fattyAcids.size() == 1) {
             fattyAcids.add(fattyAcids.get(0));
             formula.addFattyAcidToFormula(fattyAcids.get(0));
