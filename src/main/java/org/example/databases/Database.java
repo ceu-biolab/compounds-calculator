@@ -23,7 +23,7 @@ public class Database {
         }
     }
 
-    public Set<Double> calculateFattyAcidMasses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses, String adduct) throws SQLException, FattyAcidCreation_Exception {
+    public Set<Double> calculateFattyAcidMassesFromNeutralLosses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses, String adduct) throws SQLException, FattyAcidCreation_Exception {
         Double[] fattyAcidMassesArray = new Double[neutralLossAssociatedIonMasses.size()];
         int i = 0;
         for (Double neutralLossAssociatedIonMass : neutralLossAssociatedIonMasses) {
@@ -36,6 +36,7 @@ public class Database {
     }
 
     public Set<FattyAcid> getFattyAcidsFromDatabase(double fattyAcidMass) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        // TODO METER TOLERANCIA PARA MASS DELTA
         String query = "SELECT chain_id, num_carbons, double_bonds " +
                 "FROM chains " +
                 "WHERE mass <= ? + 0.05 " +
@@ -59,7 +60,7 @@ public class Database {
         return fattyAcids;
     }
 
-    public MSLipid createLipidFromCompoundName(String compoundNameDB, String compoundID, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
+    public MSLipid createLipidFromDatabase(String compoundNameDB, String compoundID, String formulaString, double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
         List<String> compoundNamesInDatabase = new ArrayList<>(List.of(compoundNameDB.split("[()]")));
         LinkedHashSet<FattyAcid> fattyAcids = new LinkedHashSet<>();
         List<String> fattyAcidsOnly = getFattyAcidsOnly(compoundNamesInDatabase);
@@ -87,13 +88,12 @@ public class Database {
         return ppmIncrement <= 10000;
     }
 
-    public Set<MSLipid> checkForRepeatedLipids(Set<MSLipid> msLipidSet) throws FattyAcidCreation_Exception {
-        Set<MSLipid> checkedLipidSet = new LinkedHashSet<>();
+    public LinkedHashSet<MSLipid> checkForRepeatedLipids(Set<MSLipid> msLipidSet) throws FattyAcidCreation_Exception {
+        LinkedHashSet<MSLipid> checkedLipidSet = new LinkedHashSet<>();
         Map<MSLipid, List<String>> lipidAndFattyAcidsMap = new HashMap<>();
         for (MSLipid msLipid : msLipidSet) {
             List<String> compoundNamesInDatabase = new ArrayList<>(List.of(msLipid.getCompoundName().split("[()]")));
             List<String> fattyAcidsOnly = getFattyAcidsOnly(compoundNamesInDatabase);
-            fattyAcidsOnly.sort(Comparator.naturalOrder());
             lipidAndFattyAcidsMap.put(msLipid, fattyAcidsOnly);
         }
         for (MSLipid msLipid : msLipidSet) {
@@ -129,15 +129,35 @@ public class Database {
         return new LinkedHashSet<>(Arrays.asList(doubleList));
     }
 
-    public Set<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+    public String buildQuery() {
+
+        return null;
+    }
+
+    /**
+     * @param lipidType
+     * @param precursorIonMZ
+     * @param neutralLossAssociatedIonMZs
+     * @return
+     * @throws SQLException
+     * @throws InvalidFormula_Exception
+     * @throws FattyAcidCreation_Exception
+     */
+    public LinkedHashSet<MSLipid> getAllLipidsFromDatabase(LipidType lipidType, double precursorIonMZ, Set<Double> neutralLossAssociatedIonMZs) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        // todo: Add adduct as a parameter for this method. Fix corresponding usages of method. Add a getAdducts() method in the MainPageUI class which allows us to access
+        // the list of adducts anywhere (which is necessary for the CSVUtils class to perform the batch processing with the correct adducts.
+        // -- Also, consider that if the adduct is a parameter then this method should be executed as many times as necessary (for each of the adducts)
         Set<Double> fattyAcidMasses;
+        LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
         String adduct = "[M+H]+";
         if (lipidType.equals(LipidType.TG)) {
             adduct = "[M+NH4]+";
         }
-        fattyAcidMasses = calculateFattyAcidMasses(precursorIon, neutralLossAssociatedIonMasses, adduct);
+
+        System.out.println(neutralLossAssociatedIonMZs.size());
+        fattyAcidMasses = calculateFattyAcidMassesFromNeutralLosses(precursorIonMZ, neutralLossAssociatedIonMZs, adduct);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
-        Formula formula = new Formula(lipidSkeletalStructure.getFormula().toString());
+        Formula formulaSkeleton = new Formula(lipidSkeletalStructure.getFormula().toString());
         StringBuilder queryBuilder = new StringBuilder(
                 "SELECT DISTINCT compounds.compound_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " +
                         "FROM compounds " +
@@ -151,7 +171,7 @@ public class Database {
             if (iterator.hasNext()) {
                 FattyAcid fattyAcid = iterator.next();
                 fattyAcids.add(fattyAcid);
-                formula.addFattyAcidToFormula(fattyAcid);
+                formulaSkeleton.addFattyAcidToFormula(fattyAcid);
                 queryBuilder.append(" AND compounds.compound_name LIKE '%").append(fattyAcid).append("%' ");
             } else {
                 System.err.println("No fatty acids found for mass: " + fattyAcidMass);
@@ -165,88 +185,114 @@ public class Database {
                 case 1:
                     break;
                 case 2:
+                    // duplicar porque es lyso
                     if (fattyAcids.size() == 1) {
                         fattyAcids.add(fattyAcids.get(0));
-                        formula.addFattyAcidToFormula(fattyAcids.get(0));
+                        formulaSkeleton.addFattyAcidToFormula(fattyAcids.get(0));
                         queryBuilder.append(" AND compounds.compound_name LIKE '%").append(fattyAcids.get(0)).append("%' ");
                     }
                     break;
                 case 3:
-                    adduct = "[M+NH4]+";
-                    whenTwoFattyAcids(formula, queryBuilder, fattyAcids, repeatedFattyAcids);
-                    break;
+                    lipidsWithInfo = getTGsWhenOneOrTwoFAs(formulaSkeleton, queryBuilder, fattyAcids, repeatedFattyAcids);
+                    return lipidsWithInfo;
                 case 4:
                     if (fattyAcids.size() == 3) {
                         // todo
-
                     } else {
-                        whenTwoFattyAcids(formula, queryBuilder, fattyAcids, repeatedFattyAcids);
+                        // not right...
+                        // getTGsWhenOneOrTwoFAs(formulaSkeleton, queryBuilder, fattyAcids, repeatedFattyAcids);
                     }
                     break;
             }
         } else {
             if (fattyAcids.size() == 1) {
-                // ** Put 2 cases together here, create a UNION of both of these events so that the final
-                // ** list contains ALL the lipids, whether it be 1 or 2
+                // ** Put 2 cases together here, create a UNION of both of these events so that the final list contains ALL the lipids, whether it be 1 or 2**/
             } else if (fattyAcids.size() == 2) {
                 // ** ONLY OCCURS IF 2 NL IONS ARE GIVEN...
             }
-
-            // min 1, max 2 case
+            /** min 1, max 2 case
             // How do I know when it should be 1 and when it should be 2?...
             // It should just look for both of these cases then, first if there's only 1 FA then if there's 2 FA.
-            // If there's 2 NL ions, then its always 2 FAs, if there's only 1 NL ion, then its 1 or 2 FAs
+            If there's 2 NL ions, then its always 2 FAs, if there's only 1 NL ion, then its 1 or 2 FAs**/
         }
         queryBuilder.append(";");
         String query = queryBuilder.toString();
-        LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, formula.toString());
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    String compoundNameDatabase = resultSet.getString("compound_name");
-                    String compoundID = resultSet.getString("compound_id");
-                    String formulaString = resultSet.getString("formula");
-                    double mass = resultSet.getDouble("mass");
-                    lipidsWithInfo.add(createLipidFromCompoundName(compoundNameDatabase, compoundID, formulaString, mass));
-                }
-            } catch (InvalidFormula_Exception | FattyAcidCreation_Exception e) {
-                JOptionPane.showMessageDialog(null, "An error occurred when configuring the lipid structure. Please try again.");
-            }
-        } catch (NoSuchElementException exception) {
-            System.err.println("No fatty acids found for the formula: " + formula);
+        try (ResultSet resultSet = callQuery(query, formulaSkeleton)) {
+            return createLipidsFromQuery(resultSet);
+        } catch (InvalidFormula_Exception | FattyAcidCreation_Exception e) {
+            JOptionPane.showMessageDialog(null, "An error occurred when configuring the lipid structure. Please try again.");
         }
-        if (neutralLossAssociatedIonMasses.size() == 2) {
-            return checkForRepeatedLipids(limitListOfLipidsAccordingToPrecursorIon(lipidsWithInfo, precursorIon, adduct));
-        } else {
-            return checkForRepeatedLipids(lipidsWithInfo);
+        if (neutralLossAssociatedIonMZs.size() == 2) {
+            return checkForRepeatedLipids(limitListOfLipidsAccordingToPrecursorIon(lipidsWithInfo, precursorIonMZ, adduct));
         }
+        return null;
     }
 
-    private void whenTwoFattyAcids(Formula formula, StringBuilder queryBuilder, List<FattyAcid> fattyAcids, List<FattyAcid> repeatedFattyAcids) throws InvalidFormula_Exception {
-        if (fattyAcids.size() == 2) {
+    private ResultSet callQuery(String query, Formula formulaSkeleton) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setString(1, formulaSkeleton.toString());
+        return statement.executeQuery();
+    }
+
+    private LinkedHashSet<MSLipid> createLipidsFromQuery(ResultSet resultSet) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        LinkedHashSet<MSLipid> lipidsWithInfo = new LinkedHashSet<>();
+        while (resultSet.next()) {
+            String compoundNameDatabase = resultSet.getString("compound_name");
+            String compoundID = resultSet.getString("compound_id");
+            String formulaString = resultSet.getString("formula");
+            double mass = resultSet.getDouble("mass");
+            lipidsWithInfo.add(createLipidFromDatabase(compoundNameDatabase, compoundID, formulaString, mass));
+        }
+        return lipidsWithInfo;
+    }
+
+    private LinkedHashSet<MSLipid> getTGsWhenOneOrTwoFAs(Formula formula, StringBuilder queryBuilder, List<FattyAcid> fattyAcids, List<FattyAcid> repeatedFattyAcids) throws InvalidFormula_Exception, SQLException, FattyAcidCreation_Exception {
+        System.out.println(fattyAcids.size());
+        if (fattyAcids.size() == 2) { // if a TG only has 2 neutral loss associated ions
             Formula secondFormula = new Formula(formula.toString());
             repeatedFattyAcids.add(fattyAcids.get(0));
             formula.addFattyAcidToFormula(fattyAcids.get(0));
-            queryBuilder.append(" AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(2)).append("%' UNION ");
+            queryBuilder.append(" AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(2));
+            //  TODO replace with 2 queries and sum arrays after
             repeatedFattyAcids.add(fattyAcids.get(0));
             repeatedFattyAcids.add(fattyAcids.get(1));
             repeatedFattyAcids.add(fattyAcids.get(1));
             secondFormula.addFattyAcidToFormula(fattyAcids.get(1));
-            queryBuilder.append("SELECT DISTINCT compounds.compound_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " + "FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = '").append(secondFormula).append("' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(3)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(4)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(5)).append("%'");
-        } else if (fattyAcids.size() == 1) {
+            StringBuilder secondQueryBuilder = new StringBuilder();
+            secondQueryBuilder.append("SELECT DISTINCT compounds.compound_id, compounds.compound_name, compounds.formula, compounds.mass, compound_chain.number_chains " + "FROM compounds " + "INNER JOIN compound_chain ON compounds.compound_id = compound_chain.compound_id " + "INNER JOIN chains ON chains.chain_id = compound_chain.chain_id " + "WHERE compounds.formula = '").append(secondFormula).append("' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(3)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(4)).append("%' AND compounds.compound_name LIKE '%").append(repeatedFattyAcids.get(5)).append("%'");
+            //** replace queries num_carbon, etc.
+
+            try {
+                LinkedHashSet<MSLipid> lipidsWithInfo = createLipidsFromQuery(callQuery(queryBuilder.toString(), formula));
+                System.out.println(lipidsWithInfo);
+                LinkedHashSet<MSLipid> lipidsWithInfo2 = createLipidsFromQuery(callQuery(secondQueryBuilder.toString(), secondFormula));
+                System.out.println(lipidsWithInfo2);
+                LinkedHashSet<MSLipid> finalLipidSet = new LinkedHashSet<>();
+                finalLipidSet.addAll(lipidsWithInfo);
+                finalLipidSet.addAll(lipidsWithInfo2);
+                return finalLipidSet;
+            } catch (SQLException | FattyAcidCreation_Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else if (fattyAcids.size() == 1) { // if a TG only has 1 neutral loss associated ion
             fattyAcids.add(fattyAcids.get(0));
             formula.addFattyAcidToFormula(fattyAcids.get(0));
             fattyAcids.add(fattyAcids.get(0));
             formula.addFattyAcidToFormula(fattyAcids.get(0));
             queryBuilder.append(" AND compounds.compound_name LIKE '%").append(fattyAcids.get(0)).append("/").append(fattyAcids.get(0)).append("%' ");
+            LinkedHashSet<MSLipid> finalLipidSet = createLipidsFromQuery(callQuery(queryBuilder.toString(), formula));
+            System.out.println(finalLipidSet);
+            //**  CAMBIAR TODOS LOS QUERIES AL MODELO RELACIONAL
+            return finalLipidSet;
         }
+        return null;
     }
 
     public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         Set<MSLipid> lipidSet = getAllLipidsFromDatabase(lipidType, precursorIon, neutralLossAssociatedIons);
         String[][] lipidData = new String[lipidSet.size()][7];
         MainPageUI.createLipidDataForTable(lipidSet, lipidData);
+
         return lipidData;
     }
 }

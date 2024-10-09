@@ -9,7 +9,13 @@ import org.example.exceptions.InvalidFormula_Exception;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.SQLException;
 
 public class SidePanelUI {
@@ -75,6 +81,17 @@ public class SidePanelUI {
             frame.repaint();
         });
 
+        JButton batchProcessingButton = new JButton("  Batch Processing");
+        configureComponents(batchProcessingButton, "src/main/resources/Transformer_icon.png");
+        batchProcessingButton.addActionListener(e -> {
+            frame.remove(interfaceUI);
+            frame.add(adductTransformerUI);
+            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+            frame.revalidate();
+            frame.repaint();
+        });
+
         JButton helpButton = new JButton("  Help");
         configureComponents(helpButton, "src/main/resources/Help_Icon.png");
         helpButton.setBackground(Color.WHITE);
@@ -82,6 +99,26 @@ public class SidePanelUI {
         helpButton.setIcon(new ImageIcon("src/main/resources/Help_Icon.png"));
         helpButton.setBorder(new LineBorder(Color.white));
         helpButton.setHorizontalAlignment(SwingConstants.LEFT);
+        helpButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    URL url = new URL("https://github.com/pilarbourg/compounds-calculator");
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop desktop = Desktop.getDesktop();
+                        try {
+                            desktop.browse(url.toURI());
+                        } catch (IOException | URISyntaxException exception) {
+                            JOptionPane.showMessageDialog(null, "An error occurred while trying to direct you to" +
+                                    " the webpage. Please try again.");
+                        }
+                    }
+                } catch (MalformedURLException exception) {
+                    throw new RuntimeException(exception);
+                }
+
+            }
+        });
 
         JButton exitButton = new JButton("  Exit");
         configureComponents(exitButton, "src/main/resources/Exit_Icon.png");
@@ -91,7 +128,8 @@ public class SidePanelUI {
         });
 
         sidePanel.add(homeButton, "gapright 50");
-        sidePanel.add(adductTransformerButton, "gapright 900");
+        sidePanel.add(adductTransformerButton, "gapright 50");
+        sidePanel.add(batchProcessingButton, "gapright 650");
         sidePanel.add(helpButton, "gapleft 50");
         sidePanel.add(exitButton, "gapleft 50");
     }

@@ -35,7 +35,7 @@ public class MainPageUI extends JPanel {
 
     private final JPanel tablePanel;
     private final JPanel searchButtonsPanel;
-    private final JPanel radioButtonsPanel;
+    private final JPanel lipidHeadGroupsPanel;
     private final JPanel inputSubpanel;
     public JPanel adductsPanel;
 
@@ -44,10 +44,14 @@ public class MainPageUI extends JPanel {
     public JTextField NLoss3_Input;
     public JTextField NLoss4_Input;
     public JTextField PI_Input;
+    public JSpinner tolerancePI_Input;
+    public JSpinner toleranceNL_Input;
 
     private final JLabel precursorIonLabel;
     private final JLabel neutralLossesLabel;
     private final JLabel adductsLabel;
+    private final JLabel tolerancePILabel;
+    private final JLabel toleranceNLLabel;
 
     private JTable table = null;
     private DefaultTableModel tableModel = null;
@@ -73,15 +77,20 @@ public class MainPageUI extends JPanel {
         getTemplateButton = new JButton("  File Template");
         tablePanel = new JPanel();
         searchButtonsPanel = new JPanel();
-        radioButtonsPanel = new JPanel();
+        lipidHeadGroupsPanel = new JPanel();
         inputSubpanel = new JPanel();
         NLoss1_Input = new JTextField();
         NLoss2_Input = new JTextField();
         NLoss3_Input = new JTextField();
         NLoss4_Input = new JTextField();
         PI_Input = new JTextField();
+        tolerancePI_Input = new JSpinner(new SpinnerNumberModel(20, 0, 50, 1)); //** TODO REPLACE WITH JTEXTFIELD
+        toleranceNL_Input = new JSpinner(new SpinnerNumberModel(30, 0, 50, 1));
+
         precursorIonLabel = new JLabel("    Precursor Ion");
         neutralLossesLabel = new JLabel("    Neutral Losses");
+        tolerancePILabel = new JLabel("    Precursor Ion Tolerance, ppm");
+        toleranceNLLabel = new JLabel("    Neutral Loss Tolerance, ppm");
         adductsLabel = new JLabel("    Adducts");
         adductsPanel = new JPanel();
         ionComboBox = new JComboBox<>(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
@@ -91,13 +100,13 @@ public class MainPageUI extends JPanel {
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]", "[grow, fill]25[grow, fill]"));
         setBackground(new Color(195, 224, 229));
         createTable();
-        createRadioButtons();
+        createLipidHeadGroupsPanel();
         createInputPanel();
         createButtons();
         createAdductsPanel();
 
         add(tablePanel, "span 2");
-        add(radioButtonsPanel, "wrap");
+        add(lipidHeadGroupsPanel, "wrap");
         add(inputSubpanel);
         add(adductsPanel);
         add(searchButtonsPanel);
@@ -254,7 +263,6 @@ public class MainPageUI extends JPanel {
                 createLipidDataForTable(lipidSet, lipidData);
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception exception) {
-            exception.printStackTrace();
             JOptionPane.showMessageDialog(null, "An error occurred while searching the database. " +
                     "Please review data inputs and try again.");
         }
@@ -274,7 +282,7 @@ public class MainPageUI extends JPanel {
             try {
                 inputSet.add(Double.parseDouble(textField.getText()));
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(null, "Please enter a valid number. Remember values " +
+                JOptionPane.showMessageDialog(null, "Please enter a valid number. All values " +
                         "should maintain the international standard for digits. For example, " +
                         "824.0293.");
             }
@@ -330,8 +338,8 @@ public class MainPageUI extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 if (table.getSelectedColumn() == 0) {
                     try {
-                        URL url = new URL("https://webbook.nist.gov/cgi/cbook.cgi?ID=" + table.getValueAt(table.getSelectedRow(),
-                                table.getSelectedColumn()) + "&Units=SI");
+                        URL url = new URL("http://ceumass.eps.uspceu.es/mediator/api/v3/compounds/" + table.getValueAt(table.getSelectedRow(),
+                                table.getSelectedColumn()));
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();
                             try {
@@ -354,6 +362,8 @@ public class MainPageUI extends JPanel {
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(65, 114, 159));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
+        table.getColumnModel().getColumn(0).setPreferredWidth(175);
+        table.getColumnModel().getColumn(1).setPreferredWidth(45);
         table.setForeground(new Color(65, 114, 159));
         table.setFont(new Font("Arial", Font.BOLD, 15));
         table.getTableHeader().setReorderingAllowed(false);
@@ -363,28 +373,28 @@ public class MainPageUI extends JPanel {
     }
 
     public void createInputPanel() {
-        inputSubpanel.setPreferredSize(new Dimension(1000, 300));
-        inputSubpanel.setSize(new Dimension(1000, 300));
-        inputSubpanel.setMinimumSize(new Dimension(1000, 300));
-        inputSubpanel.setMaximumSize(new Dimension(1000, 300));
+        inputSubpanel.setPreferredSize(new Dimension(1050, 340));
+        inputSubpanel.setSize(new Dimension(1050, 340));
+        inputSubpanel.setMinimumSize(new Dimension(1050, 340));
+        inputSubpanel.setMaximumSize(new Dimension(1050, 340));
 
-        inputSubpanel.setLayout(new MigLayout("", "[grow, fill]15[grow, fill]15", "15[grow, fill]10[grow, fill]15[grow, fill]10[grow,fill]15"));
+        inputSubpanel.setLayout(new MigLayout("", "[grow, fill]50[grow, fill]15", "15[grow, fill]10[grow, fill]15[grow, fill]10[grow,fill]15"));
         inputSubpanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         inputSubpanel.setBackground(Color.WHITE);
 
-        NLoss1_Input.setColumns(30);
+        NLoss1_Input.setColumns(15);
         configureComponents(NLoss1_Input);
         NLoss1_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         NLoss1_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 1");
-        NLoss2_Input.setColumns(30);
+        NLoss2_Input.setColumns(15);
         configureComponents(NLoss2_Input);
         NLoss2_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         NLoss2_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 2 (optional)");
-        NLoss3_Input.setColumns(30);
+        NLoss3_Input.setColumns(15);
         configureComponents(NLoss3_Input);
         NLoss3_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         NLoss3_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 3 (optional)");
-        NLoss4_Input.setColumns(30);
+        NLoss4_Input.setColumns(15);
         configureComponents(NLoss4_Input);
         NLoss4_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         NLoss4_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 4 (optional)");
@@ -392,44 +402,53 @@ public class MainPageUI extends JPanel {
         configureComponents(PI_Input);
         PI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         PI_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Precursor Ion, m/z");
-        configureComponents(ionComboBox);
-        ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        ionComboBox.setToolTipText("Choose the list of adducts based on charge.");
-        ionComboBox.addActionListener(e -> updateListOfAdductsAccordingToCharge(Objects.requireNonNull(ionComboBox.getSelectedItem()).toString()));
+        configureComponents(tolerancePI_Input);
+        tolerancePI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        tolerancePI_Input.setMaximumSize(new Dimension(100,50));
+        configureComponents(toleranceNL_Input);
+        toleranceNL_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        toleranceNL_Input.setMaximumSize(new Dimension(100,50));
+
         configureTextComponents(precursorIonLabel);
         configureTextComponents(neutralLossesLabel);
+        configureTextComponents(tolerancePILabel);
+        configureTextComponents(toleranceNLLabel);
 
-        inputSubpanel.add(precursorIonLabel, "wrap");
+        inputSubpanel.add(precursorIonLabel);
+        inputSubpanel.add(tolerancePILabel, "wrap");
         inputSubpanel.add(PI_Input);
-        inputSubpanel.add(ionComboBox, "wrap, gapleft 75");
-        inputSubpanel.add(neutralLossesLabel, "wrap, gaptop 15");
-        inputSubpanel.add(NLoss1_Input, "wrap, span 2");
-        inputSubpanel.add(NLoss2_Input, "wrap, span 2");
-        inputSubpanel.add(NLoss3_Input, "wrap, span 2");
-        inputSubpanel.add(NLoss4_Input, "span 2");
+        inputSubpanel.add(tolerancePI_Input, "wrap");
+        inputSubpanel.add(neutralLossesLabel);
+        inputSubpanel.add(toleranceNLLabel, "wrap, gaptop 15");
+        inputSubpanel.add(NLoss1_Input);
+        inputSubpanel.add(toleranceNL_Input, "wrap");
+        inputSubpanel.add(NLoss2_Input, "wrap");
+        inputSubpanel.add(NLoss3_Input, "wrap");
+        inputSubpanel.add(NLoss4_Input);
     }
 
-    public void createRadioButtons() {
-        radioButtonsPanel.setBackground(Color.WHITE);
-        radioButtonsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        radioButtonsPanel.setLayout(new MigLayout());
+    public void createLipidHeadGroupsPanel() {
+        lipidHeadGroupsPanel.setBackground(Color.WHITE);
+        lipidHeadGroupsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        lipidHeadGroupsPanel.setLayout(new MigLayout());
 
-        JLabel radioButtonsLabel = new JLabel("Lipid Head Groups");
-        configureTextComponents(radioButtonsLabel);
+        JLabel lipidHeadGroupsLabel = new JLabel("Lipid Head Groups");
+        configureTextComponents(lipidHeadGroupsLabel);
 
-        JRadioButton buttonCE = new JRadioButton(" CE");
-        JRadioButton buttonCER = new JRadioButton(" CER");
-        JRadioButton buttonDG = new JRadioButton(" DG");
-        JRadioButton buttonMG = new JRadioButton(" MG");
-        JRadioButton buttonPA = new JRadioButton(" PA");
-        JRadioButton buttonPC = new JRadioButton(" PC");
-        JRadioButton buttonPE = new JRadioButton(" PE");
-        JRadioButton buttonPI = new JRadioButton(" PI");
-        JRadioButton buttonPG = new JRadioButton(" PG");
-        JRadioButton buttonPS = new JRadioButton(" PS");
-        JRadioButton buttonSM = new JRadioButton(" SM");
-        JRadioButton buttonTG = new JRadioButton(" TG", true);
-        JRadioButton buttonCL = new JRadioButton(" CL");
+        JCheckBox buttonCE = new JCheckBox(" CE");
+        JCheckBox buttonCER = new JCheckBox(" CER");
+        JCheckBox buttonDG = new JCheckBox(" DG");
+        JCheckBox buttonMG = new JCheckBox(" MG");
+        JCheckBox buttonPA = new JCheckBox(" PA");
+        JCheckBox buttonPC = new JCheckBox(" PC");
+        JCheckBox buttonPE = new JCheckBox(" PE");
+        JCheckBox buttonPI = new JCheckBox(" PI");
+        JCheckBox buttonPG = new JCheckBox(" PG");
+        JCheckBox buttonPS = new JCheckBox(" PS");
+        JCheckBox buttonSM = new JCheckBox(" SM");
+        JCheckBox buttonTG = new JCheckBox(" TG");
+        JCheckBox buttonCL = new JCheckBox(" CL");
+        JCheckBox buttonAll = new JCheckBox(" Select All", true);
 
         configureTextComponents(buttonCE);
         configureTextComponents(buttonCER);
@@ -444,6 +463,7 @@ public class MainPageUI extends JPanel {
         configureTextComponents(buttonSM);
         configureTextComponents(buttonTG);
         configureTextComponents(buttonCL);
+        configureTextComponents(buttonAll);
 
         buttonGroup.add(buttonCE);
         buttonGroup.add(buttonCER);
@@ -458,19 +478,21 @@ public class MainPageUI extends JPanel {
         buttonGroup.add(buttonSM);
         buttonGroup.add(buttonTG);
         buttonGroup.add(buttonCL);
+        buttonGroup.add(buttonAll);
 
-        radioButtonsPanel.add(radioButtonsLabel, "wrap");
-        radioButtonsPanel.add(buttonCE, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonDG, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonMG, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonPA, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonPC, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonPE, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonPI, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonPG, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonPS, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonTG, "wrap, gapleft 15, gaptop 5");
-        radioButtonsPanel.add(buttonCL, "wrap, gapleft 15, gaptop 5");
+        lipidHeadGroupsPanel.add(lipidHeadGroupsLabel, "wrap");
+        lipidHeadGroupsPanel.add(buttonCE, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonDG, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonMG, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonPA, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonPC, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonPE, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonPI, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonPG, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonPS, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonTG, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonCL, "wrap, gapleft 15, gaptop 2");
+        lipidHeadGroupsPanel.add(buttonAll, "wrap, gapleft 15, gaptop 2");
     }
 
     public void createAdductsPanel() {
@@ -478,12 +500,16 @@ public class MainPageUI extends JPanel {
         adductsPanel.setLayout(new MigLayout("", "[]", ""));
         adductsPanel.setBackground(Color.WHITE);
         adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        adductsPanel.setPreferredSize(new Dimension(350, 300));
-        adductsPanel.setSize(new Dimension(350, 300));
-        adductsPanel.setMinimumSize(new Dimension(350, 300));
-        adductsPanel.setMaximumSize(new Dimension(350, 300));
-
+        adductsPanel.setPreferredSize(new Dimension(300, 340));
+        adductsPanel.setSize(new Dimension(300, 340));
+        adductsPanel.setMinimumSize(new Dimension(300, 340));
+        adductsPanel.setMaximumSize(new Dimension(300, 340));
         adductsPanel.add(adductsLabel, "wrap, gapbottom 4");
+        configureComponents(ionComboBox);
+        ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        ionComboBox.setToolTipText("Choose the list of adducts based on charge.");
+        ionComboBox.addActionListener(e -> updateListOfAdductsAccordingToCharge(Objects.requireNonNull(ionComboBox.getSelectedItem()).toString()));
+        adductsPanel.add(ionComboBox, "wrap, span 2, gapbottom 10");
         updateAdductPanel(Adduct.getPositiveAdducts());
         adductsPanel.setVisible(true);
     }
@@ -517,18 +543,16 @@ public class MainPageUI extends JPanel {
                 adductsPanel.remove(component);
             }
         }
-        int i = 0;
         for (String adduct : adducts) {
             JCheckBox checkBox = new JCheckBox(adduct);
             checkBoxList.add(checkBox);
             configureTextComponents(checkBox);
-            if (i % 2 == 0) {
-                adductsPanel.add(checkBox, "gapleft 10, gaptop 5, gapbottom 5");
-            } else {
-                adductsPanel.add(checkBox, "wrap, gapleft 10, gaptop 5, gapbottom 5");
-            }
-            i++;
+            checkBox.setFont(new Font("Arial", Font.BOLD, 16));
+            adductsPanel.add(checkBox, "gapleft 10, gaptop 5, wrap");
         }
+        JCheckBox checkBox = new JCheckBox("Select All");
+        configureTextComponents(checkBox);
+        adductsPanel.add(checkBox, "gapleft 10, gaptop 5, gapbottom 5");
         adductsPanel.revalidate();
         adductsPanel.repaint();
     }

@@ -1,9 +1,8 @@
 package org.example.databases;
 
 import org.example.domain.FattyAcid;
-import org.example.domain.Lipid;
-import org.example.domain.LipidSkeletalStructure;
 import org.example.domain.LipidType;
+import org.example.domain.MSLipid;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +21,7 @@ class DatabaseTest {
     private LinkedHashSet<FattyAcid> fattyAcids;
     private LinkedHashSet<FattyAcid> fattyAcidsIsoBranching;
     private LinkedHashSet<FattyAcid> fattyAcidsTG36;
+    private Set<Double> neutralLossAssociatedIonMZs;
 
     @BeforeEach
     void setUp() {
@@ -46,6 +46,9 @@ class DatabaseTest {
             fattyAcidsTG36.add(new FattyAcid(10, 0));
             fattyAcidsTG36.add(new FattyAcid(12, 0));
             fattyAcidsTG36.add(new FattyAcid(14, 0));
+
+            neutralLossAssociatedIonMZs = new LinkedHashSet<>();
+            neutralLossAssociatedIonMZs.add(531.4924);
         } catch (FattyAcidCreation_Exception | InvalidFormula_Exception e) {
             throw new RuntimeException(e);
         }
@@ -64,30 +67,21 @@ class DatabaseTest {
     }
 
     @Test
-    void calculateFattyAcidMasses() {
-        // ? todo: Method technically works but only if the values are in order... try stream() to order each Set
+    void getAllLipidsFromDatabaseWithOnlyOneNeutralLossAssociatedIonMZ() {
         try {
-            Set<Double> expectedSet = new LinkedHashSet<>();
-            expectedSet.add(172.15045);
-            expectedSet.add(200.18125);
-            expectedSet.add(228.21385);
+            LinkedHashSet<MSLipid> expectedSet = new LinkedHashSet<>();
+            expectedSet.add(database.createLipidFromDatabase("TG(16:0/16:0/16:0)", "18290", "C51H98O6", 806.736340868));
+            expectedSet.add(database.createLipidFromDatabase("TG(i-16:0/i-16:0/16:0)", "44473", "C51H98O6", 806.736340876));
+            expectedSet.add(database.createLipidFromDatabase("TG(16:0/16:0/i-16:0)", "59798", "C51H98O6", 806.736340876));
+            expectedSet.add(database.createLipidFromDatabase("TG(i-16:0/16:0/16:0)", "60082", "C51H98O6", 806.736340876));
 
-            Set<Double> actualSet = database.calculateFattyAcidMasses(656.5862, fattyAcidMasses);
-            Iterator<Double> expectedIterator = expectedSet.iterator();
-            Iterator<Double> actualIterator = actualSet.iterator();
-            while (expectedIterator.hasNext()) {
-                assertThat(actualIterator.next()).isCloseTo(expectedIterator.next(), offset(2d));
-            }
-        } catch (SQLException | FattyAcidCreation_Exception e) {
+            LinkedHashSet<MSLipid> actualSet = database.getAllLipidsFromDatabase(LipidType.TG, 804.7470, neutralLossAssociatedIonMZs);
+            System.out.println(actualSet.toString());
+            assertEquals(expectedSet.toString(), actualSet.toString());
+        } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    //     public MSLipid createLipidFromCompoundName(String compoundNameDB, String casId, String formulaString,
-    //     double mass) throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-    @Test
-    void createLipidFromCompoundName() {
 
-
-    }
 }
