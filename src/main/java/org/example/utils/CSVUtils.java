@@ -64,7 +64,7 @@ public class CSVUtils {
         }
     }
 
-    public void readCSVForBatchProcessing(File file) throws IOException {
+    public void readCSVAndWriteResultsToFile(File file) throws IOException {
         try (Reader reader = new FileReader(file.getAbsolutePath())) {
             CSVFormat csvFormat = CSVFormat.DEFAULT.builder().build();
             Iterable<CSVRecord> records = csvFormat.parse(reader);
@@ -89,5 +89,10 @@ public class CSVUtils {
             }
             JOptionPane.showMessageDialog(null, numberOfRecords + " files were created in " + fileDirectory);
         }
+    }
+
+    public void readCSVAndSaveResultsAsSet(){
+
+
     }
 }

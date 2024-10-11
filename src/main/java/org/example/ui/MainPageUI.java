@@ -44,8 +44,8 @@ public class MainPageUI extends JPanel {
     public JTextField NLoss3_Input;
     public JTextField NLoss4_Input;
     public JTextField PI_Input;
-    public JSpinner tolerancePI_Input;
-    public JSpinner toleranceNL_Input;
+    public JTextField tolerancePI_Input;
+    public JTextField toleranceNL_Input;
 
     private final JLabel precursorIonLabel;
     private final JLabel neutralLossesLabel;
@@ -72,7 +72,7 @@ public class MainPageUI extends JPanel {
 
         searchButton = new JButton("  Begin Search");
         exportButton = new JButton("  Export to CSV");
-        uploadButton = new JButton("  Upload File");
+        uploadButton = new JButton("  Batch Processing");
         clearButton = new JButton("  Clear Input");
         getTemplateButton = new JButton("  File Template");
         tablePanel = new JPanel();
@@ -84,8 +84,8 @@ public class MainPageUI extends JPanel {
         NLoss3_Input = new JTextField();
         NLoss4_Input = new JTextField();
         PI_Input = new JTextField();
-        tolerancePI_Input = new JSpinner(new SpinnerNumberModel(20, 0, 50, 1)); //** TODO REPLACE WITH JTEXTFIELD
-        toleranceNL_Input = new JSpinner(new SpinnerNumberModel(30, 0, 50, 1));
+        tolerancePI_Input = new JTextField();
+        toleranceNL_Input = new JTextField();
 
         precursorIonLabel = new JLabel("    Precursor Ion");
         neutralLossesLabel = new JLabel("    Neutral Losses");
@@ -203,7 +203,7 @@ public class MainPageUI extends JPanel {
                     // todo: idk if this works
                     // FileDialog folderDirectory = new FileDialog(new Frame(), "Choose a folder to store files.", FileDialog.LOAD);
                     // , String.valueOf(folderDirectory.getDirectory())
-                    csvUtils.readCSVForBatchProcessing(new File(fileDirectory + fileName));
+                    csvUtils.readCSVAndWriteResultsToFile(new File(fileDirectory + fileName));
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -402,12 +402,14 @@ public class MainPageUI extends JPanel {
         configureComponents(PI_Input);
         PI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         PI_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Precursor Ion, m/z");
+        tolerancePI_Input.setColumns(15);
         configureComponents(tolerancePI_Input);
         tolerancePI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        tolerancePI_Input.setMaximumSize(new Dimension(100,50));
+        tolerancePI_Input.setText("20.0");
+        toleranceNL_Input.setColumns(15);
         configureComponents(toleranceNL_Input);
         toleranceNL_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        toleranceNL_Input.setMaximumSize(new Dimension(100,50));
+        toleranceNL_Input.setText("30.0");
 
         configureTextComponents(precursorIonLabel);
         configureTextComponents(neutralLossesLabel);

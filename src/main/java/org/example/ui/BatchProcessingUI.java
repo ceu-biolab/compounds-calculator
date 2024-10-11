@@ -7,7 +7,13 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
-public class BatchProcessingUI extends JPanel {
+public class BatchProcessingUI {
+
+    // TODO: Make this a pop-up panel (JPanel) instead, so that it displays all of the different results and can be clicked through.
+        /** This class should appear when a file is uploaded by the user.
+        *
+        */
+
     public BatchProcessingUI() {
         FlatLightLaf.setup();
         try {
@@ -15,16 +21,23 @@ public class BatchProcessingUI extends JPanel {
         } catch (UnsupportedLookAndFeelException e) {
             throw new RuntimeException(e);
         }
-        setLayout(new MigLayout("", "[grow, fill]25[grow, fill]",
-                "[grow, fill]25[grow, fill]"));
-        setBackground(new Color(195, 224, 229));
-        JPanel panel1 = new JPanel();
-        panel1.setMinimumSize(new Dimension(1450, 800));
-        panel1.setMaximumSize(new Dimension(1450, 800));
-        panel1.setPreferredSize(new Dimension(1450, 800));
-        panel1.setBackground(Color.WHITE);
-        panel1.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        add(panel1);
-        setVisible(true);
+
+        JFrame frame = new JFrame();
+        frame.getContentPane().setBackground(new Color(195, 224, 229));
+        frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth() - 400,
+                (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() - 400);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
-}
+
+    public JPanel createLipidInfoPanel() {
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(195, 224, 229));
+        return panel;
+    }
+
+    public JPanel createLipidTablePanel() {
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(195, 224, 229));
+        return panel;
+    }}

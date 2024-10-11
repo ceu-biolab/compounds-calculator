@@ -81,17 +81,6 @@ public class SidePanelUI {
             frame.repaint();
         });
 
-        JButton batchProcessingButton = new JButton("  Batch Processing");
-        configureComponents(batchProcessingButton, "src/main/resources/Transformer_icon.png");
-        batchProcessingButton.addActionListener(e -> {
-            frame.remove(interfaceUI);
-            frame.add(adductTransformerUI);
-            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-            frame.revalidate();
-            frame.repaint();
-        });
-
         JButton helpButton = new JButton("  Help");
         configureComponents(helpButton, "src/main/resources/Help_Icon.png");
         helpButton.setBackground(Color.WHITE);
@@ -128,8 +117,7 @@ public class SidePanelUI {
         });
 
         sidePanel.add(homeButton, "gapright 50");
-        sidePanel.add(adductTransformerButton, "gapright 50");
-        sidePanel.add(batchProcessingButton, "gapright 650");
+        sidePanel.add(adductTransformerButton, "gapright 900");
         sidePanel.add(helpButton, "gapleft 50");
         sidePanel.add(exitButton, "gapleft 50");
     }
