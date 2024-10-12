@@ -91,8 +91,32 @@ public class CSVUtils {
         }
     }
 
-    public void readCSVAndSaveResultsAsSet(){
+    public Map<String[], String[][]> readCSVAndSaveResultsAsSet(File file) throws IOException {
+        try (Reader reader = new FileReader(file.getAbsolutePath())) {
+            CSVFormat csvFormat = CSVFormat.DEFAULT.builder().build();
+            Iterable<CSVRecord> records = csvFormat.parse(reader);
+            Set<Double> neutralLossAssociatedIons = new HashSet<>();
+            Database database = new Database();
+            Map<String[], String[][]> lipidMap = new HashMap<>();
 
-
+            for (CSVRecord record : records) {
+                for (int i = 1; i < record.size(); i++) {
+                    double number = NumberUtils.toDouble(record.get(i));
+                    if (number != 0.0d) {
+                        neutralLossAssociatedIons.add(number);
+                    }
+                }
+                try {
+                    String[] lipidRecordHeader = {String.valueOf(NumberUtils.toDouble(record.get(0)))};
+                    String[][] lipidResultsStringArray = database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)),
+                            neutralLossAssociatedIons);
+                    lipidMap.put(lipidRecordHeader, lipidResultsStringArray);
+                    neutralLossAssociatedIons.clear();
+                } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return lipidMap;
+        }
     }
 }
