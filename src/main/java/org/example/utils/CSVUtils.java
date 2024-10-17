@@ -47,7 +47,7 @@ public class CSVUtils {
 
     private void writeCSV(String[][] lipidData, File file) {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(file.getAbsolutePath()));
-             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader("CAS ID", "Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z").build())) {
+             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader("Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z", "CAS ID").build())) {
             for (String[] lipidDataString : lipidData) {
                 csvPrinter.printRecord(Arrays.asList(lipidDataString));
             }
