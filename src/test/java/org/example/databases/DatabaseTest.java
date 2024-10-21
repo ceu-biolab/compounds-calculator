@@ -1,6 +1,7 @@
 package org.example.databases;
 
 import org.example.domain.FattyAcid;
+import org.example.domain.Formula;
 import org.example.domain.LipidType;
 import org.example.domain.MSLipid;
 import org.example.exceptions.FattyAcidCreation_Exception;
@@ -65,23 +66,5 @@ class DatabaseTest {
             throw new RuntimeException(e);
         }
     }
-
-    @Test
-    void getAllLipidsFromDatabaseWithOnlyOneNeutralLossAssociatedIonMZ() {
-        try {
-            LinkedHashSet<MSLipid> expectedSet = new LinkedHashSet<>();
-            expectedSet.add(database.createLipidFromDatabase("TG(16:0/16:0/16:0)", "18290", "C51H98O6", 806.736340868));
-            expectedSet.add(database.createLipidFromDatabase("TG(i-16:0/i-16:0/16:0)", "44473", "C51H98O6", 806.736340876));
-            expectedSet.add(database.createLipidFromDatabase("TG(16:0/16:0/i-16:0)", "59798", "C51H98O6", 806.736340876));
-            expectedSet.add(database.createLipidFromDatabase("TG(i-16:0/16:0/16:0)", "60082", "C51H98O6", 806.736340876));
-
-            LinkedHashSet<MSLipid> actualSet = database.getAllLipidsFromDatabase(LipidType.TG, 804.7470, neutralLossAssociatedIonMZs);
-            System.out.println(actualSet.toString());
-            assertEquals(expectedSet.toString(), actualSet.toString());
-        } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
 }

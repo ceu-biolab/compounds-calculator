@@ -14,12 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
-
-import static org.example.ui.MainPageUI.createLipidDataForTable;
 
 public class BatchProcessingUI {
 

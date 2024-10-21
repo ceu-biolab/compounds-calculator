@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
 import org.example.databases.Database;
+import org.example.databases.QueryParameters;
 import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
@@ -117,7 +118,6 @@ public class MainPageUI extends JPanel {
         tablePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         tablePanel.setBackground(Color.WHITE);
         tablePanel.setPreferredSize(new Dimension(1250, 500));
-        tablePanel.setSize(1250, 500);
         tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
         tableTitles = new String[]{"Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "m/z", "CMM ID"};
 
@@ -251,10 +251,12 @@ public class MainPageUI extends JPanel {
 
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
-                Set<MSLipid> lipidSet = database.getAllLipidsFromDatabase(
+                String adduct = " ";
+                QueryParameters queryParameters = new QueryParameters();
+                Set<MSLipid> lipidSet = queryParameters.findLipidsInDatabase(
                         getSelectedRadioButton(),
                         Double.parseDouble(PI_Input.getText()),
-                        neutralLossAssociatedIonsInput
+                        neutralLossAssociatedIonsInput, determineAdduct(getSelectedRadioButton())
                 );
                 if (lipidSet.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "No results found in database.");
@@ -374,8 +376,6 @@ public class MainPageUI extends JPanel {
 
     public void createInputPanel() {
         inputSubpanel.setPreferredSize(new Dimension(1050, 340));
-        inputSubpanel.setSize(new Dimension(1050, 340));
-        inputSubpanel.setMinimumSize(new Dimension(1050, 340));
         inputSubpanel.setMaximumSize(new Dimension(1050, 340));
 
         inputSubpanel.setLayout(new MigLayout("", "[grow, fill]50[grow, fill]15", "15[grow, fill]10[grow, fill]15[grow, fill]10[grow,fill]15"));
@@ -503,8 +503,6 @@ public class MainPageUI extends JPanel {
         adductsPanel.setBackground(Color.WHITE);
         adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         adductsPanel.setPreferredSize(new Dimension(300, 340));
-        adductsPanel.setSize(new Dimension(300, 340));
-        adductsPanel.setMinimumSize(new Dimension(300, 340));
         adductsPanel.setMaximumSize(new Dimension(300, 340));
         adductsPanel.add(adductsLabel, "wrap, gapbottom 4");
         configureComponents(ionComboBox);
