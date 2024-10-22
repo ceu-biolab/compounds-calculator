@@ -58,10 +58,9 @@ public class MainPageUI extends JPanel {
     private DefaultTableModel tableModel = null;
     private String[] tableTitles = null;
     private String[][] lipidData = null;
-    private final Database database;
-    private final ButtonGroup buttonGroup;
+    private static ButtonGroup buttonGroup;
     private final JComboBox<String> ionComboBox;
-    private final List<JCheckBox> checkBoxList;
+    private static List<JCheckBox> checkBoxList;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -95,7 +94,7 @@ public class MainPageUI extends JPanel {
         adductsLabel = new JLabel("    Adducts");
         adductsPanel = new JPanel();
         ionComboBox = new JComboBox<>(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
-        database = new Database();
+        new Database();
         buttonGroup = new ButtonGroup();
         checkBoxList = new ArrayList<>();
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]", "[grow, fill]25[grow, fill]"));
@@ -154,8 +153,8 @@ public class MainPageUI extends JPanel {
             lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
             lipidScrollPane.setPreferredSize(new Dimension(1250, 500));
             lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-            List<JCheckBox> checkBoxesForSearch = getSelectedCheckBoxes();
-            if (checkBoxesForSearch == null || checkBoxesForSearch.isEmpty()) {
+            List<String> checkBoxesForSearch = getAdductsChosen();
+            if (checkBoxesForSearch.isEmpty()) {
                 JOptionPane.showMessageDialog(tablePanel, "Please select at least one adduct");
             } else {
                 tablePanel.add(lipidScrollPane, "center, grow");
@@ -203,7 +202,10 @@ public class MainPageUI extends JPanel {
                     // todo: idk if this works
                     // FileDialog folderDirectory = new FileDialog(new Frame(), "Choose a folder to store files.", FileDialog.LOAD);
                     // , String.valueOf(folderDirectory.getDirectory())
-                    csvUtils.readCSVAndWriteResultsToFile(new File(fileDirectory + fileName));
+                    List<String> adducts = getAdductsChosen();
+                    for (String adduct : adducts) {
+                        csvUtils.readCSVAndWriteResultsToFile(new File(fileDirectory + fileName), adduct);
+                    }
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -251,22 +253,12 @@ public class MainPageUI extends JPanel {
 
         try {
             if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
-                String adduct = " ";
-                QueryParameters queryParameters = new QueryParameters();
-                Set<MSLipid> lipidSet = queryParameters.findLipidsInDatabase(
-                        getSelectedRadioButton(),
-                        Double.parseDouble(PI_Input.getText()),
-                        neutralLossAssociatedIonsInput, determineAdduct(getSelectedRadioButton())
-                );
-                if (lipidSet.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "No results found in database.");
-                }
-                lipidData = new String[lipidSet.size()][7];
-                createLipidDataForTable(lipidSet, lipidData);
+                createLipidDataForTable(neutralLossAssociatedIonsInput);
             }
-        } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception exception) {
+        } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception |
+                 NullPointerException exception) {
             JOptionPane.showMessageDialog(null, "An error occurred while searching the database. " +
-                    "Please review data inputs and try again.");
+                    "Please ensure that the chosen adduct and lipid group are correct.");
         }
 
         tableModel = new DefaultTableModel(lipidData, tableTitles) {
@@ -291,27 +283,42 @@ public class MainPageUI extends JPanel {
         }
     }
 
-    public static void createLipidDataForTable(Set<MSLipid> lipidSet, String[][] lipidData) {
-        int i = 0;
+    public void createLipidDataForTable(Set<Double> neutralLossAssociatedIonsInput) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+        int i;
         DecimalFormat numberFormat = new DecimalFormat("#.0000");
-        for (MSLipid lipid : lipidSet) {
-            lipidData[i][0] = lipid.getCompoundName();
-            lipidData[i][1] = lipid.calculateSpeciesShorthand(lipid);
-            lipidData[i][2] = lipid.getFormula();
-            lipidData[i][3] = numberFormat.format(lipid.getMass());
-            lipidData[i][4] = determineAdduct(lipid.getLipidSkeletalStructure().getLipidType()); // ** adduct should actually come from the JCheckBox
-            lipidData[i][5] = lipid.calculateMZWithAdduct(determineAdduct(lipid.getLipidSkeletalStructure().getLipidType()), 1);
-            lipidData[i][6] = lipid.getCompoundID();
-            i++;
-        }
-    }
+        Set<MSLipid> lipidSet;
+        List<String> adducts = getAdductsChosen();
 
-    private static String determineAdduct(LipidType lipidType) {
-        // todo, fix method and link it to the list of adducts/jcheckboxes
-        if (lipidType.equals(LipidType.TG)) {
-            return "[M+NH4]+";
+        List<String[]> finalLipidDataList = new ArrayList<>();
+
+        for (String adduct : adducts) {
+            QueryParameters queryParameters = new QueryParameters();
+            lipidSet = queryParameters.findLipidsInDatabase(getSelectedRadioButton(), Double.parseDouble(PI_Input.getText()),
+                    neutralLossAssociatedIonsInput, adduct);
+
+            String[][] localLipidData = new String[lipidSet.size()][7];
+            i = 0;
+
+            for (MSLipid lipid : lipidSet) {
+                localLipidData[i][0] = lipid.getCompoundName();
+                localLipidData[i][1] = lipid.calculateSpeciesShorthand(lipid);
+                localLipidData[i][2] = lipid.getFormula();
+                localLipidData[i][3] = numberFormat.format(lipid.getMass());
+                localLipidData[i][4] = adduct;
+                localLipidData[i][5] = lipid.calculateMZWithAdduct(adduct, 1);
+                localLipidData[i][6] = lipid.getCompoundID();
+                finalLipidDataList.add(localLipidData[i]);
+                i++;
+            }
         }
-        return "[M+H]+";
+        lipidData = new String[finalLipidDataList.size()][7];
+        for (int j = 0; j < finalLipidDataList.size(); j++) {
+            lipidData[j] = finalLipidDataList.get(j);
+        }
+        if (lipidData.length == 0) {
+            JOptionPane.showMessageDialog(null, "An error occurred while searching the database. " +
+                    "Please ensure that the chosen adduct and lipid group are correct.");
+        }
     }
 
     public void configureTable(String[][] data) {
@@ -338,7 +345,7 @@ public class MainPageUI extends JPanel {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (table.getSelectedColumn() == 0) {
+                if (table.getSelectedColumn() == 7) {
                     try {
                         URL url = new URL("http://ceumass.eps.uspceu.es/mediator/api/v3/compounds/" + table.getValueAt(table.getSelectedRow(),
                                 table.getSelectedColumn()));
@@ -526,12 +533,16 @@ public class MainPageUI extends JPanel {
     }
 
     public void updateListOfAdductsAccordingToCharge(String charge) {
+        for (JCheckBox checkBox : checkBoxList) {
+            checkBox.setSelected(false);
+        }
         if (charge.equals("   View Positive Adducts  ")) {
             String[] string = Adduct.getPositiveAdducts();
             updateAdductPanel(string);
         } else if (charge.equals("   View Negative Adducts  ")) {
             String[] string = Adduct.getNegativeAdducts();
             updateAdductPanel(string);
+
         }
         adductsPanel.revalidate();
         adductsPanel.repaint();
@@ -561,7 +572,7 @@ public class MainPageUI extends JPanel {
         return !textFieldInput.isEmpty();
     }
 
-    public LipidType getSelectedRadioButton() {
+    public static LipidType getSelectedRadioButton() {
         for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements(); ) {
             AbstractButton button = buttons.nextElement();
             if (button.isSelected()) {
@@ -571,14 +582,15 @@ public class MainPageUI extends JPanel {
         return null;
     }
 
-    public List<JCheckBox> getSelectedCheckBoxes() {
-        List<JCheckBox> checkBoxes = new ArrayList<>();
+    public static List<String> getAdductsChosen() {
+        List<String> adducts = new ArrayList<>();
         for (JCheckBox checkBox : checkBoxList) {
             if (checkBox.isSelected()) {
-                checkBoxes.add(checkBox);
+                adducts.add(checkBox.getText());
             }
         }
-        return checkBoxes;
+        // TODO: ADD IF(SELECTALL) { }
+        return adducts;
     }
 }
 

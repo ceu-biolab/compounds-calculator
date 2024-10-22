@@ -64,7 +64,7 @@ public class CSVUtils {
         }
     }
 
-    public void readCSVAndWriteResultsToFile(File file) throws IOException {
+    public void readCSVAndWriteResultsToFile(File file, String adduct) throws IOException {
         try (Reader reader = new FileReader(file.getAbsolutePath())) {
             CSVFormat csvFormat = CSVFormat.DEFAULT.builder().build();
             Iterable<CSVRecord> records = csvFormat.parse(reader);
@@ -80,7 +80,7 @@ public class CSVUtils {
                 }
                 try {
                     createAndWriteCSVBatchProcessing(database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)),
-                            neutralLossAssociatedIons), String.valueOf(NumberUtils.toDouble(record.get(0))));
+                            neutralLossAssociatedIons, adduct), String.valueOf(NumberUtils.toDouble(record.get(0))));
                     numberOfRecords++;
                     neutralLossAssociatedIons.clear();
                 } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
@@ -91,7 +91,7 @@ public class CSVUtils {
         }
     }
 
-    public Map<String[], String[][]> readCSVAndSaveResultsAsSet(File file) throws IOException {
+    public Map<String[], String[][]> readCSVAndSaveResultsAsSet(File file, String adduct) throws IOException {
         try (Reader reader = new FileReader(file.getAbsolutePath())) {
             CSVFormat csvFormat = CSVFormat.DEFAULT.builder().build();
             Iterable<CSVRecord> records = csvFormat.parse(reader);
@@ -109,7 +109,7 @@ public class CSVUtils {
                 try {
                     String[] lipidRecordHeader = {String.valueOf(NumberUtils.toDouble(record.get(0)))};
                     String[][] lipidResultsStringArray = database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)),
-                            neutralLossAssociatedIons);
+                            neutralLossAssociatedIons, adduct);
                     lipidMap.put(lipidRecordHeader, lipidResultsStringArray);
                     neutralLossAssociatedIons.clear();
                 } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {

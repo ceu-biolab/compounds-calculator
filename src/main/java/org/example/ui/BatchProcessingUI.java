@@ -138,15 +138,6 @@ public class BatchProcessingUI {
         return panel;
     }
 
-    public void getData(File file) {
-        CSVUtils csvUtils = new CSVUtils();
-        try {
-            Map<String[], String[][]> map = csvUtils.readCSVAndSaveResultsAsSet(file);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public JButton addExportButton() {
         JButton exportButton = new JButton();
         exportButton.setBackground(Color.WHITE);

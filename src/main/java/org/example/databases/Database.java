@@ -3,7 +3,6 @@ package org.example.databases;
 import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
-import org.example.ui.MainPageUI;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.swing.*;
@@ -73,13 +72,13 @@ public class Database {
         return new LinkedHashSet<>(Arrays.asList(doubleList));
     }
 
-    public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        String adduct = "[M+NH4]+";
+    public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons, String adduct) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         QueryParameters queryParameters = new QueryParameters();
         LinkedHashSet<MSLipid> lipidSet = queryParameters.findLipidsInDatabase(lipidType, precursorIon, neutralLossAssociatedIons, adduct);
         String[][] lipidData = new String[lipidSet.size()][7];
-        // TODO: FIX ADDUCTS IN METHOD
-        MainPageUI.createLipidDataForTable(lipidSet, lipidData);
+        // RE-DO THIS
+        // TODO, FIX METHOD
+        //MainPageUI.createLipidDataForTable(lipidSet, lipidData, adduct);
         return lipidData;
     }
 

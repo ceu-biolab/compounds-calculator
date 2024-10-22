@@ -30,8 +30,8 @@ public class AdductTransformerUI extends JPanel {
         //** Dada una m/z cual sería la masa de todos sus aductos
         //** Select all, etc.
         //** Create own adducts by inserting a formula (should have regex of [M+X]Q+/-)
-        //** Find M from m/z
-        //** Find all m/z from M
-        //** Add-ons (from formulas)  --formulas de calculo de M de m/z
+        //** 1. Find M from m/z
+        //** 2. Find all m/z from M
+        //** 3. Add-ons (from formulas)  --formulas de calculo de M de m/z
         //** Separate pos/neg
 }
