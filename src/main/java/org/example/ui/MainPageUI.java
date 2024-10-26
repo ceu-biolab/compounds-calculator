@@ -89,8 +89,8 @@ public class MainPageUI extends JPanel {
 
         precursorIonLabel = new JLabel("    Precursor Ion");
         neutralLossesLabel = new JLabel("    Neutral Losses");
-        tolerancePILabel = new JLabel("    Precursor Ion Tolerance, ppm");
-        toleranceNLLabel = new JLabel("    Neutral Loss Tolerance, ppm");
+        tolerancePILabel = new JLabel("    Precursor Ion Tolerance (ppm)");
+        toleranceNLLabel = new JLabel("    Neutral Loss Tolerance (ppm)");
         adductsLabel = new JLabel("    Adducts");
         adductsPanel = new JPanel();
         ionComboBox = new JComboBox<>(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
@@ -257,8 +257,7 @@ public class MainPageUI extends JPanel {
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception |
                  NullPointerException exception) {
-            JOptionPane.showMessageDialog(null, "An error occurred while searching the database. " +
-                    "Please ensure that the chosen adduct and lipid group are correct.");
+            JOptionPane.showMessageDialog(null, "No results found.");
         }
 
         tableModel = new DefaultTableModel(lipidData, tableTitles) {
@@ -347,7 +346,7 @@ public class MainPageUI extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 if (table.getSelectedColumn() == 7) {
                     try {
-                        URL url = new URL("http://ceumass.eps.uspceu.es/mediator/api/v3/compounds/" + table.getValueAt(table.getSelectedRow(),
+                        URL url = new URL("https://ceumass.eps.uspceu.es/mediator/api/v3/compounds/" + table.getValueAt(table.getSelectedRow(),
                                 table.getSelectedColumn()));
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();

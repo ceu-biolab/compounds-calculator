@@ -11,7 +11,9 @@ public class Adduct {
         adductMap_Pos.put("[M+H]+", 1.00783d - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+Na]+", 22.98977d - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+K]+", 38.96371d - PeriodicTable.electronMass);
-        adductMap_Pos.put("[M+NH4]+", 18.03437d - PeriodicTable.electronMass - PeriodicTable.elements_Map.get(Element.H));
+        adductMap_Pos.put("[M+NH4]+", 18.03437d - PeriodicTable.electronMass);
+        // TODO: GET RID OF THIS ADDUCT BUT ENSURE THAT A HYDROGEN IS REMOVED FROM THE MASS OF THE TRIGLYCERIDE FA'S
+        adductMap_Pos.put("[M+NH4-H]+", 18.03437d - PeriodicTable.electronMass - PeriodicTable.elements_Map.get(Element.H));
         adductMap_Pos.put("[M+H-H2O]+", - 18.01056d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+C2H6N2+H]+", 58.05310d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
     }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Console Appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Log SQL Statements -->
+    <logger name="org.springframework.jdbc.core.JdbcTemplate" level="DEBUG"/>
+    <logger name="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate" level="DEBUG"/>
+    <logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="TRACE"/>
+
+    <!-- Log Hibernate SQL -->
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type" level="TRACE"/>
+    <logger name="org.hibernate.type.descriptor.sql" level="TRACE" additivity="false">
+        <appender-ref ref="jdbc-transaction-log"/>
+    </logger>
+    <!-- Attach Appenders -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
