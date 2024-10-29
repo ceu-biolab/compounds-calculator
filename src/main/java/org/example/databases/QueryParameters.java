@@ -254,10 +254,11 @@ public class QueryParameters {
     private List<FattyAcid> getFAsCombinationFromPIMassAndTwoFAs(LipidType lipidType,
                                                                  double precursorIon, List<FattyAcid> fattyAcids,
                                                                  String adduct) throws IncorrectAdduct, NotFoundElement, IncorrectFormula {
-        // TODO: replace adduct for formulaValidation --> throws IncorrectAdduct, NotFoundElement, IncorrectFormula
+        // TODO: replace adduct for formulaValidation --> throws IncorrectAdduct, NotFoundElement, IncorrectFormula,
         new ceu.biolab.Adduct(adduct);
         double expectedMass = precursorIon - Adduct.getAdductMass(adduct) - PeriodicTable.elements_Map.get(Element.H);
         double tolerance = 0.5d;
+
 
         for (int i = 0; i < fattyAcids.size(); i++) {
             List<FattyAcid> testFattyAcids = new ArrayList<>(fattyAcids);
