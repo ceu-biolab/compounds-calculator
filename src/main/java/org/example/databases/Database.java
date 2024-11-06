@@ -21,7 +21,7 @@ public class Database {
             connection = DriverManager.getConnection(url, username, password);
 
             dataSource = new DriverManagerDataSource();
-            dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver"); // TODO: Replace with org.sqlite.JDBC
             dataSource.setUrl(url);
             dataSource.setUsername(username);
             dataSource.setPassword(password);
@@ -74,7 +74,7 @@ public class Database {
 
     public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons, String adduct) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         QueryParameters queryParameters = new QueryParameters();
-        LinkedHashSet<MSLipid> lipidSet = queryParameters.findLipidsInDatabase(lipidType, precursorIon, neutralLossAssociatedIons, adduct);
+        LinkedHashSet<MSLipid> lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(lipidType, precursorIon, neutralLossAssociatedIons, adduct);
         String[][] lipidData = new String[lipidSet.size()][7];
         // RE-DO THIS
         // TODO, FIX METHOD

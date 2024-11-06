@@ -21,7 +21,20 @@ public class QueryParameters {
         this.namedJdbcTemplate = new NamedParameterJdbcTemplate(Database.dataSource);
     }
 
-    public LinkedHashSet<MSLipid> findLipidsInDatabase(LipidType lipidType, double precursorIonMZ, Set<Double> neutralLossAssociatedIonMZs, String adduct) throws InvalidFormula_Exception, SQLException, FattyAcidCreation_Exception {
+    /**
+     * Returns the set of lipids based on the lipid type, precursor ion m/z, neutral loss association ion m/z values,
+     * and the adduct chosen by the user.
+     *
+     * @param lipidType
+     * @param precursorIonMZ
+     * @param neutralLossAssociatedIonMZs
+     * @param adduct
+     * @return
+     * @throws InvalidFormula_Exception
+     * @throws SQLException
+     * @throws FattyAcidCreation_Exception
+     */
+    public LinkedHashSet<MSLipid> returnSetOfLipidsFoundInDatabase(LipidType lipidType, double precursorIonMZ, Set<Double> neutralLossAssociatedIonMZs, String adduct) throws InvalidFormula_Exception, SQLException, FattyAcidCreation_Exception {
         Set<Double> fattyAcidMasses = Database.calculateFattyAcidMassesFromNeutralLosses(precursorIonMZ, neutralLossAssociatedIonMZs, adduct);
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formulaSkeleton = new Formula(lipidSkeletalStructure.getFormula().toString());
@@ -32,6 +45,7 @@ public class QueryParameters {
             if (iterator.hasNext()) {
                 FattyAcid fattyAcid = iterator.next();
                 fattyAcids.add(fattyAcid);
+                //** TODO: SUBTRACT H+ MASS HERE
                 formulaSkeleton.addFattyAcidToFormula(fattyAcid);
             } else {
                 System.err.println("Fatty Acid with mass " + fattyAcidMass + " not found");
@@ -78,7 +92,18 @@ public class QueryParameters {
         return null;
     }
 
-    private LinkedHashSet<MSLipid> findMGsInDatabase(StringBuilder queryBuilder, MapSqlParameterSource paramMap, List<FattyAcid> fattyAcids, Formula formulaSkeleton) {
+    /**
+     * Completes and executes the lipid finder query for monoglycerides, creating the set of lipids according to the
+     * monoglyceride's characteristics (number of fatty acids = 1), list of fatty acids, and adduct.
+     *
+     * @param queryBuilder
+     * @param paramMap
+     * @param fattyAcids
+     * @param formulaSkeleton
+     * @return
+     */
+    private LinkedHashSet<MSLipid> findMGsInDatabase(StringBuilder queryBuilder, MapSqlParameterSource paramMap,
+                                                     List<FattyAcid> fattyAcids, Formula formulaSkeleton) {
         queryBuilder.append("""
                 WHERE
                     (chains.num_carbons, chains.double_bonds) IN ((:numCarbons1, :doubleBonds1))
@@ -94,7 +119,20 @@ public class QueryParameters {
         return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
     }
 
-    private LinkedHashSet<MSLipid> findDGsInDatabase(StringBuilder queryBuilder, MapSqlParameterSource paramMap, List<FattyAcid> fattyAcids, Formula formulaSkeleton) throws InvalidFormula_Exception {
+    /**
+     * Completes and executes the lipid finder query for diglycerides, creating the set of lipids according to the
+     * diglyceride's characteristics (number of fatty acids = 2), list of fatty acids, and adduct.
+     *
+     * @param queryBuilder
+     * @param paramMap
+     * @param fattyAcids
+     * @param formulaSkeleton
+     * @return
+     * @throws InvalidFormula_Exception
+     */
+    private LinkedHashSet<MSLipid> findDGsInDatabase(StringBuilder queryBuilder, MapSqlParameterSource paramMap,
+                                                     List<FattyAcid> fattyAcids, Formula formulaSkeleton)
+            throws InvalidFormula_Exception {
         switch (fattyAcids.size()) {
             case 1:
                 formulaSkeleton.addFattyAcidToFormula(fattyAcids.get(0));
@@ -133,7 +171,23 @@ public class QueryParameters {
         return null;
     }
 
-    private LinkedHashSet<MSLipid> findTGsInDatabase(StringBuilder queryBuilder, MapSqlParameterSource paramMap, List<FattyAcid> fattyAcids, LipidType lipidType, double precursorIon, String adduct, Formula formulaSkeleton) throws InvalidFormula_Exception {
+    /**
+     * Completes and executes the lipid finder query for triglycerides, creating the set of lipids according to the
+     * triglyceride's characteristics (number of fatty acids = 3), list of fatty acids, and adduct.
+     *
+     * @param queryBuilder
+     * @param paramMap
+     * @param fattyAcids
+     * @param lipidType
+     * @param precursorIon
+     * @param adduct
+     * @param formulaSkeleton
+     * @return
+     * @throws InvalidFormula_Exception
+     */
+    private LinkedHashSet<MSLipid> findTGsInDatabase(StringBuilder queryBuilder, MapSqlParameterSource paramMap,
+                                                     List<FattyAcid> fattyAcids, LipidType lipidType, double precursorIon,
+                                                     String adduct, Formula formulaSkeleton) throws InvalidFormula_Exception {
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         switch (fattyAcids.size()) {
             case 1:
@@ -205,7 +259,7 @@ public class QueryParameters {
                 return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
             default:
                 LinkedHashSet<MSLipid> lipidResults = new LinkedHashSet<>();
-                List<List<FattyAcid>> fattyAcidCombinations = findPossibleCombinationsOfFAsWhenCoellution(lipidType, fattyAcids, precursorIon, adduct, 30d);
+                List<List<FattyAcid>> fattyAcidCombinations = findPossibleCombinationsOfFAsWhenCoelution(lipidType, fattyAcids, precursorIon, adduct, 30d);
                 double expectedMass = precursorIon - Adduct.getAdductMass(adduct) - PeriodicTable.elements_Map.get(Element.H);
 
                 for (List<FattyAcid> combination : fattyAcidCombinations) {
@@ -253,12 +307,10 @@ public class QueryParameters {
 
     private List<FattyAcid> getFAsCombinationFromPIMassAndTwoFAs(LipidType lipidType,
                                                                  double precursorIon, List<FattyAcid> fattyAcids,
-                                                                 String adduct) throws IncorrectAdduct, NotFoundElement, IncorrectFormula {
-        // TODO: replace adduct for formulaValidation --> throws IncorrectAdduct, NotFoundElement, IncorrectFormula,
-        new ceu.biolab.Adduct(adduct);
-        double expectedMass = precursorIon - Adduct.getAdductMass(adduct) - PeriodicTable.elements_Map.get(Element.H);
+                                                                 String adductString) throws IncorrectAdduct, NotFoundElement, IncorrectFormula {
+        ceu.biolab.Adduct adduct = new ceu.biolab.Adduct(adductString);
+        double expectedMass = precursorIon - adduct.getAdductMass() - PeriodicTable.elements_Map.get(Element.H);
         double tolerance = 0.5d;
-
 
         for (int i = 0; i < fattyAcids.size(); i++) {
             List<FattyAcid> testFattyAcids = new ArrayList<>(fattyAcids);
@@ -274,6 +326,15 @@ public class QueryParameters {
         return null;
     }
 
+    /**
+     * Calculates the lipid mass according to the lipid type and list of fatty acids. The mass corresponds to the sum of
+     * the lipid head structure (which is found according to the lipid type) and each fatty acid along with the removal
+     * of a molecule of water (since the addition of a fatty acid to a lipid head is a condensation reaction, which
+     * releases water).
+     * @param lipidType
+     * @param fattyAcids
+     * @return
+     */
     private static double calculateLipidMass(LipidType lipidType, List<FattyAcid> fattyAcids) {
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         double mass = lipidSkeletalStructure.getMass(lipidSkeletalStructure.getFormula());
@@ -284,10 +345,12 @@ public class QueryParameters {
         return mass;
     }
 
-    public static List<List<FattyAcid>> findPossibleCombinationsOfFAsWhenCoellution(LipidType lipidType, List<FattyAcid> fattyAcids,
-                                                                                    double precursorIon, String adduct, double toleranceInPPM) {
+    public static List<List<FattyAcid>> findPossibleCombinationsOfFAsWhenCoelution(LipidType lipidType, List<FattyAcid> fattyAcids,
+                                                                                   double precursorIon, String adduct, double toleranceInPPM) {
         // TODO: CHANGE COMBINATION LENGTH DEPENDING ON THE LIPIDTYPE
         // TODO CHANGE WITHIN generateCombinations for the possibilities of each lipid type
+
+        //** Remember to consider cases where there is a minimum and maximum number of fatty acids
         int combinationLength = 3;  // Length of each combination
         List<List<FattyAcid>> finalFattyAcidsList = generateCombinations(lipidType, fattyAcids, combinationLength);
         System.out.println(finalFattyAcidsList);
@@ -295,17 +358,35 @@ public class QueryParameters {
         return finalFattyAcidsList;
     }
 
-    public static List<List<FattyAcid>> generateCombinations(LipidType lipidType, List<FattyAcid> fattyAcids, int combinationLength)
-    {
+    /**
+     * Public recursive function which generates the possible combinations with repetition of fatty acids from the lipid type
+     * and the list of fatty acids.
+     * @param lipidType
+     * @param fattyAcids
+     * @param combinationLength
+     * @return
+     */
+    public static List<List<FattyAcid>> generateCombinations(LipidType lipidType, List<FattyAcid> fattyAcids, int combinationLength) {
         List<List<FattyAcid>> finalFattyAcidsList = new ArrayList<>();
+        // TODO: CALCULATE COMBINATION LENGTH FROM LIPIDTYPE
         generateCombinations(lipidType, fattyAcids, new ArrayList<>(), finalFattyAcidsList, 0, fattyAcids.size(), combinationLength);
         return finalFattyAcidsList;
     }
 
+    /**
+     * Private
+     * @param lipidType
+     * @param fattyAcids
+     * @param currentCombination
+     * @param finalFattyAcidsList
+     * @param start
+     * @param n
+     * @param combinationLength
+     */
     private static void generateCombinations(LipidType lipidType, List<FattyAcid> fattyAcids, List<FattyAcid> currentCombination,
                                              List<List<FattyAcid>> finalFattyAcidsList,
                                              int start, int n, int combinationLength
-                                             ) {
+    ) {
         if (currentCombination.size() == combinationLength) {
             finalFattyAcidsList.add(new ArrayList<>(currentCombination));
             return;
@@ -318,8 +399,8 @@ public class QueryParameters {
         }
     }
 
-    private static boolean checkMassWithinTolerance(double theoreticalMass, double experimentalMass, double toleranceInPPM){
-        double tolerance = 0.5d;
+    private static boolean checkMassWithinTolerance(double theoreticalMass, double experimentalMass, double toleranceInPPM) {
+        double tolerance = 0.5d; // TODO: ADD PPM METHOD TO CALCULATE TOLERANCE IN PPM
         if (Math.abs(experimentalMass - theoreticalMass) < tolerance) {
             return true;
         } else {
@@ -340,7 +421,7 @@ public class QueryParameters {
         neutralLossIons8.add(519.4411);
         neutralLossIons8.add(547.4712);
 
-        System.out.println("4 Ions 1: " + queryParameters.findLipidsInDatabase(LipidType.TG, 736.6429, neutralLossIons8, "[M+NH4-H]+"));
+        System.out.println("4 Ions 1: " + queryParameters.returnSetOfLipidsFoundInDatabase(LipidType.TG, 736.6429, neutralLossIons8, "[M+NH4-H]+"));
     }
 
 }

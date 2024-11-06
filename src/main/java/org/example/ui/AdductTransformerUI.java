@@ -30,8 +30,13 @@ public class AdductTransformerUI extends JPanel {
         //** Dada una m/z cual sería la masa de todos sus aductos
         //** Select all, etc.
         //** Create own adducts by inserting a formula (should have regex of [M+X]Q+/-)
-        //** 1. Find M from m/z // same with 2
-        //** 2. Find all m/z from M
-        //** 3. Add-ons (from formulas)  --formulas de calculo de M de m/z
+            //** 1. Find M from m/z // same with 2
+            //** 2. Find all m/z from M
+            //** 3. Add-ons (from formulas)  --formulas de calculo de M de m/z
         //** Separate pos/neg
+    /** Básicamente, hay que refactorizar e incluir en FormulaValidation los casos de uso para obtener el M desde el MZ  y los MZs
+    * desde el M teniendo en cuenta que M puede tomar cualquier número y no exclusivamente una fórmula! Si es muy largo o al inicio
+    * te lía mañana lo vemos, pero parece una buena idea comenzar con los tests para saber los casos y los resultados y luego pasar
+    * a su implementación que será refactorizar este código.
+    * */
 }

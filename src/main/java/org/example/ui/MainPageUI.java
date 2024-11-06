@@ -292,7 +292,7 @@ public class MainPageUI extends JPanel {
 
         for (String adduct : adducts) {
             QueryParameters queryParameters = new QueryParameters();
-            lipidSet = queryParameters.findLipidsInDatabase(getSelectedRadioButton(), Double.parseDouble(PI_Input.getText()),
+            lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(getSelectedRadioButton(), Double.parseDouble(PI_Input.getText()),
                     neutralLossAssociatedIonsInput, adduct);
 
             String[][] localLipidData = new String[lipidSet.size()][7];
