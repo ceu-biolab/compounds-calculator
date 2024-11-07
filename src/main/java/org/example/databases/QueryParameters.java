@@ -410,18 +410,14 @@ public class QueryParameters {
 
     public static void main(String[] args) throws InvalidFormula_Exception, FattyAcidCreation_Exception, SQLException {
         QueryParameters queryParameters = new QueryParameters();
-        Set<Double> neutralLossIons2 = new HashSet<>();
-        neutralLossIons2.add(383.3159);
-        neutralLossIons2.add(411.3476);
-        //System.out.println("TG(10:0/10:0/12:0): " + queryParameters.findLipidsInDatabase(LipidType.TG, 600.4707, neutralLossIons2, "[M+NH4-H]+"));
-
-        Set<Double> neutralLossIons8 = new HashSet<>();
-        neutralLossIons8.add(439.3783);
-        neutralLossIons8.add(491.4076);
-        neutralLossIons8.add(519.4411);
-        neutralLossIons8.add(547.4712);
-
-        System.out.println("4 Ions 1: " + queryParameters.returnSetOfLipidsFoundInDatabase(LipidType.TG, 736.6429, neutralLossIons8, "[M+NH4-H]+"));
+        Set<Double> neutralLossAssociatedIonMZs = new LinkedHashSet<>();
+        neutralLossAssociatedIonMZs.add(467.4088);
+        neutralLossAssociatedIonMZs.add(491.4100);
+        neutralLossAssociatedIonMZs.add(493.4250);
+        neutralLossAssociatedIonMZs.add(519.4413);
+        neutralLossAssociatedIonMZs.add(547.4726);
+        neutralLossAssociatedIonMZs.add(575.5039);
+        System.out.println(queryParameters.returnSetOfLipidsFoundInDatabase(LipidType.TG, 764.6767d, neutralLossAssociatedIonMZs, "[M+NH4-H]+"));
     }
 
 }

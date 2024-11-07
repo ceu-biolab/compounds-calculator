@@ -70,8 +70,10 @@ public class Transformer {
      */
     public static Double calculateDeltaPPM(Double massToSearch, Integer toleranceMode,
                                            Double tolerance) {
-        String toleranceModeString = DataFromInterfacesUtilities.toleranceTypeToString(toleranceMode);
-        return calculateDeltaPPM(massToSearch, toleranceModeString, tolerance);
+        //String toleranceModeString = DataFromInterfacesUtilities.toleranceTypeToString(toleranceMode);
+        //return calculateDeltaPPM(massToSearch, toleranceModeString, tolerance);
+        // TODO
+        return null;
     }
 
 
@@ -147,7 +149,8 @@ public class Transformer {
      * @return
      */
     public static Double getMassToSearch(Double experimentalMass, String adduct, int ionizationMode) {
-        Double adductValue = getAdductValue(adduct, ionizationMode);
+        //Double adductValue = getAdductValue(adduct, ionizationMode);
+        Double adductValue = 0d; // TODO
         Double massToSearch;
 
         if (AdductsLists.CHARGE_2.contains(adduct)) {
@@ -211,7 +214,8 @@ public class Transformer {
      * massToSearch
      */
     public static Double getMassOfAdductFromMonoWeight(Double monoisotopic_weight, String adduct, int ionizationMode) {
-        Double adductValue = getAdductValue(adduct, ionizationMode);
+        //Double adductValue = getAdductValue(adduct, ionizationMode);
+        Double adductValue = 0d; // TODO
         Double massToSearch;
 
         if (AdductsLists.CHARGE_2.contains(adduct)) {

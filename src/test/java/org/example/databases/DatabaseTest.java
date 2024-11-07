@@ -1,9 +1,6 @@
 package org.example.databases;
 
 import org.example.domain.FattyAcid;
-import org.example.domain.Formula;
-import org.example.domain.LipidType;
-import org.example.domain.MSLipid;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 import org.junit.jupiter.api.BeforeEach;
