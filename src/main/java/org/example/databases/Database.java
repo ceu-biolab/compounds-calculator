@@ -9,6 +9,10 @@ import javax.swing.*;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * @author: Pilar Bourg
+ * @version: 1.0, 7/11/2024
+ */
 public class Database {
     public static Connection connection = null;
     public static DriverManagerDataSource dataSource = null;

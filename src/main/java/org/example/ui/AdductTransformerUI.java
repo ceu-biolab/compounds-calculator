@@ -34,9 +34,11 @@ public class AdductTransformerUI extends JPanel {
             //** 2. Find all m/z from M
             //** 3. Add-ons (from formulas)  --formulas de calculo de M de m/z
         //** Separate pos/neg
+
     /** Básicamente, hay que refactorizar e incluir en FormulaValidation los casos de uso para obtener el M desde el MZ  y los MZs
     * desde el M teniendo en cuenta que M puede tomar cualquier número y no exclusivamente una fórmula! Si es muy largo o al inicio
     * te lía mañana lo vemos, pero parece una buena idea comenzar con los tests para saber los casos y los resultados y luego pasar
     * a su implementación que será refactorizar este código.
+     * DIMEROS (2M+H), CARGAS [M+2H]2+ CUANDO TENEMOS UNA DOBLE CARGA PRIMERO SE SUMAN LOS DOS HIDRÓGENOS Y LUEGO SE DIVIDE ENTRE 2
     * */
 }
