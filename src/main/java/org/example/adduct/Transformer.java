@@ -210,8 +210,7 @@ public class Transformer {
      * @param monoisotopic_weight Experimental mass of the compound
      * @param adduct              adduct name (M+H, 2M+H, M+2H, etc..)
      * @param ionizationMode      positive, negative or neutral
-     * @return the mass difference within the tolerance respecting to the
-     * massToSearch
+     * @return the mass difference within the tolerance respecting to the massToSearch
      */
     public static Double getMassOfAdductFromMonoWeight(Double monoisotopic_weight, String adduct, int ionizationMode) {
         //Double adductValue = getAdductValue(adduct, ionizationMode);
@@ -237,9 +236,8 @@ public class Transformer {
      *
      * @param monoisotopic_weight Experimental mass of the compound
      * @param adduct              adduct name (M+H, 2M+H, M+2H, etc..)
-     * @param adductValue         numeric value of the adduct (1.0073, etc..)
-     * @return the mass difference within the tolerance respecting to the
-     * massToSearch
+     * @param adductValue         numeric value of the adduct (1.0073, etc.)
+     * @return the mass difference within the tolerance respecting to the massToSearch
      */
     public static Double getMassOfAdductFromMonoWeight(Double monoisotopic_weight, String adduct, Double adductValue) {
         Double massToSearch;
