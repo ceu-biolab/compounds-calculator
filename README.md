@@ -4,7 +4,6 @@ The application includes a lipid calculator and an adduct transformer, both of w
 ## Table of Contents
 - [Usage](#usage)
 - [Installation](#installation)
-- [Getting Started](#getting-started)
 - [Contact](#contact)
 
 ## Usage
