@@ -210,8 +210,13 @@ public class QueryParameters {
             case 2:
                 try {
                     fattyAcids = getFAsCombinationFromPIMassAndTwoFAs(lipidType, precursorIon, fattyAcids, adduct);
+                    if (fattyAcids == null || fattyAcids.isEmpty()) {
+                        System.out.println("No fatty acids found for specified parameters.");
+                        return new LinkedHashSet<>();
+                    }
                 } catch (IncorrectAdduct | NotFoundElement | IncorrectFormula e) {
                     JOptionPane.showMessageDialog(null, "Invalid adduct.");
+                    return new LinkedHashSet<>();
                 }
                 lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
                 formulaSkeleton = new Formula(lipidSkeletalStructure.getFormula().toString());

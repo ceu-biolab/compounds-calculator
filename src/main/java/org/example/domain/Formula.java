@@ -12,7 +12,13 @@ public class Formula {
         createFormulaFromString(formula);
     }
 
-    public void createFormulaFromString(String formula) throws IllegalStateException {
+    /**
+     * Defines the formula of a chemical compound via a tree map structure that defines elements as the keys and
+     * the number of elements as the values.
+     *
+     * @param formula String representation of the formula that will be produced.
+     */
+    public void createFormulaFromString(String formula) {
         try {
             List<String> array = new ArrayList<>(Arrays.asList(formula.split("(?<=[0-9])(?=[a-zA-Z])")));
             for (String element : array) {
@@ -32,18 +38,42 @@ public class Formula {
         }
     }
 
+    /**
+     * Calculates the mass-to-charge ratio according to the lipid mass divided by the charge of the adduct.
+     *
+     * @param exactLipidMass Lipid mass as a double.
+     * @param charge         Adduct charge as an int.
+     * @return Division of the mass by the charge to provide the m/z value as a double.
+     */
     public double calculateMZ(double exactLipidMass, int charge) {
         return (exactLipidMass / charge);
     }
 
+    /**
+     * Gets the element objects found in the formula map. (ie. H, C, and O)
+     *
+     * @return Set of keys found in the map formula (since the keys correspond to the elements).
+     */
     public Set<Element> getElements() {
         return mapFormula.keySet();
     }
 
-    public int getElementQuantity(Element c) {
-        return mapFormula.get(c);
+    /**
+     * Determines the number of atoms that correspond to a specific element in a formula. (ie. 2 Hydrogen atoms in H2O)
+     *
+     * @param element Element object to be searched for in the formula map.
+     * @return Integer value of the number of atoms of an element.
+     */
+    public int getElementQuantity(Element element) {
+        return mapFormula.get(element);
     }
 
+    /**
+     * Removes a molecule of water from the formula map by removing 2 Hydrogen atoms and 1 Oxygen atom.
+     *
+     * @return New formula object with 2 less Hydrogen atoms and 1 less Oxygen atom.
+     * @throws InvalidFormula_Exception Invalid formula format.
+     */
     public Formula removeH2OFromFormula() throws InvalidFormula_Exception {
         try {
             mapFormula.replace(Element.H, mapFormula.get(Element.H) - 2);
@@ -54,6 +84,16 @@ public class Formula {
         return new Formula(mapToString(mapFormula));
     }
 
+    /**
+     * Adds a fatty acid's elements to the formula map while removing a water molecule (2 Hydrogens and 1 Oxygen)
+     * from the formula map. The addition of a fatty acid is a condensation reaction which releases a molecule of
+     * water so the removal of these elements must occur at the same time as the addition of the fatty acid's
+     * elements.
+     *
+     * @param fattyAcid Fatty acid object.
+     * @return New formula object with the elements of the fatty acid object added and one molecule of water removed.
+     * @throws InvalidFormula_Exception Invalid formula format.
+     */
     public Formula addFattyAcidToFormula(FattyAcid fattyAcid) throws InvalidFormula_Exception {
         Formula formula = fattyAcid.getFormula();
         mapFormula.replace(Element.C, mapFormula.get(Element.C) + formula.getElementQuantity(Element.C));
@@ -63,6 +103,12 @@ public class Formula {
         return new Formula(mapToString(mapFormula));
     }
 
+    /**
+     * Converts map of elements that represents the formula into a string object.
+     *
+     * @param mapFormula Tree map of elements and the number of each element in the formula.
+     * @return String representation of compound's formula.
+     */
     public static String mapToString(TreeMap<Element, Integer> mapFormula) {
         StringBuilder formula = new StringBuilder();
         for (Map.Entry<Element, Integer> entry : mapFormula.entrySet()) {
@@ -75,6 +121,11 @@ public class Formula {
         return formula.toString();
     }
 
+    /**
+     * Defines formula object as a string.
+     *
+     * @return String representation of compound's formula.
+     */
     @Override
     public String toString() {
         return mapToString(mapFormula);

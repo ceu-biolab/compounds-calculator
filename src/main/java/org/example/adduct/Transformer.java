@@ -129,9 +129,9 @@ public class Transformer {
         } else if (AdductsLists.CHARGE_3.contains(adduct)) {
             massToSearch = getChargedOriginalMass(experimentalMass, adductValue, 3);
         } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimmerOriginalMass(experimentalMass, adductValue, 2);
+            massToSearch = getDimerOriginalMass(experimentalMass, adductValue, 2);
         } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimmerOriginalMass(experimentalMass, adductValue, 3);
+            massToSearch = getDimerOriginalMass(experimentalMass, adductValue, 3);
         } else {
             massToSearch = experimentalMass + adductValue;
         }
@@ -158,9 +158,9 @@ public class Transformer {
         } else if (AdductsLists.CHARGE_3.contains(adduct)) {
             massToSearch = getChargedOriginalMass(experimentalMass, adductValue, 3);
         } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimmerAdductMass(experimentalMass, adductValue, 2);
+            massToSearch = getDimerAdductMass(experimentalMass, adductValue, 2);
         } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimmerAdductMass(experimentalMass, adductValue, 3);
+            massToSearch = getDimerAdductMass(experimentalMass, adductValue, 3);
         } else {
             massToSearch = experimentalMass + adductValue;
         }
@@ -176,7 +176,7 @@ public class Transformer {
         return result;
     }
 
-    private static Double getDimmerOriginalMass(double experimentalMass, double adductValue, int numberAtoms) {
+    private static Double getDimerOriginalMass(double experimentalMass, double adductValue, int numberAtoms) {
         double result = experimentalMass;
 
         result = result + adductValue;
@@ -194,7 +194,7 @@ public class Transformer {
         return result;
     }
 
-    private static Double getDimmerAdductMass(double monoisotopicWeight, double adductValue, int numberAtoms) {
+    private static Double getDimerAdductMass(double monoisotopicWeight, double adductValue, int numberAtoms) {
         double result = monoisotopicWeight;
         result = result * numberAtoms;
         result = result - adductValue;
@@ -222,9 +222,9 @@ public class Transformer {
         } else if (AdductsLists.CHARGE_3.contains(adduct)) {
             massToSearch = getChargedAdductMass(monoisotopic_weight, adductValue, 3);
         } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimmerAdductMass(monoisotopic_weight, adductValue, 2);
+            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 2);
         } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimmerAdductMass(monoisotopic_weight, adductValue, 3);
+            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 3);
         } else {
             massToSearch = monoisotopic_weight - adductValue;
         }
@@ -247,9 +247,9 @@ public class Transformer {
         } else if (AdductsLists.CHARGE_3.contains(adduct)) {
             massToSearch = getChargedAdductMass(monoisotopic_weight, adductValue, 3);
         } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimmerAdductMass(monoisotopic_weight, adductValue, 2);
+            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 2);
         } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimmerAdductMass(monoisotopic_weight, adductValue, 3);
+            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 3);
         } else {
             massToSearch = monoisotopic_weight - adductValue;
         }

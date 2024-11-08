@@ -16,10 +16,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -29,6 +26,8 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
+
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 
 public class MainPageUI extends JPanel {
     private final JButton searchButton;
@@ -200,6 +199,7 @@ public class MainPageUI extends JPanel {
         uploadButton.setBorder(new LineBorder(Color.white));
         uploadButton.setHorizontalAlignment(SwingConstants.LEFT);
         uploadButton.addActionListener(e -> {
+            // TODO: ADD HEADER PROCESSOR SO THAT IT SKIPS THE FIRST LINE (ASSUMING THAT ITS THE HEADER)
             CSVUtils csvUtils = new CSVUtils();
             FileDialog fileDialog = new FileDialog(new Frame(), "Choose a file in CSV format.", FileDialog.LOAD);
             fileDialog.setVisible(true);
@@ -242,7 +242,7 @@ public class MainPageUI extends JPanel {
         Set<Double> neutralLossAssociatedIonsInput = new LinkedHashSet<>();
 
         if (neutralLossIonsTextPane != null) {
-            String[] neutralLosses = neutralLossIonsTextPane.getText().split("[\\\\s,;]+");
+            String[] neutralLosses = neutralLossIonsTextPane.getText().split("[\\s,;\\t]");
             for (String neutralLoss : neutralLosses) {
                 neutralLossAssociatedIonsInput.add(Double.parseDouble(neutralLoss));
             }
@@ -254,7 +254,8 @@ public class MainPageUI extends JPanel {
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception |
                  NullPointerException exception) {
-            JOptionPane.showMessageDialog(null, "No results found.");
+            exception.printStackTrace(); //! GIVING NULL POINTER EXCEPTION
+            //JOptionPane.showMessageDialog(null, "No results found.");
         }
 
         tableModel = new DefaultTableModel(lipidData, tableTitles) {
@@ -268,20 +269,29 @@ public class MainPageUI extends JPanel {
     }
 
     public void createLipidDataForTable(Set<Double> neutralLossAssociatedIonsInput) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        int i;
         DecimalFormat numberFormat = new DecimalFormat("#.0000");
-        Set<MSLipid> lipidSet;
         List<String> adducts = getAdductsChosen();
-
         List<String[]> finalLipidDataList = new ArrayList<>();
+        boolean hasResults = false;
 
         for (String adduct : adducts) {
             QueryParameters queryParameters = new QueryParameters();
-            lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(getLipidHeadGroupsChosen(), Double.parseDouble(precursorIonTextField.getText()),
-                    neutralLossAssociatedIonsInput, adduct);
+            Set<MSLipid> lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(
+                    getLipidHeadGroupsChosen(),
+                    Double.parseDouble(precursorIonTextField.getText()),
+                    neutralLossAssociatedIonsInput,
+                    adduct
+            );
 
+            if (lipidSet.isEmpty()) {
+                // Optional: Log or track which adducts returned no results
+                System.out.println("No results found for adduct: " + adduct);
+                continue;  // Skip to the next adduct if no results
+            }
+
+            hasResults = true;  // Mark that we have at least one result
+            int i = 0;
             String[][] localLipidData = new String[lipidSet.size()][7];
-            i = 0;
 
             for (MSLipid lipid : lipidSet) {
                 localLipidData[i][0] = lipid.getCompoundName();
@@ -295,13 +305,17 @@ public class MainPageUI extends JPanel {
                 i++;
             }
         }
+
+        // Convert final list to array for lipidData
         lipidData = new String[finalLipidDataList.size()][7];
         for (int j = 0; j < finalLipidDataList.size(); j++) {
             lipidData[j] = finalLipidDataList.get(j);
         }
-        if (lipidData.length == 0) {
-            JOptionPane.showMessageDialog(null, "An error occurred while searching the database. " +
-                    "Please ensure that the chosen adduct and lipid group are correct.");
+
+        // Display a message if no results were found across all adducts
+        if (!hasResults) {
+            JOptionPane.showMessageDialog(null, "No results found for any chosen adduct or lipid group. " +
+                    "Please verify your input and try again.");
         }
     }
 
@@ -432,24 +446,6 @@ public class MainPageUI extends JPanel {
         inputSubpanel.add(toleranceOfNLPanel, "wrap");
     }
 
-    static class HighlightListener implements ItemListener {
-        private final JPanel panel;
-
-        public HighlightListener(JPanel panel) {
-            this.panel = panel;
-        }
-
-        @Override
-        public void itemStateChanged(ItemEvent e) {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                panel.setBackground(new Color(195, 224, 229));
-            } else {
-                panel.setBackground(new Color(231, 242, 245));
-            }
-            panel.repaint();
-        }
-    }
-
     public void createLipidHeadGroupsPanel() {
         lipidHeadGroupsPanel.setBackground(Color.WHITE);
         lipidHeadGroupsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
@@ -461,18 +457,54 @@ public class MainPageUI extends JPanel {
         JCheckBox selectAllCheckBox = new JCheckBox("Select All");
         configureTextComponents(selectAllCheckBox);
         lipidHeadGroupsPanel.add(selectAllCheckBox, "gapleft 15, wrap");
+        List<JPanel> checkBoxPanels = new ArrayList<>();
 
         String[] lipidHeadGroupsStrings = {"CE", "CER", "DG", "MG", "PA", "PC", "PE", "PI", "PG", "PS", "SM", "TG", "CL"};
 
         for (String lipidHeadGroup : lipidHeadGroupsStrings) {
             JCheckBox checkBox = new JCheckBox(lipidHeadGroup);
             JPanel checkBoxPanel = new JPanel(new BorderLayout());
+            checkBoxPanels.add(checkBoxPanel);
             checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
             checkBoxPanel.setMinimumSize(new Dimension(0, 30));
             checkBoxPanel.setBackground(new Color(231, 242, 245));
             checkBoxPanel.add(checkBox);
             checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            checkBox.addItemListener(new HighlightListener(checkBoxPanel));
+            checkBox.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        checkBoxPanel.setBackground(new Color(195, 224, 229));
+                        checkBox.setBackground(new Color(195, 224, 229));
+                    } else {
+                        checkBoxPanel.setBackground(new Color(231, 242, 245));
+                        checkBox.setBackground(new Color(231, 242, 245));
+                    }
+                }
+            });
+
+            selectAllCheckBox.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
+                    Color bg = isSelected ? new Color(195, 224, 229) : new Color(231, 242, 245);
+
+                    for (JPanel panel : checkBoxPanels) {
+                        panel.setBackground(bg);
+                        panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+                        panel.repaint();
+
+                        for (Component component : panel.getComponents()) {
+                            if (component instanceof JCheckBox) {
+                                JCheckBox checkBox = (JCheckBox) component;
+                                checkBox.setSelected(isSelected);
+                                checkBox.setBackground(bg);
+                            }
+                        }
+                    }
+                }
+            });
+
             lipidHeadGroupsCheckBoxList.add(checkBox);
             configureTextComponents(checkBox);
             checkBox.setFont(new Font("Arial", Font.BOLD, 16));
@@ -525,7 +557,7 @@ public class MainPageUI extends JPanel {
 
     public void updateAdductPanel(String[] adducts) {
         for (Component component : adductsPanel.getComponents()) {
-            if (component instanceof JPanel || component instanceof JCheckBox) {
+            if (component instanceof JPanel || component instanceof JCheckBox || component instanceof JScrollPane) {
                 adductsPanel.remove(component);
             }
         }
@@ -534,20 +566,71 @@ public class MainPageUI extends JPanel {
         configureTextComponents(selectAllCheckBox);
         adductsPanel.add(selectAllCheckBox, "gapleft 15, wrap");
 
+        List<JPanel> checkBoxPanels = new ArrayList<>();
+
+        JPanel subPanel = new JPanel(new MigLayout());
+        subPanel.setBackground(Color.WHITE);
+
         for (String adduct : adducts) {
             JCheckBox checkBox = new JCheckBox(adduct);
             JPanel checkBoxPanel = new JPanel(new BorderLayout());
+            checkBoxPanels.add(checkBoxPanel);
             checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
-            checkBoxPanel.setMinimumSize(new Dimension(0, 30));
+
+            checkBoxPanel.setMinimumSize(new Dimension(290, 30));
+            checkBoxPanel.setMaximumSize(new Dimension(290, 30));
+            checkBox.setMinimumSize(new Dimension(290, 30));
+            checkBox.setMaximumSize(new Dimension(290, 30));
+
             checkBoxPanel.setBackground(new Color(231, 242, 245));
             checkBoxPanel.add(checkBox);
             checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            checkBox.addItemListener(new HighlightListener(checkBoxPanel));
+            checkBox.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        checkBoxPanel.setBackground(new Color(195, 224, 229));
+                        checkBox.setBackground(new Color(195, 224, 229));
+                    } else {
+                        checkBoxPanel.setBackground(new Color(231, 242, 245));
+                        checkBox.setBackground(new Color(231, 242, 245));
+                    }
+                }
+            });
             adductCheckBoxList.add(checkBox);
             configureTextComponents(checkBox);
             checkBox.setFont(new Font("Arial", Font.BOLD, 16));
-            adductsPanel.add(checkBoxPanel, "wrap");
+            subPanel.add(checkBoxPanel, "wrap, gapbottom 3");
         }
+
+        selectAllCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
+                Color bg = isSelected ? new Color(195, 224, 229) : new Color(231, 242, 245);
+
+                for (JPanel panel : checkBoxPanels) {
+                    panel.setBackground(bg);
+                    panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+                    panel.setMaximumSize(new Dimension(280, 30));
+                    panel.revalidate();
+                    panel.repaint();
+
+                    for (Component component : panel.getComponents()) {
+                        if (component instanceof JCheckBox) {
+                            JCheckBox checkBox = (JCheckBox) component;
+                            checkBox.setSelected(isSelected);
+                            checkBox.setBackground(bg);
+                        }
+                    }
+                }
+            }
+        });
+
+        JScrollPane adductsScrollPane = new JScrollPane(subPanel);
+        adductsScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        adductsScrollPane.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_NEVER);
+        adductsPanel.add(adductsScrollPane);
         adductsPanel.revalidate();
         adductsPanel.repaint();
     }
@@ -558,12 +641,28 @@ public class MainPageUI extends JPanel {
 
     public static List<String> getAdductsChosen() {
         List<String> adducts = new ArrayList<>();
+
+        boolean isSelectAllSelected = false;
         for (JCheckBox checkBox : adductCheckBoxList) {
-            if (checkBox.isSelected()) {
-                adducts.add(checkBox.getText());
+            if (checkBox.getText().equals("Select All") && checkBox.isSelected()) {
+                isSelectAllSelected = true;
+                break;
             }
         }
-        // TODO: ADD IF(SELECTALL) { }
+
+        if (isSelectAllSelected) {
+            for (JCheckBox checkBox : adductCheckBoxList) {
+                adducts.add(checkBox.getText());
+            }
+        } else {
+            for (JCheckBox checkBox : adductCheckBoxList) {
+                if (checkBox.isSelected()) {
+                    adducts.add(checkBox.getText());
+                }
+            }
+        }
+
+        System.out.println(adducts);
         return adducts;
     }
 
@@ -571,11 +670,17 @@ public class MainPageUI extends JPanel {
         List<String> lipidHeadGroups = new ArrayList<>();
         for (JCheckBox checkBox : lipidHeadGroupsCheckBoxList) {
             if (checkBox.isSelected()) {
+                if (checkBox.getText().equals("Select All")) {
+                    for (JCheckBox checkBoxWhenAll : lipidHeadGroupsCheckBoxList) {
+                        lipidHeadGroups.add(checkBoxWhenAll.getText().replace("[", "").replace("]", ""));
+                    }
+                    // TODO: return lipidHeadGroups;
+                }
                 lipidHeadGroups.add(checkBox.getText());
             }
         }
-        // TODO: ADD IF(SELECTALL) { } AND MAKE THIS METHOD RETURN A LIST OF LIPIDTYPES
         return LipidType.valueOf(lipidHeadGroups.toString().replace("[", "").replace("]", ""));
     }
+
 }
 
