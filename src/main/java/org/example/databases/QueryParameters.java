@@ -408,16 +408,4 @@ public class QueryParameters {
         }
     }
 
-    public static void main(String[] args) throws InvalidFormula_Exception, FattyAcidCreation_Exception, SQLException {
-        QueryParameters queryParameters = new QueryParameters();
-        Set<Double> neutralLossAssociatedIonMZs = new LinkedHashSet<>();
-        neutralLossAssociatedIonMZs.add(467.4088);
-        neutralLossAssociatedIonMZs.add(491.4100);
-        neutralLossAssociatedIonMZs.add(493.4250);
-        neutralLossAssociatedIonMZs.add(519.4413);
-        neutralLossAssociatedIonMZs.add(547.4726);
-        neutralLossAssociatedIonMZs.add(575.5039);
-        System.out.println(queryParameters.returnSetOfLipidsFoundInDatabase(LipidType.TG, 764.6767d, neutralLossAssociatedIonMZs, "[M+NH4-H]+"));
-    }
-
 }

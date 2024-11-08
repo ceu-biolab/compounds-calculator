@@ -11,10 +11,13 @@ import org.example.exceptions.InvalidFormula_Exception;
 import org.example.utils.CSVUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -40,17 +43,13 @@ public class MainPageUI extends JPanel {
     private final JPanel inputSubpanel;
     public JPanel adductsPanel;
 
-    public JTextField NLoss1_Input;
-    public JTextField NLoss2_Input;
-    public JTextField NLoss3_Input;
-    public JTextField NLoss4_Input;
-    public JTextField PI_Input;
-    public JTextField tolerancePI_Input;
-    public JTextField toleranceNL_Input;
+    public JTextArea neutralLossIonsTextPane;
+    public JTextField precursorIonTextField;
+    public JTextField toleranceOfPITextField;
+    public JTextField toleranceOfNLTextField;
 
     private final JLabel precursorIonLabel;
     private final JLabel neutralLossesLabel;
-    private final JLabel adductsLabel;
     private final JLabel tolerancePILabel;
     private final JLabel toleranceNLLabel;
 
@@ -58,9 +57,9 @@ public class MainPageUI extends JPanel {
     private DefaultTableModel tableModel = null;
     private String[] tableTitles = null;
     private String[][] lipidData = null;
-    private static ButtonGroup buttonGroup;
+    private static List<JCheckBox> lipidHeadGroupsCheckBoxList;
     private final JComboBox<String> ionComboBox;
-    private static List<JCheckBox> checkBoxList;
+    private static List<JCheckBox> adductCheckBoxList;
 
     public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
@@ -79,25 +78,21 @@ public class MainPageUI extends JPanel {
         searchButtonsPanel = new JPanel();
         lipidHeadGroupsPanel = new JPanel();
         inputSubpanel = new JPanel();
-        NLoss1_Input = new JTextField();
-        NLoss2_Input = new JTextField();
-        NLoss3_Input = new JTextField();
-        NLoss4_Input = new JTextField();
-        PI_Input = new JTextField();
-        tolerancePI_Input = new JTextField();
-        toleranceNL_Input = new JTextField();
+        neutralLossIonsTextPane = new JTextArea(9, 10);
+        precursorIonTextField = new JTextField();
+        toleranceOfPITextField = new JTextField();
+        toleranceOfNLTextField = new JTextField();
 
         precursorIonLabel = new JLabel("    Precursor Ion");
-        neutralLossesLabel = new JLabel("    Neutral Losses");
+        neutralLossesLabel = new JLabel("    Neutral Loss Associated Ions");
         tolerancePILabel = new JLabel("    Precursor Ion Tolerance (ppm)");
         toleranceNLLabel = new JLabel("    Neutral Loss Tolerance (ppm)");
-        adductsLabel = new JLabel("    Adducts");
         adductsPanel = new JPanel();
         ionComboBox = new JComboBox<>(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
         new Database();
-        buttonGroup = new ButtonGroup();
-        checkBoxList = new ArrayList<>();
-        setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]", "[grow, fill]25[grow, fill]"));
+        lipidHeadGroupsCheckBoxList = new ArrayList<>();
+        adductCheckBoxList = new ArrayList<>();
+        setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]25[grow, fill]", "25[grow, fill]25[grow, fill]25"));
         setBackground(new Color(195, 224, 229));
         createTable();
         createLipidHeadGroupsPanel();
@@ -105,8 +100,8 @@ public class MainPageUI extends JPanel {
         createButtons();
         createAdductsPanel();
 
-        add(tablePanel, "span 2");
-        add(lipidHeadGroupsPanel, "wrap");
+        add(tablePanel, "span 3");
+        add(lipidHeadGroupsPanel, "span 1 2, wrap");
         add(inputSubpanel);
         add(adductsPanel);
         add(searchButtonsPanel);
@@ -138,6 +133,8 @@ public class MainPageUI extends JPanel {
 
     public void createButtons() {
         searchButtonsPanel.setBackground(Color.WHITE);
+        searchButtonsPanel.setPreferredSize(new Dimension(400, 340));
+        searchButtonsPanel.setMaximumSize(new Dimension(400, 340));
         searchButtonsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         searchButtonsPanel.setLayout(new MigLayout("", "25[grow, fill]25", "25[grow, fill]25[grow, fill]25"));
 
@@ -161,6 +158,17 @@ public class MainPageUI extends JPanel {
                 tablePanel.revalidate();
                 tablePanel.repaint();
             }
+        });
+
+        configureComponents(clearButton);
+        clearButton.setBackground(Color.WHITE);
+        clearButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        clearButton.setIcon(new ImageIcon("src/main/resources/Clear_Icon.png"));
+        clearButton.setBorder(new LineBorder(Color.white));
+        clearButton.setHorizontalAlignment(SwingConstants.LEFT);
+        clearButton.addActionListener(e -> {
+            neutralLossIonsTextPane.setText(null);
+            precursorIonTextField.setText(null);
         });
 
         configureComponents(exportButton);
@@ -212,20 +220,6 @@ public class MainPageUI extends JPanel {
             }
         });
 
-        configureComponents(clearButton);
-        clearButton.setBackground(Color.WHITE);
-        clearButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        clearButton.setIcon(new ImageIcon("src/main/resources/Clear_Icon.png"));
-        clearButton.setBorder(new LineBorder(Color.white));
-        clearButton.setHorizontalAlignment(SwingConstants.LEFT);
-        clearButton.addActionListener(e -> {
-            NLoss1_Input.setText(null);
-            NLoss2_Input.setText(null);
-            NLoss3_Input.setText(null);
-            NLoss4_Input.setText(null);
-            PI_Input.setText(null);
-        });
-
         configureComponents(getTemplateButton);
         getTemplateButton.setBackground(Color.WHITE);
         getTemplateButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
@@ -237,22 +231,25 @@ public class MainPageUI extends JPanel {
             JOptionPane.showMessageDialog(null, "Not sure what the template should look like yet...");
         });
 
-        searchButtonsPanel.add(searchButton, "wrap");
-        searchButtonsPanel.add(clearButton, "wrap");
-        searchButtonsPanel.add(exportButton, "wrap");
-        searchButtonsPanel.add(uploadButton, "wrap");
-        searchButtonsPanel.add(getTemplateButton, "wrap");
+        searchButtonsPanel.add(searchButton, "gaptop 10, gapleft 10, wrap");
+        searchButtonsPanel.add(clearButton, "gapleft 10, wrap");
+        searchButtonsPanel.add(exportButton, "gapleft 10, wrap");
+        searchButtonsPanel.add(uploadButton, "gapleft 10, wrap");
+        searchButtonsPanel.add(getTemplateButton, "gapleft 10, wrap");
     }
 
     public JScrollPane createLipidScrollPane() {
         Set<Double> neutralLossAssociatedIonsInput = new LinkedHashSet<>();
-        JTextField[] neutralLossInputFields = {NLoss1_Input, NLoss2_Input, NLoss3_Input, NLoss4_Input};
-        for (JTextField field : neutralLossInputFields) {
-            addNeutralLossInput(neutralLossAssociatedIonsInput, field);
+
+        if (neutralLossIonsTextPane != null) {
+            String[] neutralLosses = neutralLossIonsTextPane.getText().split("[\\\\s,;]+");
+            for (String neutralLoss : neutralLosses) {
+                neutralLossAssociatedIonsInput.add(Double.parseDouble(neutralLoss));
+            }
         }
 
         try {
-            if (checkIfTextFieldIsNotEmpty(PI_Input.getText())) {
+            if (checkIfTextFieldIsNotEmpty(precursorIonTextField.getText())) {
                 createLipidDataForTable(neutralLossAssociatedIonsInput);
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception |
@@ -270,18 +267,6 @@ public class MainPageUI extends JPanel {
         return new JScrollPane(table);
     }
 
-    private void addNeutralLossInput(Set<Double> inputSet, JTextField textField) {
-        if (checkIfTextFieldIsNotEmpty(textField.getText())) {
-            try {
-                inputSet.add(Double.parseDouble(textField.getText()));
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(null, "Please enter a valid number. All values " +
-                        "should maintain the international standard for digits. For example, " +
-                        "824.0293.");
-            }
-        }
-    }
-
     public void createLipidDataForTable(Set<Double> neutralLossAssociatedIonsInput) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         int i;
         DecimalFormat numberFormat = new DecimalFormat("#.0000");
@@ -292,7 +277,7 @@ public class MainPageUI extends JPanel {
 
         for (String adduct : adducts) {
             QueryParameters queryParameters = new QueryParameters();
-            lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(getSelectedRadioButton(), Double.parseDouble(PI_Input.getText()),
+            lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(getLipidHeadGroupsChosen(), Double.parseDouble(precursorIonTextField.getText()),
                     neutralLossAssociatedIonsInput, adduct);
 
             String[][] localLipidData = new String[lipidSet.size()][7];
@@ -381,141 +366,132 @@ public class MainPageUI extends JPanel {
     }
 
     public void createInputPanel() {
-        inputSubpanel.setPreferredSize(new Dimension(1050, 340));
-        inputSubpanel.setMaximumSize(new Dimension(1050, 340));
-
-        inputSubpanel.setLayout(new MigLayout("", "[grow, fill]50[grow, fill]15", "15[grow, fill]10[grow, fill]15[grow, fill]10[grow,fill]15"));
+        inputSubpanel.setPreferredSize(new Dimension(800, 340));
+        inputSubpanel.setMaximumSize(new Dimension(800, 340));
+        inputSubpanel.setLayout(new MigLayout("", "[]50[]", "[][]"));
         inputSubpanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         inputSubpanel.setBackground(Color.WHITE);
 
-        NLoss1_Input.setColumns(15);
-        configureComponents(NLoss1_Input);
-        NLoss1_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss1_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 1");
-        NLoss2_Input.setColumns(15);
-        configureComponents(NLoss2_Input);
-        NLoss2_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss2_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 2 (optional)");
-        NLoss3_Input.setColumns(15);
-        configureComponents(NLoss3_Input);
-        NLoss3_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss3_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 3 (optional)");
-        NLoss4_Input.setColumns(15);
-        configureComponents(NLoss4_Input);
-        NLoss4_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        NLoss4_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Neutral Loss Associated Ion 4 (optional)");
-        PI_Input.setColumns(15);
-        configureComponents(PI_Input);
-        PI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        PI_Input.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Precursor Ion, m/z");
-        tolerancePI_Input.setColumns(15);
-        configureComponents(tolerancePI_Input);
-        tolerancePI_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        tolerancePI_Input.setText("20.0");
-        toleranceNL_Input.setColumns(15);
-        configureComponents(toleranceNL_Input);
-        toleranceNL_Input.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        toleranceNL_Input.setText("30.0");
+        JPanel NLIonsPanel = new JPanel();
+        NLIonsPanel.setMaximumSize(new Dimension(300, 300));
+        neutralLossIonsTextPane.setMaximumSize(new Dimension(300, 300));
+        neutralLossIonsTextPane.setColumns(20);
+        neutralLossIonsTextPane.setLineWrap(true);
+        neutralLossIonsTextPane.setWrapStyleWord(true);
+        configureComponents(neutralLossIonsTextPane);
+        configureComponents(NLIonsPanel);
+        NLIonsPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        NLIonsPanel.setBackground(new Color(231, 242, 245));
+        NLIonsPanel.add(neutralLossIonsTextPane);
+
+        JPanel precursorIonPanel = new JPanel();
+        precursorIonTextField.setColumns(21);
+        configureComponents(precursorIonTextField);
+        configureComponents(precursorIonPanel);
+        precursorIonPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        precursorIonTextField.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        precursorIonTextField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "  Precursor Ion m/z");
+        precursorIonTextField.setBorder(BorderFactory.createLineBorder(new Color(231, 242, 245)));
+        precursorIonPanel.add(precursorIonTextField);
+
+        JPanel toleranceOfPIPanel = new JPanel();
+        toleranceOfPITextField.setColumns(10);
+        configureComponents(toleranceOfPITextField);
+        configureComponents(toleranceOfPIPanel);
+        toleranceOfPIPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        toleranceOfPITextField.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        toleranceOfPITextField.setText("20.0");
+        toleranceOfPITextField.setBorder(BorderFactory.createLineBorder(new Color(231, 242, 245)));
+        toleranceOfPIPanel.add(toleranceOfPITextField);
+
+        JPanel toleranceOfNLPanel = new JPanel();
+        toleranceOfNLTextField.setColumns(10);
+        configureComponents(toleranceOfNLTextField);
+        configureComponents(toleranceOfNLPanel);
+        toleranceOfNLPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        toleranceOfNLTextField.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        toleranceOfNLTextField.setText("30.0");
+        toleranceOfNLTextField.setBorder(BorderFactory.createLineBorder(new Color(231, 242, 245)));
+        toleranceOfNLPanel.add(toleranceOfNLTextField);
 
         configureTextComponents(precursorIonLabel);
         configureTextComponents(neutralLossesLabel);
         configureTextComponents(tolerancePILabel);
         configureTextComponents(toleranceNLLabel);
 
-        inputSubpanel.add(precursorIonLabel);
+        inputSubpanel.add(precursorIonLabel, "gapleft 15, gaptop 15");
         inputSubpanel.add(tolerancePILabel, "wrap");
-        inputSubpanel.add(PI_Input);
-        inputSubpanel.add(tolerancePI_Input, "wrap");
-        inputSubpanel.add(neutralLossesLabel);
-        inputSubpanel.add(toleranceNLLabel, "wrap, gaptop 15");
-        inputSubpanel.add(NLoss1_Input);
-        inputSubpanel.add(toleranceNL_Input, "wrap");
-        inputSubpanel.add(NLoss2_Input, "wrap");
-        inputSubpanel.add(NLoss3_Input, "wrap");
-        inputSubpanel.add(NLoss4_Input);
+
+        inputSubpanel.add(precursorIonPanel, "gapleft 15");
+        inputSubpanel.add(toleranceOfPIPanel, "wrap");
+
+        inputSubpanel.add(neutralLossesLabel, "gapleft 15, gaptop 25");
+        inputSubpanel.add(toleranceNLLabel, "wrap");
+
+        inputSubpanel.add(NLIonsPanel, "gapleft 15, span 1 3");
+        inputSubpanel.add(toleranceOfNLPanel, "wrap");
+    }
+
+    static class HighlightListener implements ItemListener {
+        private final JPanel panel;
+
+        public HighlightListener(JPanel panel) {
+            this.panel = panel;
+        }
+
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                panel.setBackground(new Color(195, 224, 229));
+            } else {
+                panel.setBackground(new Color(231, 242, 245));
+            }
+            panel.repaint();
+        }
     }
 
     public void createLipidHeadGroupsPanel() {
         lipidHeadGroupsPanel.setBackground(Color.WHITE);
         lipidHeadGroupsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        lipidHeadGroupsPanel.setLayout(new MigLayout());
+        lipidHeadGroupsPanel.setLayout(new MigLayout("", "[grow, fill]", ""));
 
         JLabel lipidHeadGroupsLabel = new JLabel("Lipid Head Groups");
         configureTextComponents(lipidHeadGroupsLabel);
-
-        JCheckBox buttonCE = new JCheckBox(" CE");
-        JCheckBox buttonCER = new JCheckBox(" CER");
-        JCheckBox buttonDG = new JCheckBox(" DG");
-        JCheckBox buttonMG = new JCheckBox(" MG");
-        JCheckBox buttonPA = new JCheckBox(" PA");
-        JCheckBox buttonPC = new JCheckBox(" PC");
-        JCheckBox buttonPE = new JCheckBox(" PE");
-        JCheckBox buttonPI = new JCheckBox(" PI");
-        JCheckBox buttonPG = new JCheckBox(" PG");
-        JCheckBox buttonPS = new JCheckBox(" PS");
-        JCheckBox buttonSM = new JCheckBox(" SM");
-        JCheckBox buttonTG = new JCheckBox(" TG");
-        JCheckBox buttonCL = new JCheckBox(" CL");
-        JCheckBox buttonAll = new JCheckBox(" Select All", true);
-
-        configureTextComponents(buttonCE);
-        configureTextComponents(buttonCER);
-        configureTextComponents(buttonDG);
-        configureTextComponents(buttonMG);
-        configureTextComponents(buttonPA);
-        configureTextComponents(buttonPC);
-        configureTextComponents(buttonPE);
-        configureTextComponents(buttonPI);
-        configureTextComponents(buttonPG);
-        configureTextComponents(buttonPS);
-        configureTextComponents(buttonSM);
-        configureTextComponents(buttonTG);
-        configureTextComponents(buttonCL);
-        configureTextComponents(buttonAll);
-
-        buttonGroup.add(buttonCE);
-        buttonGroup.add(buttonCER);
-        buttonGroup.add(buttonDG);
-        buttonGroup.add(buttonMG);
-        buttonGroup.add(buttonPA);
-        buttonGroup.add(buttonPC);
-        buttonGroup.add(buttonPE);
-        buttonGroup.add(buttonPI);
-        buttonGroup.add(buttonPG);
-        buttonGroup.add(buttonPS);
-        buttonGroup.add(buttonSM);
-        buttonGroup.add(buttonTG);
-        buttonGroup.add(buttonCL);
-        buttonGroup.add(buttonAll);
-
         lipidHeadGroupsPanel.add(lipidHeadGroupsLabel, "wrap");
-        lipidHeadGroupsPanel.add(buttonCE, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonDG, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonMG, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonPA, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonPC, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonPE, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonPI, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonPG, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonPS, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonTG, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonCL, "wrap, gapleft 15, gaptop 2");
-        lipidHeadGroupsPanel.add(buttonAll, "wrap, gapleft 15, gaptop 2");
+        JCheckBox selectAllCheckBox = new JCheckBox("Select All");
+        configureTextComponents(selectAllCheckBox);
+        lipidHeadGroupsPanel.add(selectAllCheckBox, "gapleft 15, wrap");
+
+        String[] lipidHeadGroupsStrings = {"CE", "CER", "DG", "MG", "PA", "PC", "PE", "PI", "PG", "PS", "SM", "TG", "CL"};
+
+        for (String lipidHeadGroup : lipidHeadGroupsStrings) {
+            JCheckBox checkBox = new JCheckBox(lipidHeadGroup);
+            JPanel checkBoxPanel = new JPanel(new BorderLayout());
+            checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
+            checkBoxPanel.setMinimumSize(new Dimension(0, 30));
+            checkBoxPanel.setBackground(new Color(231, 242, 245));
+            checkBoxPanel.add(checkBox);
+            checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+            checkBox.addItemListener(new HighlightListener(checkBoxPanel));
+            lipidHeadGroupsCheckBoxList.add(checkBox);
+            configureTextComponents(checkBox);
+            checkBox.setFont(new Font("Arial", Font.BOLD, 16));
+            lipidHeadGroupsPanel.add(checkBoxPanel, "gapbottom 3, wrap");
+        }
     }
 
     public void createAdductsPanel() {
-        configureTextComponents(adductsLabel);
-        adductsPanel.setLayout(new MigLayout("", "[]", ""));
+        adductsPanel.setLayout(new MigLayout("", "[grow, fill]", ""));
         adductsPanel.setBackground(Color.WHITE);
         adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        adductsPanel.setPreferredSize(new Dimension(300, 340));
-        adductsPanel.setMaximumSize(new Dimension(300, 340));
-        adductsPanel.add(adductsLabel, "wrap, gapbottom 4");
+        adductsPanel.setMinimumSize(new Dimension(360, 340));
+        adductsPanel.setPreferredSize(new Dimension(360, 340));
+        adductsPanel.setMaximumSize(new Dimension(360, 340));
         configureComponents(ionComboBox);
         ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         ionComboBox.setToolTipText("Choose the list of adducts based on charge.");
         ionComboBox.addActionListener(e -> updateListOfAdductsAccordingToCharge(Objects.requireNonNull(ionComboBox.getSelectedItem()).toString()));
-        adductsPanel.add(ionComboBox, "wrap, span 2, gapbottom 10");
+        adductsPanel.add(ionComboBox, "gapbottom 10, wrap");
         updateAdductPanel(Adduct.getPositiveAdducts());
         adductsPanel.setVisible(true);
     }
@@ -532,14 +508,14 @@ public class MainPageUI extends JPanel {
     }
 
     public void updateListOfAdductsAccordingToCharge(String charge) {
-        for (JCheckBox checkBox : checkBoxList) {
+        for (JCheckBox checkBox : adductCheckBoxList) {
             checkBox.setSelected(false);
         }
         if (charge.equals("   View Positive Adducts  ")) {
-            String[] string = Adduct.getPositiveAdducts();
+            String[] string = {"[M+H]+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+NH4-H]+", "[M+H-H2O]+", "[M+C2H6N2+H]+"};
             updateAdductPanel(string);
         } else if (charge.equals("   View Negative Adducts  ")) {
-            String[] string = Adduct.getNegativeAdducts();
+            String[] string = {"[M-H]-", "[M+Cl]-", "[M-H-H2O]-", "[M+HCOOH-H]-", "[M+CH3COOH-H]-"};
             updateAdductPanel(string);
 
         }
@@ -549,20 +525,29 @@ public class MainPageUI extends JPanel {
 
     public void updateAdductPanel(String[] adducts) {
         for (Component component : adductsPanel.getComponents()) {
-            if (component instanceof JCheckBox) {
+            if (component instanceof JPanel || component instanceof JCheckBox) {
                 adductsPanel.remove(component);
             }
         }
+
+        JCheckBox selectAllCheckBox = new JCheckBox("Select All");
+        configureTextComponents(selectAllCheckBox);
+        adductsPanel.add(selectAllCheckBox, "gapleft 15, wrap");
+
         for (String adduct : adducts) {
             JCheckBox checkBox = new JCheckBox(adduct);
-            checkBoxList.add(checkBox);
+            JPanel checkBoxPanel = new JPanel(new BorderLayout());
+            checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
+            checkBoxPanel.setMinimumSize(new Dimension(0, 30));
+            checkBoxPanel.setBackground(new Color(231, 242, 245));
+            checkBoxPanel.add(checkBox);
+            checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+            checkBox.addItemListener(new HighlightListener(checkBoxPanel));
+            adductCheckBoxList.add(checkBox);
             configureTextComponents(checkBox);
             checkBox.setFont(new Font("Arial", Font.BOLD, 16));
-            adductsPanel.add(checkBox, "gapleft 10, gaptop 5, wrap");
+            adductsPanel.add(checkBoxPanel, "wrap");
         }
-        JCheckBox checkBox = new JCheckBox("Select All");
-        configureTextComponents(checkBox);
-        adductsPanel.add(checkBox, "gapleft 10, gaptop 5, gapbottom 5");
         adductsPanel.revalidate();
         adductsPanel.repaint();
     }
@@ -571,25 +556,26 @@ public class MainPageUI extends JPanel {
         return !textFieldInput.isEmpty();
     }
 
-    public static LipidType getSelectedRadioButton() {
-        for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements(); ) {
-            AbstractButton button = buttons.nextElement();
-            if (button.isSelected()) {
-                return LipidType.valueOf(button.getText().replaceAll(" ", ""));
-            }
-        }
-        return null;
-    }
-
     public static List<String> getAdductsChosen() {
         List<String> adducts = new ArrayList<>();
-        for (JCheckBox checkBox : checkBoxList) {
+        for (JCheckBox checkBox : adductCheckBoxList) {
             if (checkBox.isSelected()) {
                 adducts.add(checkBox.getText());
             }
         }
         // TODO: ADD IF(SELECTALL) { }
         return adducts;
+    }
+
+    public static LipidType getLipidHeadGroupsChosen() {
+        List<String> lipidHeadGroups = new ArrayList<>();
+        for (JCheckBox checkBox : lipidHeadGroupsCheckBoxList) {
+            if (checkBox.isSelected()) {
+                lipidHeadGroups.add(checkBox.getText());
+            }
+        }
+        // TODO: ADD IF(SELECTALL) { } AND MAKE THIS METHOD RETURN A LIST OF LIPIDTYPES
+        return LipidType.valueOf(lipidHeadGroups.toString().replace("[", "").replace("]", ""));
     }
 }
 
