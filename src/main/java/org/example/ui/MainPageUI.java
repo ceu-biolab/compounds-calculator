@@ -284,16 +284,18 @@ public class MainPageUI extends JPanel {
             );
 
             if (lipidSet.isEmpty()) {
-                // Optional: Log or track which adducts returned no results
                 System.out.println("No results found for adduct: " + adduct);
-                continue;  // Skip to the next adduct if no results
+                continue;
             }
 
-            hasResults = true;  // Mark that we have at least one result
+            hasResults = true;
             int i = 0;
             String[][] localLipidData = new String[lipidSet.size()][7];
 
+
             for (MSLipid lipid : lipidSet) {
+                System.out.println("FAs list: " + lipid.getFattyAcids());
+
                 localLipidData[i][0] = lipid.getCompoundName();
                 localLipidData[i][1] = lipid.calculateSpeciesShorthand(lipid);
                 localLipidData[i][2] = lipid.getFormula();

@@ -40,10 +40,16 @@ public class Lipid {
     public String calculateSpeciesShorthand(MSLipid lipid) {
         int carbonAtoms = 0;
         int doubleBonds = 0;
+
+        System.out.println(lipid.getCompoundName());
+
         for (FattyAcid fattyAcid : lipid.getFattyAcids()) {
+            System.out.println("FA: " + fattyAcid);
             carbonAtoms += fattyAcid.getCarbonAtoms();
             doubleBonds += fattyAcid.getDoubleBonds();
         }
+        System.out.println("Atoms: " + carbonAtoms + " " + doubleBonds);
+
         return lipid.getLipidSkeletalStructure().getLipidType().toString() + " " + carbonAtoms + ":" + doubleBonds;
     }
 

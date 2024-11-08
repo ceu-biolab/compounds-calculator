@@ -36,6 +36,7 @@ public class QueryParameters {
      */
     public LinkedHashSet<MSLipid> returnSetOfLipidsFoundInDatabase(LipidType lipidType, double precursorIonMZ, Set<Double> neutralLossAssociatedIonMZs, String adduct) throws InvalidFormula_Exception, SQLException, FattyAcidCreation_Exception {
         Set<Double> fattyAcidMasses = Database.calculateFattyAcidMassesFromNeutralLosses(precursorIonMZ, neutralLossAssociatedIonMZs, adduct);
+
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formulaSkeleton = new Formula(lipidSkeletalStructure.getFormula().toString());
 
@@ -51,6 +52,9 @@ public class QueryParameters {
                 System.err.println("Fatty Acid with mass " + fattyAcidMass + " not found");
             }
         }
+
+        System.out.println("FAs:" + fattyAcids);
+
 
         StringBuilder queryBuilder = new StringBuilder(
                 """
