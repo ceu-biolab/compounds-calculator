@@ -5,7 +5,9 @@ import org.example.exceptions.InvalidFormula_Exception;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,7 +17,7 @@ class LipidTest {
 
     @BeforeEach
     void setUp() throws InvalidFormula_Exception, FattyAcidCreation_Exception {
-        LinkedHashSet<FattyAcid> fattyAcids = new LinkedHashSet<>();
+        List<FattyAcid> fattyAcids = new ArrayList<>();
         fattyAcids.add(new FattyAcid(12, 0));
         fattyAcids.add(new FattyAcid(10, 0));
         fattyAcids.add(new FattyAcid(10, 0));

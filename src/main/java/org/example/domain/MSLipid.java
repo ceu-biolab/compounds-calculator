@@ -2,6 +2,7 @@ package org.example.domain;
 
 import java.text.DecimalFormat;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class MSLipid extends Lipid {
     public String compoundID;
@@ -9,7 +10,7 @@ public class MSLipid extends Lipid {
     public String formula;
     public double mass;
 
-    public MSLipid(LinkedHashSet<FattyAcid> fattyAcids, LipidSkeletalStructure lipidSkeletalStructure, String compoundName, String compoundID,
+    public MSLipid(List<FattyAcid> fattyAcids, LipidSkeletalStructure lipidSkeletalStructure, String compoundName, String compoundID,
                    String compoundNameMSLipid, double mass) {
         super(fattyAcids, lipidSkeletalStructure);
         this.compoundName = compoundName;

@@ -72,7 +72,6 @@ public class AdductTransformerUI extends JPanel {
         return chart;
     }
 
-
     //** Dada una m/z cual sería la masa de todos sus aductos
     //** Select all, etc.
     //** Create own adducts by inserting a formula (should have regex of [M+X]Q+/-)

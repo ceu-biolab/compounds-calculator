@@ -34,7 +34,9 @@ public class QueryParameters {
      * @throws SQLException
      * @throws FattyAcidCreation_Exception
      */
-    public LinkedHashSet<MSLipid> returnSetOfLipidsFoundInDatabase(LipidType lipidType, double precursorIonMZ, Set<Double> neutralLossAssociatedIonMZs, String adduct) throws InvalidFormula_Exception, SQLException, FattyAcidCreation_Exception {
+    public LinkedHashSet<MSLipid> returnSetOfLipidsFoundInDatabase(LipidType lipidType, double precursorIonMZ,
+                                                                   Set<Double> neutralLossAssociatedIonMZs, String adduct)
+            throws InvalidFormula_Exception, SQLException, FattyAcidCreation_Exception {
         Set<Double> fattyAcidMasses = Database.calculateFattyAcidMassesFromNeutralLosses(precursorIonMZ, neutralLossAssociatedIonMZs, adduct);
 
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
@@ -52,9 +54,6 @@ public class QueryParameters {
                 System.err.println("Fatty Acid with mass " + fattyAcidMass + " not found");
             }
         }
-
-        System.out.println("FAs:" + fattyAcids);
-
 
         StringBuilder queryBuilder = new StringBuilder(
                 """
@@ -120,7 +119,7 @@ public class QueryParameters {
         paramMap.addValue("formulaSkeleton", formulaSkeleton.toString());
         paramMap.addValue("numCarbons1", fattyAcids.get(0).getCarbonAtoms());
         paramMap.addValue("doubleBonds1", fattyAcids.get(0).getDoubleBonds());
-        return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
+        return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper(fattyAcids)));
     }
 
     /**
@@ -153,7 +152,7 @@ public class QueryParameters {
                 paramMap.addValue("formulaSkeleton", formulaSkeleton.toString());
                 paramMap.addValue("numCarbons1", fattyAcids.get(0).getCarbonAtoms());
                 paramMap.addValue("doubleBonds1", fattyAcids.get(0).getDoubleBonds());
-                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
+                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper(fattyAcids)));
             case 2:
                 queryBuilder.append("""
                         WHERE
@@ -170,7 +169,7 @@ public class QueryParameters {
                 paramMap.addValue("doubleBonds1", fattyAcids.get(0).getDoubleBonds());
                 paramMap.addValue("numCarbons2", fattyAcids.get(1).getCarbonAtoms());
                 paramMap.addValue("doubleBonds2", fattyAcids.get(1).getDoubleBonds());
-                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
+                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper(fattyAcids)));
         }
         return null;
     }
@@ -210,7 +209,7 @@ public class QueryParameters {
                 paramMap.addValue("formulaSkeleton", formulaSkeleton.toString());
                 paramMap.addValue("numCarbons1", fattyAcids.get(0).getCarbonAtoms());
                 paramMap.addValue("doubleBonds1", fattyAcids.get(0).getDoubleBonds());
-                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
+                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper(fattyAcids)));
             case 2:
                 try {
                     fattyAcids = getFAsCombinationFromPIMassAndTwoFAs(lipidType, precursorIon, fattyAcids, adduct);
@@ -244,7 +243,7 @@ public class QueryParameters {
                 paramMap.addValue("doubleBonds1", fattyAcids.get(0).getDoubleBonds());
                 paramMap.addValue("numCarbons2", fattyAcids.get(1).getCarbonAtoms());
                 paramMap.addValue("doubleBonds2", fattyAcids.get(1).getDoubleBonds());
-                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
+                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper(fattyAcids)));
             case 3:
                 queryBuilder.append("""
                         WHERE
@@ -265,7 +264,7 @@ public class QueryParameters {
                 paramMap.addValue("doubleBonds2", fattyAcids.get(1).getDoubleBonds());
                 paramMap.addValue("numCarbons3", fattyAcids.get(2).getCarbonAtoms());
                 paramMap.addValue("doubleBonds3", fattyAcids.get(2).getDoubleBonds());
-                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper()));
+                return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper(fattyAcids)));
             default:
                 LinkedHashSet<MSLipid> lipidResults = new LinkedHashSet<>();
                 List<List<FattyAcid>> fattyAcidCombinations = findPossibleCombinationsOfFAsWhenCoelution(lipidType, fattyAcids, precursorIon, adduct, 30d);
@@ -307,7 +306,7 @@ public class QueryParameters {
                         paramMap2.addValue("numCarbons3", combination.get(2).getCarbonAtoms());
                         paramMap2.addValue("doubleBonds3", combination.get(2).getDoubleBonds());
 
-                        lipidResults.addAll(namedJdbcTemplate.query(queryBuilder2.toString(), paramMap2, new MSLipidRowMapper()));
+                        lipidResults.addAll(namedJdbcTemplate.query(queryBuilder2.toString(), paramMap2, new MSLipidRowMapper(combination)));
                     }
                 }
                 return lipidResults;
@@ -340,6 +339,7 @@ public class QueryParameters {
      * the lipid head structure (which is found according to the lipid type) and each fatty acid along with the removal
      * of a molecule of water (since the addition of a fatty acid to a lipid head is a condensation reaction, which
      * releases water).
+     *
      * @param lipidType
      * @param fattyAcids
      * @return
@@ -362,7 +362,6 @@ public class QueryParameters {
         //** Remember to consider cases where there is a minimum and maximum number of fatty acids
         int combinationLength = 3;  // Length of each combination
         List<List<FattyAcid>> finalFattyAcidsList = generateCombinations(lipidType, fattyAcids, combinationLength);
-        System.out.println(finalFattyAcidsList);
         // TODO FILTRAR BY PRECURSOR ION and ADDUCT and TOLERANCE
         return finalFattyAcidsList;
     }
@@ -370,6 +369,7 @@ public class QueryParameters {
     /**
      * Public recursive function which generates the possible combinations with repetition of fatty acids from the lipid type
      * and the list of fatty acids.
+     *
      * @param lipidType
      * @param fattyAcids
      * @param combinationLength
@@ -384,6 +384,7 @@ public class QueryParameters {
 
     /**
      * Private
+     *
      * @param lipidType
      * @param fattyAcids
      * @param currentCombination

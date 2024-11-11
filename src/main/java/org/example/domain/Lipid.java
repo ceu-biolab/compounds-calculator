@@ -3,12 +3,13 @@ package org.example.domain;
 import org.example.exceptions.InvalidFormula_Exception;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class Lipid {
-    private final LinkedHashSet<FattyAcid> fattyAcids;
+    private final List<FattyAcid> fattyAcids;
     private final LipidSkeletalStructure lipidSkeletalStructure;
 
-    public Lipid(LinkedHashSet<FattyAcid> fattyAcids, LipidSkeletalStructure lipidSkeletalStructure) {
+    public Lipid(List<FattyAcid> fattyAcids, LipidSkeletalStructure lipidSkeletalStructure) {
         this.lipidSkeletalStructure = lipidSkeletalStructure;
         this.fattyAcids = fattyAcids;
     }
@@ -29,7 +30,7 @@ public class Lipid {
         return mass - (fattyAcids.size() * (PeriodicTable.waterMass));
     }
 
-    public LinkedHashSet<FattyAcid> getFattyAcids() {
+    public List<FattyAcid> getFattyAcids() {
         return fattyAcids;
     }
 
@@ -40,8 +41,6 @@ public class Lipid {
     public String calculateSpeciesShorthand(MSLipid lipid) {
         int carbonAtoms = 0;
         int doubleBonds = 0;
-
-        System.out.println(lipid.getCompoundName());
 
         for (FattyAcid fattyAcid : lipid.getFattyAcids()) {
             System.out.println("FA: " + fattyAcid);
