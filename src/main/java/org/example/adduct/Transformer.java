@@ -1,5 +1,6 @@
 package org.example.adduct;
 
+import ceu.biolab.Adduct;
 import org.example.domain.Element;
 import org.example.domain.PeriodicTable;
 
@@ -121,87 +122,76 @@ public class Transformer {
      * @return the mass difference within the tolerance respecting to the
      * massToSearch
      */
-    public static Double getMassToSearch(Double experimentalMass, String adduct, Double adductValue) {
-        Double massToSearch;
+    public static Double getMonoisotopicMassFromMZ(Double experimentalMass, String adduct, Double adductValue) {
+        Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
 
-        if (AdductsLists.CHARGE_2.contains(adduct)) {
-            massToSearch = getChargedOriginalMass(experimentalMass, adductValue, 2);
-        } else if (AdductsLists.CHARGE_3.contains(adduct)) {
-            massToSearch = getChargedOriginalMass(experimentalMass, adductValue, 3);
-        } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimerOriginalMass(experimentalMass, adductValue, 2);
-        } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimerOriginalMass(experimentalMass, adductValue, 3);
-        } else {
-            massToSearch = experimentalMass + adductValue;
+        if (adductObj == null) { // Adduct not found in map
+            return getDefaultMassFromMZ(experimentalMass, adductValue);
         }
-        return massToSearch;
-    }
 
+        int charge = adductObj.getAdductCharge();
+        int multimer = adductObj.getMultimer();
+
+        if (charge == 1 && multimer == 1) { // Default case: Monomer with Charge +/- 1
+            return getDefaultMassFromMZ(experimentalMass, adductValue);
+        }
+
+        if (multimer > 1) { // Dimer or Trimer with a charge of +/- 2 or +/- 3
+            return getMultimerOriginalMass(experimentalMass, adductValue, multimer);
+        } else { // Monomer with a specified charge of +/- 2 or +/- 3
+            return getChargedOriginalMass(experimentalMass, adductValue, charge);
+        }
+    }
 
     /**
      * Calculate the monoisotopic mass based on the adduct mass, without knowing
      * the value of the adduct.
      *
-     * @param experimentalMass
+     * @param mz
      * @param adduct
-     * @param ionizationMode
      * @return
      */
-    public static Double getMassToSearch(Double experimentalMass, String adduct, int ionizationMode) {
-        //Double adductValue = getAdductValue(adduct, ionizationMode);
-        Double adductValue = 0d; // TODO
-        Double massToSearch;
+    public static Double getMonoisotopicMassFromMZ(Double mz, String adduct) {
+        // TODO: Double adductValue = getAdductValue(adduct, ionizationMode);
+        Double adductValue = 0d;
+        return getMonoisotopicMassFromMZ(mz, adduct, adductValue);
+    }
 
-        if (AdductsLists.CHARGE_2.contains(adduct)) {
-            massToSearch = getChargedOriginalMass(experimentalMass, adductValue, 2);
-        } else if (AdductsLists.CHARGE_3.contains(adduct)) {
-            massToSearch = getChargedOriginalMass(experimentalMass, adductValue, 3);
-        } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimerAdductMass(experimentalMass, adductValue, 2);
-        } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimerAdductMass(experimentalMass, adductValue, 3);
-        } else {
-            massToSearch = experimentalMass + adductValue;
-        }
-        return massToSearch;
+    public static Double getDefaultMassFromMZ(Double experimentalMass, Double adductValue) {
+        return experimentalMass + adductValue;
+    }
+
+    public static Double getDefaultMassFromMonoWeight(Double monoisotopic_weight, Double adductValue) {
+        return monoisotopic_weight - adductValue;
     }
 
     private static Double getChargedOriginalMass(double experimentalMass, double adductValue, int charge) {
         double result = experimentalMass;
-
-        result = result + adductValue;
-        result = result * charge;
-
+        result += adductValue;
+        result *= charge;
         return result;
     }
 
-    private static Double getDimerOriginalMass(double experimentalMass, double adductValue, int numberAtoms) {
+    private static Double getMultimerOriginalMass(double experimentalMass, double adductValue, int numberAtoms) {
         double result = experimentalMass;
-
-        result = result + adductValue;
-        result = result / numberAtoms;
-
+        result += adductValue;
+        result /= numberAtoms;
         return result;
     }
 
     private static Double getChargedAdductMass(double monoisotopicWeight, double adductValue, int charge) {
         double result = monoisotopicWeight;
-
-        result = result / charge;
-        result = result - adductValue;
-
+        result /= charge;
+        result -= adductValue;
         return result;
     }
 
-    private static Double getDimerAdductMass(double monoisotopicWeight, double adductValue, int numberAtoms) {
+    private static Double getMultimerAdductMass(double monoisotopicWeight, double adductValue, int numberAtoms) {
         double result = monoisotopicWeight;
-        result = result * numberAtoms;
-        result = result - adductValue;
-
+        result *= numberAtoms;
+        result -= adductValue;
         return result;
     }
-
 
     /**
      * Calculate the adduct Mass based on the monoisotopic weight, without
@@ -213,22 +203,26 @@ public class Transformer {
      * @return the mass difference within the tolerance respecting to the massToSearch
      */
     public static Double getMassOfAdductFromMonoWeight(Double monoisotopic_weight, String adduct, int ionizationMode) {
-        //Double adductValue = getAdductValue(adduct, ionizationMode);
-        Double adductValue = 0d; // TODO
-        Double massToSearch;
+        Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
+        // TODO: Double adductValue = getAdductValue(adduct, ionizationMode);
+        Double adductValue = 0d;
 
-        if (AdductsLists.CHARGE_2.contains(adduct)) {
-            massToSearch = getChargedAdductMass(monoisotopic_weight, adductValue, 2);
-        } else if (AdductsLists.CHARGE_3.contains(adduct)) {
-            massToSearch = getChargedAdductMass(monoisotopic_weight, adductValue, 3);
-        } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 2);
-        } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 3);
-        } else {
-            massToSearch = monoisotopic_weight - adductValue;
+        if (adductObj == null) { // Adduct not found in map
+            return getDefaultMassFromMonoWeight(monoisotopic_weight, adductValue);
         }
-        return massToSearch;
+
+        int charge = adductObj.getAdductCharge();
+        int multimer = adductObj.getMultimer();
+
+        if (charge == 1 && multimer == 1) { // Default case: Monomer with Charge +/- 1
+            return getDefaultMassFromMonoWeight(monoisotopic_weight, adductValue);
+        }
+
+        if (multimer > 1) { // Dimer or Trimer with a charge of +/- 2 or +/- 3
+            return getMultimerOriginalMass(monoisotopic_weight, adductValue, multimer);
+        } else { // Monomer with a specified charge of +/- 2 or +/- 3
+            return getChargedOriginalMass(monoisotopic_weight, adductValue, charge);
+        }
     }
 
     /**
@@ -240,19 +234,26 @@ public class Transformer {
      * @return the mass difference within the tolerance respecting to the massToSearch
      */
     public static Double getMassOfAdductFromMonoWeight(Double monoisotopic_weight, String adduct, Double adductValue) {
-        Double massToSearch;
+        getMonoisotopicMassFromMZ(monoisotopic_weight, adduct, adductValue);
 
-        if (AdductsLists.CHARGE_2.contains(adduct)) {
-            massToSearch = getChargedAdductMass(monoisotopic_weight, adductValue, 2);
-        } else if (AdductsLists.CHARGE_3.contains(adduct)) {
-            massToSearch = getChargedAdductMass(monoisotopic_weight, adductValue, 3);
-        } else if (AdductsLists.DIMER_2.contains(adduct)) {
-            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 2);
-        } else if (AdductsLists.TRIMER_3.contains(adduct)) {
-            massToSearch = getDimerAdductMass(monoisotopic_weight, adductValue, 3);
-        } else {
-            massToSearch = monoisotopic_weight - adductValue;
+        Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
+        // TODO: Double adductValue = getAdductValue(adduct, ionizationMode);
+
+        if (adductObj == null) { // Adduct not found in map
+            return getDefaultMassFromMonoWeight(monoisotopic_weight, adductValue);
         }
-        return massToSearch;
+
+        int charge = adductObj.getAdductCharge();
+        int multimer = adductObj.getMultimer();
+
+        if (charge == 1 && multimer == 1) { // Default case: Monomer with Charge +/- 1
+            return getDefaultMassFromMonoWeight(monoisotopic_weight, adductValue);
+        }
+
+        if (multimer > 1) { // Dimer or Trimer with a charge of +/- 2 or +/- 3
+            return getMultimerOriginalMass(monoisotopic_weight, adductValue, multimer);
+        } else { // Monomer with a specified charge of +/- 2 or +/- 3
+            return getChargedOriginalMass(monoisotopic_weight, adductValue, charge);
+        }
     }
 }
