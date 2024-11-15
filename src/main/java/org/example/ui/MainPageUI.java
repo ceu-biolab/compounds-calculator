@@ -304,26 +304,30 @@ public class MainPageUI extends JPanel {
 
         for (String adduct : adducts) {
             QueryParameters queryParameters = new QueryParameters();
-            Set<MSLipid> lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(
-                    getLipidHeadGroupsChosen(),
-                    Double.parseDouble(precursorIonTextField.getText()),
-                    neutralLossAssociatedIonsInput,
-                    adduct
-            );
+            Set<MSLipid> finalLipids = new HashSet<>();
+            for (LipidType lipidType : getLipidHeadGroupsChosen()) {
+                Set<MSLipid> lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(
+                        lipidType,
+                        Double.parseDouble(precursorIonTextField.getText()),
+                        neutralLossAssociatedIonsInput,
+                        adduct
+                );
+                if (!(lipidSet == null)) {
+                    finalLipids.addAll(lipidSet);
+                }
+            }
 
-            if (lipidSet.isEmpty()) {
+            if (finalLipids.isEmpty()) {
                 System.out.println("No results found for adduct: " + adduct);
                 continue;
             }
 
             hasResults = true;
             int i = 0;
-            String[][] localLipidData = new String[lipidSet.size()][7];
+            String[][] localLipidData = new String[finalLipids.size()][7];
 
 
-            for (MSLipid lipid : lipidSet) {
-                System.out.println("FAs list: " + lipid.getFattyAcids());
-
+            for (MSLipid lipid : finalLipids) {
                 localLipidData[i][0] = lipid.getCompoundName();
                 localLipidData[i][1] = lipid.calculateSpeciesShorthand(lipid);
                 localLipidData[i][2] = lipid.getFormula();
@@ -336,13 +340,11 @@ public class MainPageUI extends JPanel {
             }
         }
 
-        // Convert final list to array for lipidData
         lipidData = new String[finalLipidDataList.size()][7];
         for (int j = 0; j < finalLipidDataList.size(); j++) {
             lipidData[j] = finalLipidDataList.get(j);
         }
 
-        // Display a message if no results were found across all adducts
         if (!hasResults) {
             JOptionPane.showMessageDialog(null, "No results found for any chosen adduct or lipid group. " +
                     "Please verify your input and try again.");
@@ -692,24 +694,22 @@ public class MainPageUI extends JPanel {
             }
         }
 
-        System.out.println(adducts);
         return adducts;
     }
 
-    public static LipidType getLipidHeadGroupsChosen() {
-        List<String> lipidHeadGroups = new ArrayList<>();
+    public static List<LipidType> getLipidHeadGroupsChosen() {
+        List<LipidType> lipidHeadGroups = new ArrayList<>();
         for (JCheckBox checkBox : lipidHeadGroupsCheckBoxList) {
             if (checkBox.isSelected()) {
                 if (checkBox.getText().equals("Select All")) {
-                    for (JCheckBox checkBoxWhenAll : lipidHeadGroupsCheckBoxList) {
-                        lipidHeadGroups.add(checkBoxWhenAll.getText().replace("[", "").replace("]", ""));
+                    for (JCheckBox allCheckBoxes : lipidHeadGroupsCheckBoxList) {
+                        lipidHeadGroups.add(LipidType.valueOf(allCheckBoxes.getText()));
                     }
-                    // TODO: return lipidHeadGroups;
                 }
-                lipidHeadGroups.add(checkBox.getText());
+                lipidHeadGroups.add(LipidType.valueOf(checkBox.getText()));
             }
         }
-        return LipidType.valueOf(lipidHeadGroups.toString().replace("[", "").replace("]", ""));
+        return lipidHeadGroups;
     }
 
 }

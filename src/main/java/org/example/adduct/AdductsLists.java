@@ -126,5 +126,4 @@ public class AdductsLists {
         mapNeutralAdductsTMP.put("M", "0");
         MAPNEUTRALADDUCTS = Collections.unmodifiableMap(mapNeutralAdductsTMP);
     }
-
 }
