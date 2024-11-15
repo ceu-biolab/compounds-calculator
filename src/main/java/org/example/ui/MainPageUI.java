@@ -17,15 +17,17 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 
@@ -227,8 +229,35 @@ public class MainPageUI extends JPanel {
         getTemplateButton.setBorder(new LineBorder(Color.white));
         getTemplateButton.setHorizontalAlignment(SwingConstants.LEFT);
         getTemplateButton.addActionListener(e -> {
-            // todo
-            JOptionPane.showMessageDialog(null, "Not sure what the template should look like yet...");
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            try (InputStream inputStream = classLoader.getResourceAsStream("Batch Processing Template.csv")) {
+
+                if (inputStream == null) {
+                    System.out.println("File not found in resources!");
+                    return;
+                }
+
+                File tempFile = Files.createTempFile("test", ".csv").toFile();
+                tempFile.deleteOnExit();
+
+                try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                }
+
+                if (Desktop.isDesktopSupported()) {
+                    Desktop desktop = Desktop.getDesktop();
+                    desktop.open(tempFile);
+                } else {
+                    System.out.println("Desktop is not supported.");
+                }
+
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
         });
 
         searchButtonsPanel.add(searchButton, "gaptop 10, gapleft 10, wrap");
@@ -254,8 +283,7 @@ public class MainPageUI extends JPanel {
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception |
                  NullPointerException exception) {
-            exception.printStackTrace(); //! GIVING NULL POINTER EXCEPTION
-            //JOptionPane.showMessageDialog(null, "No results found.");
+            exception.printStackTrace();
         }
 
         tableModel = new DefaultTableModel(lipidData, tableTitles) {
