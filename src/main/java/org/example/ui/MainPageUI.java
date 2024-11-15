@@ -491,7 +491,7 @@ public class MainPageUI extends JPanel {
         lipidHeadGroupsPanel.add(selectAllCheckBox, "gapleft 15, wrap");
         List<JPanel> checkBoxPanels = new ArrayList<>();
 
-        String[] lipidHeadGroupsStrings = {"CE", "CER", "DG", "MG", "PA", "PC", "PE", "PI", "PG", "PS", "SM", "TG", "CL"};
+        String[] lipidHeadGroupsStrings = {"CE", "DG", "MG", "PA", "PC", "PE", "PI", "PG", "PS", "TG", "CL"};
 
         for (String lipidHeadGroup : lipidHeadGroupsStrings) {
             JCheckBox checkBox = new JCheckBox(lipidHeadGroup);
@@ -702,8 +702,8 @@ public class MainPageUI extends JPanel {
         for (JCheckBox checkBox : lipidHeadGroupsCheckBoxList) {
             if (checkBox.isSelected()) {
                 if (checkBox.getText().equals("Select All")) {
-                    for (JCheckBox allCheckBoxes : lipidHeadGroupsCheckBoxList) {
-                        lipidHeadGroups.add(LipidType.valueOf(allCheckBoxes.getText()));
+                    for (JCheckBox checkBoxWhenAll : lipidHeadGroupsCheckBoxList) {
+                        lipidHeadGroups.add(LipidType.valueOf(checkBoxWhenAll.getText()));
                     }
                 }
                 lipidHeadGroups.add(LipidType.valueOf(checkBox.getText()));

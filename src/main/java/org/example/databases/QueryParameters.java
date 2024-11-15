@@ -107,6 +107,10 @@ public class QueryParameters {
      */
     private LinkedHashSet<MSLipid> findMGsInDatabase(StringBuilder queryBuilder, MapSqlParameterSource paramMap,
                                                      List<FattyAcid> fattyAcids, Formula formulaSkeleton) {
+        if (fattyAcids.isEmpty()) {
+            return null;
+        }
+
         queryBuilder.append("""
                 WHERE
                     (chains.num_carbons, chains.double_bonds) IN ((:numCarbons1, :doubleBonds1))

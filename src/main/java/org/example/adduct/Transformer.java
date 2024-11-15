@@ -1,8 +1,6 @@
 package org.example.adduct;
 
-import ceu.biolab.Adduct;
-import org.example.domain.Element;
-import org.example.domain.PeriodicTable;
+import ceu.biolab.*;
 
 /**
  * @author: San Pablo-CEU, Alberto Gil de la Fuente
@@ -17,16 +15,15 @@ public class Transformer {
      * protonated or deprotonated calcuation
      *
      * @param inputMass
-     * @param massesMode
      * @param ionizationMode
      * @return
      */
-    public static Double calculateMZFromNeutralMass(Double inputMass, int massesMode, int ionizationMode) {
+    public static Double calculateMZFromNeutralMass(Double inputMass, int ionizationMode) {
         Double mzInputMass = inputMass;
-        if (massesMode == 0 && ionizationMode == 1) {
-            mzInputMass = inputMass + PeriodicTable.elements_Map.get(Element.H);
-        } else if (massesMode == 0 && ionizationMode == 2) {
-            mzInputMass = inputMass - PeriodicTable.elements_Map.get(Element.H);
+        if (ionizationMode == 1) {
+            mzInputMass = inputMass + Element.elementWeights.get(Element.ElementType.H);
+        } else if (ionizationMode == 2) {
+            mzInputMass = inputMass - Element.elementWeights.get(Element.ElementType.H);
         }
         return mzInputMass;
     }
@@ -112,20 +109,19 @@ public class Transformer {
         return delta;
     }
 
-
     /**
      * Calculate the mass to search depending on the adduct hypothesis
      *
      * @param experimentalMass Experimental mass of the compound
      * @param adduct           adduct name (M+H, 2M+H, M+2H, etc.)
-     * @param adductValue      numeric value of the adduct (1.0073, etc.)
      * @return the mass difference within the tolerance respecting to the
      * massToSearch
      */
-    public static Double getMonoisotopicMassFromMZ(Double experimentalMass, String adduct, Double adductValue) {
+    public static Double getMonoisotopicMassFromMZ(Double experimentalMass, String adduct) {
         Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
+        Double adductValue = adductObj.getAdductMass();
 
-        if (adductObj == null) { // Adduct not found in map
+        if (adductObj == null) {
             return getMonoMassFromSingleChargedMZ(experimentalMass, adductValue);
         }
 
@@ -143,38 +139,24 @@ public class Transformer {
         }
     }
 
-    /**
-     * Calculate the monoisotopic mass based on the adduct mass, without knowing
-     * the value of the adduct.
-     *
-     * @param mz
-     * @param adduct
-     * @return
-     */
-    public static Double getMonoisotopicMassFromMZ(Double mz, String adduct) {
-        // TODO: Double adductValue = getAdductValue(adduct, ionizationMode); CHECK THE SIGNS of the values received!
-        Double adductValue = 0d;
-        return getMonoisotopicMassFromMZ(mz, adduct, adductValue);
-    }
-
     public static Double getMonoMassFromSingleChargedMZ(Double experimentalMass, Double adductValue) {
-        return experimentalMass + adductValue;
+        return experimentalMass - adductValue;
     }
 
     public static Double getMZFromSingleChargedMonoMass(Double monoisotopic_weight, Double adductValue) {
-        return monoisotopic_weight - adductValue;
+        return monoisotopic_weight + adductValue;
     }
 
     private static Double getMonoMassFromMultiChargedMZ(double experimentalMass, double adductValue, int charge) {
         double result = experimentalMass;
-        result += adductValue;
+        result -= adductValue;
         result *= charge;
         return result;
     }
 
     private static Double getMonoMassFromMultimerMZ(double experimentalMass, double adductValue, int numberAtoms) {
         double result = experimentalMass;
-        result += adductValue;
+        result -= adductValue;
         result /= numberAtoms;
         return result;
     }
@@ -182,14 +164,14 @@ public class Transformer {
     private static Double getMZFromMultiChargedMonoMass(double monoisotopicWeight, double adductValue, int charge) {
         double result = monoisotopicWeight;
         result /= charge;
-        result -= adductValue;
+        result += adductValue;
         return result;
     }
 
     private static Double getMZFromMultimerMonoMass(double monoisotopicWeight, double adductValue, int numberMultimers) {
         double result = monoisotopicWeight;
         result *= numberMultimers;
-        result -= adductValue;
+        result += adductValue;
         return result;
     }
 
