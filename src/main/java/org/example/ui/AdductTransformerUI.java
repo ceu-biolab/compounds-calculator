@@ -3,6 +3,7 @@ package org.example.ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
+import org.example.adduct.AdductsLists;
 import org.example.adduct.Transformer;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
@@ -15,6 +16,7 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.example.ui.MainPageUI.configureComponents;
@@ -59,7 +61,9 @@ public class AdductTransformerUI extends JPanel {
         graphPanel.add(chartPanel, "gaptop 15, gapbottom 300, grow");
 
         JLabel massToMzLabel = new JLabel("   Find mz from M values");
-        JComboBox<String> comboBox = new JComboBox<>(new String[]{"   [M+H]+  ", "   [M+NH4]+  ", "   [M+C2H6N2+H]+  "});
+
+        String[] adducts = AdductsLists.MAPADDUCTS.keySet().toArray(new String[0]);
+        JComboBox<String> comboBox = new JComboBox<>(adducts);
         massToMzLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon.png"));
         massToMzLabel.setHorizontalAlignment(SwingConstants.CENTER);
         configureTextComponents(massToMzLabel);
@@ -69,9 +73,11 @@ public class AdductTransformerUI extends JPanel {
         massToMzButton.addActionListener(e -> {
             List<Double> mzValues = new ArrayList<>();
             if (monoMassTextPane1A != null) {
-                String[] massValues = monoMassTextPane1A.getText().split("[\\s,;\\t]");
-                String adduct = comboBox.getSelectedItem().toString().replaceAll(" ", "");
+                String[] massValues = monoMassTextPane1A.getText().replaceAll("[\\[\\]]", "").split("[\\s,;\\t]+");
+                String adduct = comboBox.getSelectedItem().toString();
                 for (String mass : massValues) {
+                    System.out.println(mass);
+                    System.out.println(Transformer.getMassOfAdductFromMonoMass(Double.parseDouble(mass), adduct));
                     mzValues.add(Double.valueOf(numberFormat.format(Transformer.getMassOfAdductFromMonoMass(Double.parseDouble(mass), adduct))));
                 }
             }
@@ -79,7 +85,7 @@ public class AdductTransformerUI extends JPanel {
         });
 
         JLabel mzToMassLabel = new JLabel("   Find M from mz values");
-        JComboBox<String> comboBox2 = new JComboBox<>(new String[]{"   [M+H]+  ", "   [M+NH4]+  ", "   [M+C2H6N2+H]+  "});
+        JComboBox<String> comboBox2 = new JComboBox<>(adducts);
         mzToMassLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon copy.png"));
         mzToMassLabel.setHorizontalAlignment(SwingConstants.CENTER);
         configureTextComponents(mzToMassLabel);
@@ -89,8 +95,8 @@ public class AdductTransformerUI extends JPanel {
         mzToMassButton.addActionListener(e -> {
             List<Double> massValues = new ArrayList<>();
             if (mzTextPane2A != null) {
-                String[] mzValues = mzTextPane2A.getText().split("[\\s,;\\t]");
-                String adduct = comboBox2.getSelectedItem().toString().replaceAll(" ", "");
+                String[] mzValues = mzTextPane2A.getText().replaceAll("[\\[\\]]", "").split("[\\s,;\\t]+");
+                String adduct = comboBox2.getSelectedItem().toString();
                 for (String mz : mzValues) {
                     massValues.add(Double.valueOf(numberFormat.format(Transformer.getMonoisotopicMassFromMZ(Double.parseDouble(mz), adduct))));
                 }
