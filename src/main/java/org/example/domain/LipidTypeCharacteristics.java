@@ -27,10 +27,6 @@ public class LipidTypeCharacteristics extends ChemicalCompound {
         }
     }
 
-    public static LipidCharacteristics getNumberOfFattyAcids(LipidType lipidType) {
-        return lipidHeadStructure.get(lipidType);
-    }
-
     @Override
     public String toString() {
         return "LipidTypeCharacteristics{" +

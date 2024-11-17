@@ -72,12 +72,12 @@ public class Database {
         return new LinkedHashSet<>(Arrays.asList(doubleList));
     }
 
+    // TODO, FIX METHOD
     public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons, String adduct) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         QueryParameters queryParameters = new QueryParameters();
         LinkedHashSet<MSLipid> lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(lipidType, precursorIon, neutralLossAssociatedIons, adduct);
         String[][] lipidData = new String[lipidSet.size()][7];
         // RE-DO THIS
-        // TODO, FIX METHOD
         //MainPageUI.createLipidDataForTable(lipidSet, lipidData, adduct);
         return lipidData;
     }

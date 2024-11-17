@@ -271,7 +271,7 @@ public class QueryParameters {
                 return new LinkedHashSet<>(namedJdbcTemplate.query(queryBuilder.toString(), paramMap, new MSLipidRowMapper(fattyAcids)));
             default:
                 LinkedHashSet<MSLipid> lipidResults = new LinkedHashSet<>();
-                List<List<FattyAcid>> fattyAcidCombinations = findPossibleCombinationsOfFAsWhenCoelution(lipidType, fattyAcids, precursorIon, adduct, 30d);
+                List<List<FattyAcid>> fattyAcidCombinations = findPossibleCombinationsOfFAsWhenCoelution(lipidType, fattyAcids);
                 double expectedMass = precursorIon - Adduct.getAdductMass(adduct) - PeriodicTable.elements_Map.get(Element.H);
 
                 for (List<FattyAcid> combination : fattyAcidCombinations) {
@@ -358,15 +358,16 @@ public class QueryParameters {
         return mass;
     }
 
-    public static List<List<FattyAcid>> findPossibleCombinationsOfFAsWhenCoelution(LipidType lipidType, List<FattyAcid> fattyAcids,
-                                                                                   double precursorIon, String adduct, double toleranceInPPM) {
+    public static List<List<FattyAcid>> findPossibleCombinationsOfFAsWhenCoelution(LipidType lipidType, List<FattyAcid> fattyAcids) {
         // TODO: CHANGE COMBINATION LENGTH DEPENDING ON THE LIPIDTYPE
         // TODO CHANGE WITHIN generateCombinations for the possibilities of each lipid type
-
         //** Remember to consider cases where there is a minimum and maximum number of fatty acids
+
+        // if numexactFAs then combinationLength = X and if not do it for 1 and 2
+
+
         int combinationLength = 3;  // Length of each combination
         List<List<FattyAcid>> finalFattyAcidsList = generateCombinations(lipidType, fattyAcids, combinationLength);
-        // TODO FILTRAR BY PRECURSOR ION and ADDUCT and TOLERANCE
         return finalFattyAcidsList;
     }
 

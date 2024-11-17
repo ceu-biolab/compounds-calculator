@@ -53,6 +53,7 @@ public class MainPageUI extends JPanel {
     private final JLabel neutralLossesLabel;
     private final JLabel tolerancePILabel;
     private final JLabel toleranceNLLabel;
+    private final JLabel tableLabel;
 
     private JTable table = null;
     private DefaultTableModel tableModel = null;
@@ -75,7 +76,7 @@ public class MainPageUI extends JPanel {
         uploadButton = new JButton("  Batch Processing");
         clearButton = new JButton("  Clear Input");
         getTemplateButton = new JButton("  File Template");
-        tablePanel = new JPanel();
+        tablePanel = new JPanel(new MigLayout("", "15[grow]15", "15[grow]15[grow]15[grow]15"));
         searchButtonsPanel = new JPanel();
         lipidHeadGroupsPanel = new JPanel();
         inputSubpanel = new JPanel();
@@ -88,6 +89,7 @@ public class MainPageUI extends JPanel {
         neutralLossesLabel = new JLabel("    Neutral Loss Associated Ions");
         tolerancePILabel = new JLabel("    Precursor Ion Tolerance (ppm)");
         toleranceNLLabel = new JLabel("    Neutral Loss Tolerance (ppm)");
+        tableLabel = new JLabel("   Lipid Results");
         adductsPanel = new JPanel();
         ionComboBox = new JComboBox<>(new String[]{"   View Positive Adducts  ", "   View Negative Adducts  "});
         new Database();
@@ -110,12 +112,13 @@ public class MainPageUI extends JPanel {
     }
 
     public void createTable() {
+        configureTextComponents(tableLabel);
+        tablePanel.add(tableLabel, "wrap");
         tablePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         tablePanel.setBackground(Color.WHITE);
         tablePanel.setPreferredSize(new Dimension(1250, 500));
-        tablePanel.setLayout(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        tableTitles = new String[]{"Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "m/z", "CMM ID"};
 
+        tableTitles = new String[]{"Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "m/z", "CMM ID"};
         DefaultTableModel model = new DefaultTableModel(tableTitles, 0);
         table = new JTable(model);
         JScrollPane jScrollPane = new JScrollPane(table);
@@ -129,7 +132,29 @@ public class MainPageUI extends JPanel {
         jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
         jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        tablePanel.add(jScrollPane, "center, grow");
+        JPanel emptyTablePanel = new JPanel(new MigLayout("", "15[grow]15", "15[]15[]15[]15"));
+        emptyTablePanel.setBackground(Color.WHITE);
+
+        JLabel emptyIconLabel = new JLabel();
+        emptyIconLabel.setIcon(new ImageIcon("src/main/resources/EmptyTable_Icon.png"));
+        emptyIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel noResultsLabel = new JLabel("No results yet...");
+        configureTextComponents(noResultsLabel);
+        noResultsLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        noResultsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel tryInputtingInfoLabel = new JLabel("Start by inputting some data.");
+        tryInputtingInfoLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        configureTextComponents(tryInputtingInfoLabel);
+        tryInputtingInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        emptyTablePanel.add(emptyIconLabel, "align center, wrap");
+        emptyTablePanel.add(noResultsLabel, "align center, wrap");
+        emptyTablePanel.add(tryInputtingInfoLabel, "align center, wrap");
+
+        tablePanel.add(jScrollPane, "cell 0 1, align center, growx, wrap");
+        tablePanel.add(emptyTablePanel, "cell 0 2, align center, growx, gapbottom 60");
     }
 
     public void createButtons() {
@@ -147,6 +172,8 @@ public class MainPageUI extends JPanel {
         searchButton.setHorizontalAlignment(SwingConstants.LEFT);
         searchButton.addActionListener(e -> {
             tablePanel.removeAll();
+            tablePanel.add(tableLabel, "wrap");
+            configureTextComponents(tableLabel);
             JScrollPane lipidScrollPane = createLipidScrollPane();
             lipidScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
             lipidScrollPane.setPreferredSize(new Dimension(1250, 500));
@@ -711,6 +738,5 @@ public class MainPageUI extends JPanel {
         }
         return lipidHeadGroups;
     }
-
 }
 

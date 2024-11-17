@@ -15,7 +15,7 @@ public class AdductsLists {
     static {
         try {
             MAPADDUCTS = new LinkedHashMap<>();
-            // TODO: Check charges for each adduct
+
             // Positive adducts
             MAPADDUCTS.put("[M+H]+", new Adduct("[M+H]+"));
             MAPADDUCTS.put("[M+2H]2+", new Adduct("[M+2H]2+"));
