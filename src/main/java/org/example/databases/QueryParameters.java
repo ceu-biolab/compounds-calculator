@@ -37,7 +37,7 @@ public class QueryParameters {
     public LinkedHashSet<MSLipid> returnSetOfLipidsFoundInDatabase(LipidType lipidType, double precursorIonMZ,
                                                                    Set<Double> neutralLossAssociatedIonMZs, String adduct)
             throws InvalidFormula_Exception, SQLException, FattyAcidCreation_Exception {
-        Set<Double> fattyAcidMasses = Database.calculateFattyAcidMassesFromNeutralLosses(precursorIonMZ, neutralLossAssociatedIonMZs, adduct);
+        Set<Double> fattyAcidMasses = Database.calculateFattyAcidMassesFromNeutralLosses(lipidType, precursorIonMZ, neutralLossAssociatedIonMZs, adduct);
 
         LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
         Formula formulaSkeleton = new Formula(lipidSkeletalStructure.getFormula().toString());
@@ -48,7 +48,6 @@ public class QueryParameters {
             if (iterator.hasNext()) {
                 FattyAcid fattyAcid = iterator.next();
                 fattyAcids.add(fattyAcid);
-                //** TODO: SUBTRACT H+ MASS HERE
                 formulaSkeleton.addFattyAcidToFormula(fattyAcid);
             } else {
                 System.err.println("Fatty Acid with mass " + fattyAcidMass + " not found");
@@ -272,7 +271,7 @@ public class QueryParameters {
             default:
                 LinkedHashSet<MSLipid> lipidResults = new LinkedHashSet<>();
                 List<List<FattyAcid>> fattyAcidCombinations = findPossibleCombinationsOfFAsWhenCoelution(lipidType, fattyAcids);
-                double expectedMass = precursorIon - Adduct.getAdductMass(adduct) - PeriodicTable.elements_Map.get(Element.H);
+                double expectedMass = precursorIon - Adduct.getAdductMass(adduct);
 
                 for (List<FattyAcid> combination : fattyAcidCombinations) {
                     StringBuilder queryBuilder2 = new StringBuilder();
@@ -321,7 +320,7 @@ public class QueryParameters {
                                                                  double precursorIon, List<FattyAcid> fattyAcids,
                                                                  String adductString) throws IncorrectAdduct, NotFoundElement, IncorrectFormula {
         ceu.biolab.Adduct adduct = new ceu.biolab.Adduct(adductString);
-        double expectedMass = precursorIon - adduct.getAdductMass() - PeriodicTable.elements_Map.get(Element.H);
+        double expectedMass = precursorIon - adduct.getAdductMass();
         double tolerance = 0.5d;
 
         for (int i = 0; i < fattyAcids.size(); i++) {
@@ -382,7 +381,6 @@ public class QueryParameters {
      */
     public static List<List<FattyAcid>> generateCombinations(LipidType lipidType, List<FattyAcid> fattyAcids, int combinationLength) {
         List<List<FattyAcid>> finalFattyAcidsList = new ArrayList<>();
-        // TODO: CALCULATE COMBINATION LENGTH FROM LIPIDTYPE
         generateCombinations(lipidType, fattyAcids, new ArrayList<>(), finalFattyAcidsList, 0, fattyAcids.size(), combinationLength);
         return finalFattyAcidsList;
     }

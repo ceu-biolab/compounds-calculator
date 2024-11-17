@@ -601,7 +601,7 @@ public class MainPageUI extends JPanel {
             checkBox.setSelected(false);
         }
         if (charge.equals("   View Positive Adducts  ")) {
-            String[] string = {"[M+H]+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+NH4-H]+", "[M+H-H2O]+", "[M+C2H6N2+H]+"};
+            String[] string = {"[M+H]+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+H-H2O]+", "[M+C2H6N2+H]+"};
             updateAdductPanel(string);
         } else if (charge.equals("   View Negative Adducts  ")) {
             String[] string = {"[M-H]-", "[M+Cl]-", "[M-H-H2O]-", "[M+HCOOH-H]-", "[M+CH3COOH-H]-"};

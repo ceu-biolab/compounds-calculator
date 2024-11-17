@@ -30,12 +30,19 @@ public class Database {
         }
     }
 
-    public static Set<Double> calculateFattyAcidMassesFromNeutralLosses(double precursorIon, Set<Double> neutralLossAssociatedIonMasses, String adduct) {
+    public static Set<Double> calculateFattyAcidMassesFromNeutralLosses(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIonMasses, String adduct) {
         Double[] fattyAcidMassesArray = new Double[neutralLossAssociatedIonMasses.size()];
         int i = 0;
         for (Double neutralLossAssociatedIonMass : neutralLossAssociatedIonMasses) {
             if (neutralLossAssociatedIonMass != 0.0d) {
-                fattyAcidMassesArray[i] = precursorIon - neutralLossAssociatedIonMass - Adduct.getAdductMass(adduct);
+                if (lipidType.equals(LipidType.TG) && adduct.equals("[M+NH4]+")) {
+                    fattyAcidMassesArray[i] = precursorIon - neutralLossAssociatedIonMass - Adduct.getAdductMass(adduct) + PeriodicTable.elements_Map.get(Element.H);
+                    //fattyAcidMassesArray[i] = precursorIon - neutralLossAssociatedIonMass - Adduct.getAdductMass(adduct) - PeriodicTable.elements_Map.get(Element.H);
+                    System.out.println("1: " + fattyAcidMassesArray[i]);
+                } else {
+                    fattyAcidMassesArray[i] = precursorIon - neutralLossAssociatedIonMass - Adduct.getAdductMass(adduct);
+                    System.out.println("2: " + fattyAcidMassesArray[i]);
+                }
                 i++;
             }
         }
