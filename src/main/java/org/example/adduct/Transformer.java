@@ -176,48 +176,15 @@ public class Transformer {
     }
 
     /**
-     * Calculate the adduct Mass based on the monoisotopic weight, without
-     * knowing the value of the adduct.
-     *
-     * @param monoisotopic_weight Experimental mass of the compound
-     * @param adduct              adduct name (M+H, 2M+H, M+2H, etc..)
-     * @param ionizationMode      positive, negative or neutral
-     * @return the mass difference within the tolerance respecting to the massToSearch
-     */
-    public static Double getMassOfAdductFromMonoMass(Double monoisotopic_weight, String adduct, int ionizationMode) {
-        Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
-        // TODO: Double adductValue = getAdductValue(adduct, ionizationMode);
-        Double adductValue = 0d;
-
-        if (adductObj == null) { // Adduct not found in map
-            return getMZFromSingleChargedMonoMass(monoisotopic_weight, adductValue);
-        }
-
-        int charge = adductObj.getAdductCharge();
-        int multimer = adductObj.getMultimer();
-
-        if (charge == 1 && multimer == 1) { // Default case: Monomer with Charge +/- 1
-            return getMZFromSingleChargedMonoMass(monoisotopic_weight, adductValue);
-        }
-
-        if (multimer > 1) { // Dimer or Trimer with a charge of +/- 2 or +/- 3
-            return getMZFromMultimerMonoMass(monoisotopic_weight, adductValue, multimer);
-        } else { // Monomer with a specified charge of +/- 2 or +/- 3
-            return getMZFromMultiChargedMonoMass(monoisotopic_weight, adductValue, charge);
-        }
-    }
-
-    /**
      * Calculate the adduct Mass based on the monoisotopic weight
      *
      * @param monoisotopic_weight Experimental mass of the compound
      * @param adduct              adduct name (M+H, 2M+H, M+2H, etc..)
-     * @param adductValue         numeric value of the adduct (1.0073, etc.)
      * @return the mass difference within the tolerance respecting to the massToSearch
      */
-    public static Double getMassOfAdductFromMonoMass(Double monoisotopic_weight, String adduct, Double adductValue) {
+    public static Double getMassOfAdductFromMonoMass(Double monoisotopic_weight, String adduct) {
         Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
-        // TODO: Double adductValue = getAdductValue(adduct, ionizationMode);
+        Double adductValue = adductObj.getAdductMass();
 
         if (adductObj == null) { // Adduct not found in map
             return getMZFromSingleChargedMonoMass(monoisotopic_weight, adductValue);

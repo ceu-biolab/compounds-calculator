@@ -22,12 +22,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 
