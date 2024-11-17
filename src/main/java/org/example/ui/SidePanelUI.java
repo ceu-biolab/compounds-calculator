@@ -88,7 +88,7 @@ public class SidePanelUI {
             frame.repaint();
         });
 
-        JButton helpButton = new JButton("  Help");
+        JButton helpButton = new JButton("  Github");
         configureComponents(helpButton, "src/main/resources/Help_Icon.png");
         helpButton.setBackground(Color.WHITE);
         helpButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");

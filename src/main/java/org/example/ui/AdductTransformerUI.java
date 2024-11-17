@@ -21,6 +21,7 @@ import static org.example.ui.MainPageUI.configureTextComponents;
 public class AdductTransformerUI extends JPanel {
     public JPanel mToMZPanel = new JPanel(new MigLayout("", "20[grow, fill]20[]20[grow, fill]20", "20[]20[grow, fill]20"));
     public JPanel mzToMPanel = new JPanel(new MigLayout("", "20[grow, fill]20[]20[grow, fill]20", "20[]20[grow, fill]20"));
+    JPanel createAdductsPanel = new JPanel(new MigLayout("", "15[grow]15", ""));
 
     public JTextArea mOfMToMzTextPane = new JTextArea();
     public JTextArea mzOfMToMzTextPane = new JTextArea();
@@ -37,70 +38,131 @@ public class AdductTransformerUI extends JPanel {
         } catch (UnsupportedLookAndFeelException e) {
             throw new RuntimeException(e);
         }
+
         setLayout(new MigLayout("", "[grow, fill]25[grow, fill]25[grow, fill]",
                 "[grow, fill]25[grow, fill]"));
         setBackground(new Color(195, 224, 229));
-        JPanel graphPanel = new JPanel(new MigLayout());
+
+        JPanel graphPanel = new JPanel(new MigLayout("", "[grow, fill]", "[grow, fill]"));
         graphPanel.setMinimumSize(new Dimension(1000, 420));
         graphPanel.setBackground(Color.WHITE);
         graphPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         JPanel chartPanel = new XChartPanel<XYChart>(configureChart());
-        graphPanel.add(chartPanel, "gaptop 15");
+        JLabel adductPeaksLabel = new JLabel("Likely Adduct Peaks According to Input");
+        configureTextComponents(adductPeaksLabel);
 
-        JLabel mToMzLabel = new JLabel("Find mz from M values");
+        graphPanel.add(adductPeaksLabel, "gapleft 15, gaptop 15, wrap");
+        graphPanel.add(chartPanel, "gaptop 15, gapbottom 300, grow");
+
+        JLabel mToMzLabel = new JLabel("   Find mz from M values");
+        mToMzLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon.png"));
         mToMzLabel.setHorizontalAlignment(SwingConstants.CENTER);
         configureTextComponents(mToMzLabel);
         mToMZPanel.setMinimumSize(new Dimension(500, 320));
         mToMZPanel.setBackground(Color.WHITE);
         mToMZPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        mToMZPanel.add(mToMzLabel, "wrap");
-        mToMZPanel.add(configurePanel(mOfMToMzTextPane), "center");
-        mToMZPanel.add(configureButton(mToMzButton), "center");
-        mToMZPanel.add(configurePanel(mzOfMToMzTextPane), "center");
 
-        JLabel mzToMLabel = new JLabel("Find M from mz values");
+        JLabel mzToMLabel = new JLabel("   Find M from mz values");
+        mzToMLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon copy.png"));
         mzToMLabel.setHorizontalAlignment(SwingConstants.CENTER);
         configureTextComponents(mzToMLabel);
         mzToMPanel.setMinimumSize(new Dimension(500, 320));
         mzToMPanel.setBackground(Color.WHITE);
         mzToMPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        mzToMPanel.add(mzToMLabel, "wrap");
-        mzToMPanel.add(configurePanel(mOfMzToMTextPane), "center");
-        mzToMPanel.add(configureButton(mzToMButton), "center");
-        mzToMPanel.add(configurePanel(mzOfMzToMTextPane), "center");
 
-        JPanel createAdductsPanel = new JPanel();
         createAdductsPanel.setMinimumSize(new Dimension(500, 680));
         createAdductsPanel.setBackground(Color.WHITE);
         createAdductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        JLabel createAdductsLabel = new JLabel("   Create Adduct");
+        createAdductsLabel.setIcon(new ImageIcon("src/main/resources/CreateAdduct_Icon.png"));
+        configureTextComponents(createAdductsLabel);
+        JLabel createAdductsSubLabel = new JLabel("Define an adduct for use in the application.");
+        JLabel createAdductsSubLabel2 = new JLabel("Valid adducts are automatically added for use in the list of adducts");
+        configureTextComponents(createAdductsSubLabel);
+        configureTextComponents(createAdductsSubLabel2);
+        createAdductsSubLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+        createAdductsSubLabel2.setFont(new Font("Arial", Font.ITALIC, 12));
 
-        add(graphPanel, "span 2 1");
-        add(createAdductsPanel, "span 1 2, wrap");
-        add(mToMZPanel);
-        add(mzToMPanel);
+        JLabel adductFormulaLabel = new JLabel("Introduce in [M+X]q+/- Format: ");
+        configureTextComponents(adductFormulaLabel);
+        JPanel adductFormulaPanel = new JPanel(new MigLayout("", "[grow, fill]", "[grow, fill]"));
+        JTextField adductFormulaTextField = new JTextField();
+        configureComponents(adductFormulaTextField);
+        configureComponents(adductFormulaPanel);
+        adductFormulaPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        adductFormulaTextField.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        adductFormulaTextField.setBorder(BorderFactory.createLineBorder(new Color(231, 242, 245)));
+        adductFormulaPanel.add(adductFormulaTextField, "grow");
+
+        JButton confirmAdduct = new JButton(" Done ");
+        configureTextComponents(confirmAdduct);
+        confirmAdduct.setBorder(new LineBorder(Color.WHITE, 1));
+
+        //** ---------------------------------
+        JPanel testPanel = new JPanel(new MigLayout());
+        testPanel.setBackground(new Color(231, 242, 245));
+        testPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        JComboBox<String> comboBox = new JComboBox<>(new String[]{"   [M+H]+  ", "   [M+NH4]+  ", "   [M+C2H6N2+H]+  "});
+        configureComponents(comboBox);
+        comboBox.setBackground(Color.WHITE);
+        comboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+
+        testPanel.add(comboBox, "gapbottom 10, wrap");
+        testPanel.add(configurePanel(mOfMToMzTextPane), "align center");
+        testPanel.add(configureButton(mToMzButton), "align center");
+        testPanel.add(configurePanel(mzOfMToMzTextPane), "align center");
+
+        JPanel testPanel2 = new JPanel(new MigLayout());
+        testPanel2.setBackground(new Color(231, 242, 245));
+        testPanel2.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        JComboBox<String> comboBox2 = new JComboBox<>(new String[]{"   [M+H]+  ", "   [M+NH4]+  ", "   [M+C2H6N2+H]+  "});
+        configureComponents(comboBox2);
+        comboBox2.setBackground(Color.WHITE);
+        comboBox2.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+
+        testPanel2.add(comboBox2, "gapbottom 10, wrap");
+        testPanel2.add(configurePanel(mOfMzToMTextPane), "align center");
+        testPanel2.add(configureButton(mzToMButton), "align center");
+        testPanel2.add(configurePanel(mzOfMzToMTextPane), "align center");
+        //** ---------------------------------
+
+        createAdductsPanel.add(createAdductsLabel, "wrap");
+        createAdductsPanel.add(createAdductsSubLabel, "gaptop 5, align center, wrap");
+        createAdductsPanel.add(createAdductsSubLabel2, "align center, wrap");
+        createAdductsPanel.add(adductFormulaLabel, "gaptop 10, wrap");
+        createAdductsPanel.add(adductFormulaPanel, "grow, gaptop 10, wrap");
+        createAdductsPanel.add(confirmAdduct, "align center, gaptop 10, gapbottom 25, wrap");
+
+        createAdductsPanel.add(mToMzLabel, "gapbottom 5, wrap");
+        createAdductsPanel.add(testPanel, "grow, gapbottom 25, wrap");
+
+        createAdductsPanel.add(mzToMLabel, "gapbottom 5, wrap");
+        createAdductsPanel.add(testPanel2, "grow, wrap");
+
+        add(createAdductsPanel, "span 1 2");
+        add(graphPanel, "span 2 2");
         setVisible(true);
     }
 
     public JPanel configurePanel(JTextArea textArea) {
         JPanel basePanel = new JPanel(new MigLayout("", "[grow, fill]", "[grow, fill]"));
-        basePanel.setMaximumSize(new Dimension(mToMZPanel.getMinimumSize().width / 3, mToMZPanel.getMinimumSize().height));
-        textArea.setMaximumSize(new Dimension(mToMZPanel.getMinimumSize().width / 3, mToMZPanel.getMinimumSize().height));
-        textArea.setColumns(20);
+        basePanel.setMinimumSize(new Dimension(createAdductsPanel.getMinimumSize().width/3, createAdductsPanel.getMinimumSize().height/6));
+        textArea.setMinimumSize(new Dimension(createAdductsPanel.getMinimumSize().width/3, createAdductsPanel.getMinimumSize().height/6));
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         configureComponents(textArea);
         configureComponents(basePanel);
         basePanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
-        basePanel.setBackground(new Color(231, 242, 245));
+        basePanel.setBackground(Color.WHITE);
+        textArea.setBackground(Color.WHITE);
         basePanel.add(textArea);
         return basePanel;
     }
 
     public JButton configureButton(JButton button) {
         configureComponents(button);
-        button.setBackground(Color.WHITE);
         button.setIcon(new ImageIcon("src/main/resources/Transformer_Icon.png"));
-        button.setBorder(new LineBorder(Color.white));
+        button.setBorder(new LineBorder(new Color(231, 242, 245)));
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.addActionListener(e -> {
             // TODO: Is mz always a precursor ion value? and M is then the mass of the lipid? Could M also be a formula?
