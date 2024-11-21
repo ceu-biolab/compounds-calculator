@@ -90,7 +90,6 @@ public class PatternRecognitionUI extends JPanel {
         chart.getStyler().setYAxisMin(0.0d);
         chart.getStyler().setYAxisMax(100.0d);
         chart.getStyler().setXAxisMin(0.0d);
-
         return chart;
     }
 
@@ -128,7 +127,12 @@ public class PatternRecognitionUI extends JPanel {
         }
 
         XChartPanel<XYChart> chartPanel = new XChartPanel<>(configureChart());
-        chart.getStyler().setXAxisMin(retentionTime - 1);
+        double minimum = retentionTime - 1;
+        if (minimum >= 0) {
+            chart.getStyler().setXAxisMin(minimum);
+        } else {
+            chart.getStyler().setXAxisMin(0.0d);
+        }
         chart.getStyler().setXAxisMax(retentionTime + 1);
         chartPanel.setMaximumSize(new Dimension(1100, 1400));
         chartPanel.setMinimumSize(new Dimension(1100, 550));

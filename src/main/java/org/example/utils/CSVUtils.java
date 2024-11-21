@@ -1,5 +1,9 @@
 package org.example.utils;
 
+import ceu.biolab.Adduct;
+import ceu.biolab.IncorrectAdduct;
+import ceu.biolab.IncorrectFormula;
+import ceu.biolab.NotFoundElement;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -17,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.List;
 
 public class CSVUtils {
     private final Path fileDirectory;
@@ -58,13 +63,13 @@ public class CSVUtils {
     }
 
     public void createAndWriteCSVBatchProcessing(String[][] lipidData, String precursorIon) {
-        if (!(lipidData == null) && !(lipidData.length == 0)) {
+        if (!(lipidData == null)) {
             File file = new File(String.valueOf(fileDirectory), "Lipids " + precursorIon + " " + (10000 + (int) (Math.random() * 90000)) + ".csv");
             writeCSV(lipidData, file);
         }
     }
 
-    public void readCSVAndWriteResultsToFile(File file, String adduct) throws IOException {
+    public void readCSVAndWriteResultsToFile(File file, List<String> adducts, List<LipidType> lipidTypes) throws IOException {
         try (Reader reader = new FileReader(file.getAbsolutePath())) {
             CSVFormat csvFormat = CSVFormat.DEFAULT.builder().build();
             Iterable<CSVRecord> records = csvFormat.parse(reader);
@@ -79,8 +84,9 @@ public class CSVUtils {
                     }
                 }
                 try {
-                    createAndWriteCSVBatchProcessing(database.findLipidsCSVFormat(LipidType.TG, NumberUtils.toDouble(record.get(0)),
-                            neutralLossAssociatedIons, adduct), String.valueOf(NumberUtils.toDouble(record.get(0))));
+                    double precursorIon = NumberUtils.toDouble(record.get(0));
+                    createAndWriteCSVBatchProcessing(database.findLipidsCSVFormat(precursorIon,
+                            neutralLossAssociatedIons, lipidTypes, adducts), String.valueOf(precursorIon));
                     numberOfRecords++;
                     neutralLossAssociatedIons.clear();
                 } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
@@ -91,7 +97,7 @@ public class CSVUtils {
         }
     }
 
-    public Map<String[], String[][]> readCSVAndSaveResultsAsSet(File file, String adduct) throws IOException {
+    /*public Map<String[], String[][]> readCSVAndSaveResultsAsSet(File file, String adduct) throws IOException {
         try (Reader reader = new FileReader(file.getAbsolutePath())) {
             CSVFormat csvFormat = CSVFormat.DEFAULT.builder().build();
             Iterable<CSVRecord> records = csvFormat.parse(reader);
@@ -118,5 +124,5 @@ public class CSVUtils {
             }
             return lipidMap;
         }
-    }
+    }*/
 }

@@ -5,11 +5,14 @@ import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
 import org.example.adduct.AdductsLists;
 import org.example.adduct.Transformer;
+import org.example.domain.MSLipid;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -31,7 +34,8 @@ public class AdductTransformerUI extends JPanel {
     public JButton massToMzButton = new JButton();
     public JTextField mzTextField = new JTextField();
     public JButton mzToMassButton = new JButton();
-    public JTable table2 = new JTable();
+    public JScrollPane mzScrollPane = createTableOfMZs();
+    public JScrollPane massScrollPane = createTableOfMonoMasses();
 
     public AdductTransformerUI() {
         FlatLightLaf.setup();
@@ -87,11 +91,18 @@ public class AdductTransformerUI extends JPanel {
         mzToMassButton.addActionListener(e -> {
             List<Double> massValues = new ArrayList<>();
             if (mzTextField != null) {
-                String[] mzValues = mzTextField.getText().replaceAll("[\\[\\]]", "").split("[\\s,;\\t]+");
-                // todo
-                for (String mz : mzValues) {
-                    massValues.add(Double.valueOf(numberFormat.format(Transformer.getMonoisotopicMassFromMZ(Double.parseDouble(mz), "[M+NH4]+"))));
+                /* TODO String mzValue = mzTextField.getText();
+                for (String adduct : chosenAdductCheckBoxes) {
+                    massValues.add(Double.valueOf(numberFormat.format(Transformer.getMonoisotopicMassFromMZ(Double.parseDouble(mzValue), adduct))));
+
                 }
+                String[][] localLipidData = new String[massValues.size()][8];
+
+                for (double d : massValues) {
+                    localLipidData[i][0] = d;
+                    localLipidData[i][1] = d;
+                }
+                JScrollPane tableScrollPane = configureTable(massValues, 2);*/
             }
 
             StringBuilder stringBuilder = new StringBuilder();
@@ -101,8 +112,8 @@ public class AdductTransformerUI extends JPanel {
             }
         });
 
-        createAdductsPanel.setMinimumSize(new Dimension(475, 240));
-        createAdductsPanel.setMaximumSize(new Dimension(475, 240));
+        createAdductsPanel.setMinimumSize(new Dimension(375, 240));
+        createAdductsPanel.setMaximumSize(new Dimension(375, 240));
         createAdductsPanel.setBackground(Color.WHITE);
         createAdductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         JLabel createAdductsLabel = new JLabel("   Create Adduct");
@@ -134,7 +145,7 @@ public class AdductTransformerUI extends JPanel {
             JOptionPane.showMessageDialog(null, "Adduct has sucessfully been added to the list of adducts.");
         });
 
-        JPanel testPanel = new JPanel(new MigLayout("", "[]", "[][]"));
+        JPanel testPanel = new JPanel(new MigLayout("", "25[grow, fill][grow, fill]25", "[grow, fill]"));
         testPanel.setBackground(new Color(231, 242, 245));
         testPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         JButton goButton1 = new JButton();
@@ -163,9 +174,9 @@ public class AdductTransformerUI extends JPanel {
         createAdductsPanel.add(adductFormulaPanel, "grow, gaptop 10, wrap");
         createAdductsPanel.add(confirmAdduct, "align center, gaptop 10, gapbottom 25, wrap");
 
-        JPanel panel2 = new JPanel(new MigLayout("", "25[grow, fill]25[grow, fill]25", "25[]25[]25[]25[]25"));
+        JPanel panel2 = new JPanel(new MigLayout("", "50[grow, fill]100[grow, fill]50", "50[]25[]25[]25[]25"));
         panel2.setBackground(Color.WHITE);
-        panel2.setMinimumSize(new Dimension(1000, 800));
+        panel2.setMinimumSize(new Dimension(1200, 800));
         panel2.putClientProperty(FlatClientProperties.STYLE, "arc:40");
 
         JPanel resultsPanel1 = new JPanel(new MigLayout());
@@ -178,15 +189,14 @@ public class AdductTransformerUI extends JPanel {
         configureTextComponents(waitingForInputLabel);
         waitingForInputLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
-        JPanel circlePanel = new JPanel(new MigLayout("", "40[]40", "40[]40"));
+        JPanel circlePanel = new JPanel(new MigLayout("", "100[]100", "150[]150"));
         circlePanel.setBackground(new Color(231, 242, 245));
-        circlePanel.putClientProperty(FlatClientProperties.STYLE, "arc:100");
-        circlePanel.add(iconLabel, "align center");
+        circlePanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        circlePanel.add(waitingForInputLabel, "align center");
 
         resultsPanel1.add(resultsLabel1, "gapbottom 15, wrap");
-        resultsPanel1.add(createTable1(), "gapbottom 10, wrap");
-        resultsPanel1.add(circlePanel, "align center, gaptop 25, gapbottom 15, wrap");
-        resultsPanel1.add(waitingForInputLabel, "align center, gapbottom 100");
+        resultsPanel1.add(mzScrollPane, "gapbottom 10, wrap");
+        resultsPanel1.add(circlePanel, "align center, gaptop 25, gapbottom 15");
         resultsPanel1.setMinimumSize(new Dimension(300, 200));
         resultsPanel1.putClientProperty(FlatClientProperties.STYLE, "arc:20");
 
@@ -200,36 +210,37 @@ public class AdductTransformerUI extends JPanel {
         configureTextComponents(waitingForInputLabel2);
         waitingForInputLabel2.setFont(new Font("Arial", Font.BOLD, 16));
 
-        JPanel circlePanel2 = new JPanel(new MigLayout("", "40[]40", "40[]40"));
+        JPanel circlePanel2 = new JPanel(new MigLayout("", "80[]80", "150[]150"));
         circlePanel2.setBackground(new Color(231, 242, 245));
-        circlePanel2.putClientProperty(FlatClientProperties.STYLE, "arc:100");
-        circlePanel2.add(iconLabel2);
+        circlePanel2.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        circlePanel2.add(waitingForInputLabel2);
 
         resultsPanel2.add(resultsLabel2, "gapbottom 15, wrap");
-        resultsPanel2.add(createTable2(), "wrap");
-        resultsPanel2.add(circlePanel2, "align center, gaptop 25, gapbottom 15, wrap");
-        resultsPanel2.add(waitingForInputLabel2, "align center, gapbottom 100");
+        resultsPanel2.add(massScrollPane, "gapbottom 10, wrap");
+        resultsPanel2.add(circlePanel2, "align center, gaptop 25, gapbottom 15");
         resultsPanel2.setMinimumSize(new Dimension(300, 200));
         resultsPanel2.putClientProperty(FlatClientProperties.STYLE, "arc:20");
 
         panel2.add(massToMzLabel, "gapbottom 5");
         panel2.add(mzToMassLabel, "gapbottom 5, wrap");
-
         panel2.add(testPanel, "gapbottom 15");
         panel2.add(testPanel2, "gapbottom 15, wrap");
-
         panel2.add(resultsPanel1, "gapbottom 25");
         panel2.add(resultsPanel2, "gapbottom 25");
-        createFullAdductsListPanel();
 
+        createFullAdductsListPanel();
         add(createAdductsPanel, "grow");
         add(panel2, "grow, span 1 2, wrap");
         add(adductsPanel, "grow");
         setVisible(true);
     }
 
-    public JScrollPane createTable1() {
+    public JScrollPane createTableOfMZs() {
         String[] tableTitles = new String[]{"m/z", "Adduct"};
+        return getjScrollPane(tableTitles);
+    }
+
+    private JScrollPane getjScrollPane(String[] tableTitles) {
         DefaultTableModel model = new DefaultTableModel(tableTitles, 0);
         JTable table = new JTable(model);
         JScrollPane jScrollPane = new JScrollPane(table);
@@ -243,20 +254,45 @@ public class AdductTransformerUI extends JPanel {
         return jScrollPane;
     }
 
-    public JScrollPane createTable2() {
+    public JScrollPane createTableOfMonoMasses() {
         String[] tableTitles = new String[]{"Monoisotopic Mass", "Adduct"};
-        DefaultTableModel model = new DefaultTableModel(tableTitles, 0);
-        JTable table = new JTable(model);
-        JScrollPane jScrollPane = new JScrollPane(table);
+        return getjScrollPane(tableTitles);
+    }
+
+    public JTable configureTable(String[][] data, int numRows) {
+        TableModel tableModel = new DefaultTableModel(data, numRows) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable table = new JTable(tableModel) {
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component comp = super.prepareRenderer(renderer, row, column);
+                Color alternateColor = new Color(231, 242, 245);
+                Color whiteColor = Color.WHITE;
+                if (!comp.getBackground().equals(getSelectionBackground())) {
+                    Color color = (row % 2 == 0 ? alternateColor : whiteColor);
+                    comp.setBackground(color);
+                }
+                return comp;
+            }
+        };
+
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(65, 114, 159));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
+        table.setForeground(new Color(65, 114, 159));
+        table.setFont(new Font("Arial", Font.BOLD, 15));
         table.getTableHeader().setReorderingAllowed(false);
-        jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-        jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        return jScrollPane;
+        table.setModel(tableModel);
+        table.setRowHeight(table.getRowHeight() + 15);
+        table.setBorder(new LineBorder(Color.WHITE, 1));
+        return table;
     }
+
 
     public JPanel configurePanelForTextField(JTextField textField) {
         JPanel basePanel = new JPanel(new MigLayout("", "[grow, fill]", "[grow, fill]"));
@@ -265,33 +301,17 @@ public class AdductTransformerUI extends JPanel {
         basePanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
         basePanel.setBackground(Color.WHITE);
         textField.setBackground(Color.WHITE);
-        basePanel.setMinimumSize(new Dimension(400, 50));
+        basePanel.setMinimumSize(new Dimension(375, 50));
         basePanel.add(textField);
         return basePanel;
     }
-
-    public JButton configureButton(JButton button) {
-        configureComponents(button);
-        button.setIcon(new ImageIcon("src/main/resources/Transformer_Icon.png"));
-        button.setBorder(new LineBorder(new Color(231, 242, 245)));
-        button.setHorizontalAlignment(SwingConstants.LEFT);
-        return button;
-    }
-
-    /**
-     * Básicamente, hay que refactorizar e incluir en FormulaValidation los casos de uso para obtener el M desde el MZ  y los MZs
-     * desde el M teniendo en cuenta que M puede tomar cualquier número y no exclusivamente una fórmula! Si es muy largo o al inicio
-     * te lía mañana lo vemos, pero parece una buena idea comenzar con los tests para saber los casos y los resultados y luego pasar
-     * a su implementación que será refactorizar este código.
-     * DIMEROS (2M+H), CARGAS [M+2H]2+ CUANDO TENEMOS UNA DOBLE CARGA PRIMERO SE SUMAN LOS DOS HIDRÓGENOS Y LUEGO SE DIVIDE ENTRE 2
-     */
 
     public void createFullAdductsListPanel() {
         adductsPanel.setLayout(new MigLayout("", "[grow, fill]", ""));
         adductsPanel.setBackground(Color.WHITE);
         adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        adductsPanel.setMinimumSize(new Dimension(475, 525));
-        adductsPanel.setMaximumSize(new Dimension(475, 525));
+        adductsPanel.setMinimumSize(new Dimension(375, 535));
+        adductsPanel.setMaximumSize(new Dimension(375, 535));
 
         JLabel adductsLabel = new JLabel("Adducts");
         configureTextComponents(adductsLabel);
@@ -317,10 +337,10 @@ public class AdductTransformerUI extends JPanel {
             checkBoxPanels.add(checkBoxPanel);
             checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
 
-            checkBoxPanel.setMinimumSize(new Dimension(500, 30));
-            checkBoxPanel.setMaximumSize(new Dimension(500, 30));
-            checkBox.setMinimumSize(new Dimension(500, 30));
-            checkBox.setMaximumSize(new Dimension(500, 30));
+            checkBoxPanel.setMinimumSize(new Dimension(375, 30));
+            checkBoxPanel.setMaximumSize(new Dimension(375, 30));
+            checkBox.setMinimumSize(new Dimension(375, 30));
+            checkBox.setMaximumSize(new Dimension(375, 30));
 
             checkBoxPanel.setBackground(new Color(231, 242, 245));
             checkBoxPanel.add(checkBox);
@@ -332,46 +352,34 @@ public class AdductTransformerUI extends JPanel {
                         checkBoxPanel.setBackground(new Color(195, 224, 229));
                         checkBox.setBackground(new Color(195, 224, 229));
                         chosenAdductCheckBoxes.add(checkBox.getText());
-
                     } else {
                         checkBoxPanel.setBackground(new Color(231, 242, 245));
                         checkBox.setBackground(new Color(231, 242, 245));
                         chosenAdductCheckBoxes.remove(checkBox.getText());
-
                     }
                 }
             });
             adductCheckBoxList.add(checkBox);
             configureTextComponents(checkBox);
             checkBox.setFont(new Font("Arial", Font.BOLD, 16));
-            /*if (adduct.equals("[M+H]+") || adduct.equals("[M+Na]+") || adduct.equals("[M+NH4]+")) {
-                checkBox.setSelected(true);
-                checkBoxPanel.setBackground(new Color(195, 224, 229));
-                checkBox.setBackground(new Color(195, 224, 229));
-                chosenAdductCheckBoxes.add(checkBox.getText());
-            }*/
             subPanel.add(checkBoxPanel, "wrap, gapbottom 3");
         }
 
-        selectAllCheckBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
-                Color bg = isSelected ? new Color(195, 224, 229) : new Color(231, 242, 245);
+        selectAllCheckBox.addItemListener(e -> {
+            boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
+            Color bg = isSelected ? new Color(195, 224, 229) : new Color(231, 242, 245);
 
-                for (JPanel panel : checkBoxPanels) {
-                    panel.setBackground(bg);
-                    panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-                    panel.setMaximumSize(new Dimension(500, 30));
-                    panel.revalidate();
-                    panel.repaint();
+            for (JPanel panel : checkBoxPanels) {
+                panel.setBackground(bg);
+                panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+                panel.setMaximumSize(new Dimension(500, 30));
+                panel.revalidate();
+                panel.repaint();
 
-                    for (Component component : panel.getComponents()) {
-                        if (component instanceof JCheckBox) {
-                            JCheckBox checkBox = (JCheckBox) component;
-                            checkBox.setSelected(isSelected);
-                            checkBox.setBackground(bg);
-                        }
+                for (Component component : panel.getComponents()) {
+                    if (component instanceof JCheckBox checkBox) {
+                        checkBox.setSelected(isSelected);
+                        checkBox.setBackground(bg);
                     }
                 }
             }
@@ -382,6 +390,5 @@ public class AdductTransformerUI extends JPanel {
         adductsScrollPane.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_NEVER);
         adductsPanel.add(adductsScrollPane);
     }
-
 }
 

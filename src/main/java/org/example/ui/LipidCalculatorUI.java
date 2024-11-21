@@ -3,6 +3,7 @@ package org.example.ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
+import org.example.adduct.Transformer;
 import org.example.databases.Database;
 import org.example.databases.QueryParameters;
 import org.example.domain.*;
@@ -116,7 +117,7 @@ public class LipidCalculatorUI extends JPanel {
         tablePanel.setBackground(Color.WHITE);
         tablePanel.setPreferredSize(new Dimension(1250, 500));
 
-        tableTitles = new String[]{"Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "m/z", "CMM ID"};
+        tableTitles = new String[]{"Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "m/z", "CMM ID", "Adduct Pattern"};
         DefaultTableModel model = new DefaultTableModel(tableTitles, 0);
         table = new JTable(model);
         JScrollPane jScrollPane = new JScrollPane(table);
@@ -168,7 +169,7 @@ public class LipidCalculatorUI extends JPanel {
         searchButton.setIcon(new ImageIcon("src/main/resources/Search_Icon.png"));
         searchButton.setBorder(new LineBorder(Color.white));
         searchButton.setHorizontalAlignment(SwingConstants.LEFT);
-        searchButton.addActionListener(e -> {
+        searchButton.addActionListener(_ -> {
             tablePanel.removeAll();
             tablePanel.add(tableLabel, "wrap");
             configureTextComponents(tableLabel);
@@ -192,7 +193,7 @@ public class LipidCalculatorUI extends JPanel {
         clearButton.setIcon(new ImageIcon("src/main/resources/Clear_Icon.png"));
         clearButton.setBorder(new LineBorder(Color.white));
         clearButton.setHorizontalAlignment(SwingConstants.LEFT);
-        clearButton.addActionListener(e -> {
+        clearButton.addActionListener(_ -> {
             neutralLossIonsTextPane.setText(null);
             precursorIonTextField.setText(null);
         });
@@ -203,7 +204,7 @@ public class LipidCalculatorUI extends JPanel {
         exportButton.setIcon(new ImageIcon("src/main/resources/Download_Icon.png"));
         exportButton.setBorder(new LineBorder(Color.white));
         exportButton.setHorizontalAlignment(SwingConstants.LEFT);
-        exportButton.addActionListener(e -> {
+        exportButton.addActionListener(_ -> {
             int choice = JOptionPane.showConfirmDialog(null, "Do you wish to export this information to CSV format?", "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
             if (choice == JOptionPane.YES_OPTION) {
                 try {
@@ -225,8 +226,7 @@ public class LipidCalculatorUI extends JPanel {
         uploadButton.setIcon(new ImageIcon("src/main/resources/Upload_Icon.png"));
         uploadButton.setBorder(new LineBorder(Color.white));
         uploadButton.setHorizontalAlignment(SwingConstants.LEFT);
-        uploadButton.addActionListener(e -> {
-            // TODO: ADD HEADER PROCESSOR SO THAT IT SKIPS THE FIRST LINE (ASSUMING THAT ITS THE HEADER)
+        uploadButton.addActionListener(_ -> {
             CSVUtils csvUtils = new CSVUtils();
             FileDialog fileDialog = new FileDialog(new Frame(), "Choose a file in CSV format.", FileDialog.LOAD);
             fileDialog.setVisible(true);
@@ -234,13 +234,8 @@ public class LipidCalculatorUI extends JPanel {
             String fileDirectory = fileDialog.getDirectory();
             if (fileName != null && fileDirectory != null) {
                 try {
-                    // todo: idk if this works
-                    // FileDialog folderDirectory = new FileDialog(new Frame(), "Choose a folder to store files.", FileDialog.LOAD);
-                    // , String.valueOf(folderDirectory.getDirectory())
-                    List<String> adducts = getAdductsChosen();
-                    for (String adduct : adducts) {
-                        csvUtils.readCSVAndWriteResultsToFile(new File(fileDirectory + fileName), adduct);
-                    }
+                    csvUtils.readCSVAndWriteResultsToFile(new File(fileDirectory + fileName), getAdductsChosen(),
+                            getLipidHeadGroupsChosen());
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -253,7 +248,7 @@ public class LipidCalculatorUI extends JPanel {
         getTemplateButton.setIcon(new ImageIcon("src/main/resources/Template_Icon.png"));
         getTemplateButton.setBorder(new LineBorder(Color.white));
         getTemplateButton.setHorizontalAlignment(SwingConstants.LEFT);
-        getTemplateButton.addActionListener(e -> {
+        getTemplateButton.addActionListener(_ -> {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             try (InputStream inputStream = classLoader.getResourceAsStream("Batch Processing Template.csv")) {
 
@@ -262,7 +257,7 @@ public class LipidCalculatorUI extends JPanel {
                     return;
                 }
 
-                File tempFile = Files.createTempFile("test", ".csv").toFile();
+                File tempFile = Files.createTempFile("Template", ".csv").toFile();
                 tempFile.deleteOnExit();
 
                 try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
@@ -281,7 +276,7 @@ public class LipidCalculatorUI extends JPanel {
                 }
 
             } catch (Exception exception) {
-                exception.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Desktop is not supported.");
             }
         });
 
@@ -308,7 +303,7 @@ public class LipidCalculatorUI extends JPanel {
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception |
                  NullPointerException exception) {
-            exception.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error in searching database.");
         }
 
         tableModel = new DefaultTableModel(lipidData, tableTitles) {
@@ -321,7 +316,8 @@ public class LipidCalculatorUI extends JPanel {
         return new JScrollPane(table);
     }
 
-    public void createLipidDataForTable(Set<Double> neutralLossAssociatedIonsInput) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+    public void createLipidDataForTable(Set<Double> neutralLossAssociatedIonsInput)
+            throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         DecimalFormat numberFormat = new DecimalFormat("#.0000");
         List<String> adducts = getAdductsChosen();
         List<String[]> finalLipidDataList = new ArrayList<>();
@@ -349,8 +345,7 @@ public class LipidCalculatorUI extends JPanel {
 
             hasResults = true;
             int i = 0;
-            String[][] localLipidData = new String[finalLipids.size()][7];
-
+            String[][] localLipidData = new String[finalLipids.size()][8];
 
             for (MSLipid lipid : finalLipids) {
                 localLipidData[i][0] = lipid.getCompoundName();
@@ -358,14 +353,15 @@ public class LipidCalculatorUI extends JPanel {
                 localLipidData[i][2] = lipid.getFormula();
                 localLipidData[i][3] = numberFormat.format(lipid.getMass());
                 localLipidData[i][4] = adduct;
-                localLipidData[i][5] = lipid.calculateMZWithAdduct(adduct, 1);
+                localLipidData[i][5] = numberFormat.format(Transformer.getMassOfAdductFromMonoMass(lipid.getMass(), adduct));
                 localLipidData[i][6] = lipid.getCompoundID();
+                localLipidData[i][7] = "View";
                 finalLipidDataList.add(localLipidData[i]);
                 i++;
             }
         }
 
-        lipidData = new String[finalLipidDataList.size()][7];
+        lipidData = new String[finalLipidDataList.size()][8];
         for (int j = 0; j < finalLipidDataList.size(); j++) {
             lipidData[j] = finalLipidDataList.get(j);
         }
@@ -400,7 +396,7 @@ public class LipidCalculatorUI extends JPanel {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (table.getSelectedColumn() == 7) {
+                if (table.getSelectedColumn() == 6) {
                     try {
                         URL url = new URL("https://ceumass.eps.uspceu.es/mediator/api/v3/compounds/" + table.getValueAt(table.getSelectedRow(),
                                 table.getSelectedColumn()));
@@ -417,11 +413,17 @@ public class LipidCalculatorUI extends JPanel {
                         throw new RuntimeException(exception);
                     }
                 }
+
+                if (table.getSelectedColumn() == 7) {
+                    SidePanelUI.updateUI(SidePanelUI.patternRecognitionUI);
+                    PatternRecognitionUI.lipidTextField.setText(String.valueOf(table.getModel().getValueAt(table.getSelectedRow(), 0)));
+                    for (int i = 0; i < 5; i++) {
+                        PatternRecognitionUI.adductCheckBoxList.get(i).setSelected(true);
+                    }
+                }
             }
         });
 
-        table.getColumnModel().getColumn(0).setPreferredWidth(30);
-        table.getColumnModel().getColumn(1).setPreferredWidth(175);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setBackground(Color.WHITE);
         table.getTableHeader().setForeground(new Color(65, 114, 159));
@@ -492,13 +494,10 @@ public class LipidCalculatorUI extends JPanel {
 
         inputSubpanel.add(precursorIonLabel, "gapleft 15, gaptop 15");
         inputSubpanel.add(tolerancePILabel, "wrap");
-
         inputSubpanel.add(precursorIonPanel, "gapleft 15");
         inputSubpanel.add(toleranceOfPIPanel, "wrap");
-
         inputSubpanel.add(neutralLossesLabel, "gapleft 15, gaptop 25");
         inputSubpanel.add(toleranceNLLabel, "wrap");
-
         inputSubpanel.add(NLIonsPanel, "gapleft 15, span 1 3");
         inputSubpanel.add(toleranceOfNLPanel, "wrap");
     }
@@ -518,7 +517,7 @@ public class LipidCalculatorUI extends JPanel {
         lipidHeadGroupsPanel.add(selectAllCheckBox, "gapleft 15, gaptop 7, wrap");
         List<JPanel> checkBoxPanels = new ArrayList<>();
 
-        String[] lipidHeadGroupsStrings = {"CE", "DG", "MG", "PA", "PC", "PE", "PI", "PG", "PS", "TG", "CL"};
+        String[] lipidHeadGroupsStrings = {"TG", "DG", "MG", "CE", "PA", "PC", "PE", "PI", "PG", "PS", "CL"};
         JPanel lipidSubPanel = new JPanel(new MigLayout("", "10[grow, fill]10", "[grow, fill]"));
         lipidSubPanel.setBackground(Color.WHITE);
 
@@ -528,18 +527,7 @@ public class LipidCalculatorUI extends JPanel {
             checkBoxPanels.add(checkBoxPanel);
             checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
             checkBoxPanel.setMinimumSize(new Dimension(0, 30));
-            checkBoxPanel.setBackground(new Color(231, 242, 245));
-            checkBoxPanel.add(checkBox);
-            checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            checkBox.addItemListener(e -> {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    checkBoxPanel.setBackground(new Color(195, 224, 229));
-                    checkBox.setBackground(new Color(195, 224, 229));
-                } else {
-                    checkBoxPanel.setBackground(new Color(231, 242, 245));
-                    checkBox.setBackground(new Color(231, 242, 245));
-                }
-            });
+            configureCheckBoxPanel(checkBox, checkBoxPanel);
 
             selectAllCheckBox.addItemListener(e -> {
                 boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
@@ -572,6 +560,21 @@ public class LipidCalculatorUI extends JPanel {
         lipidHeadGroupsPanel.repaint();
     }
 
+    private static void configureCheckBoxPanel(JCheckBox checkBox, JPanel checkBoxPanel) {
+        checkBoxPanel.setBackground(new Color(231, 242, 245));
+        checkBoxPanel.add(checkBox);
+        checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        checkBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                checkBoxPanel.setBackground(new Color(195, 224, 229));
+                checkBox.setBackground(new Color(195, 224, 229));
+            } else {
+                checkBoxPanel.setBackground(new Color(231, 242, 245));
+                checkBox.setBackground(new Color(231, 242, 245));
+            }
+        });
+    }
+
     public void createAdductsPanel() {
         adductsPanel.setLayout(new MigLayout("", "10[grow, fill]10", "10[grow, fill]10"));
         adductsPanel.setBackground(Color.WHITE);
@@ -582,7 +585,7 @@ public class LipidCalculatorUI extends JPanel {
         configureComponents(ionComboBox);
         ionComboBox.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         ionComboBox.setToolTipText("Choose the list of adducts based on charge.");
-        ionComboBox.addActionListener(e -> updateListOfAdductsAccordingToCharge(Objects.requireNonNull(ionComboBox.getSelectedItem()).toString()));
+        ionComboBox.addActionListener(_ -> updateListOfAdductsAccordingToCharge(Objects.requireNonNull(ionComboBox.getSelectedItem()).toString()));
         adductsPanel.add(ionComboBox, "gapbottom 10, wrap");
         updateAdductPanel(Adduct.getPositiveAdducts());
         adductsPanel.setVisible(true);
@@ -644,18 +647,7 @@ public class LipidCalculatorUI extends JPanel {
             checkBox.setMinimumSize(new Dimension(290, 30));
             checkBox.setMaximumSize(new Dimension(290, 30));
 
-            checkBoxPanel.setBackground(new Color(231, 242, 245));
-            checkBoxPanel.add(checkBox);
-            checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            checkBox.addItemListener(e -> {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    checkBoxPanel.setBackground(new Color(195, 224, 229));
-                    checkBox.setBackground(new Color(195, 224, 229));
-                } else {
-                    checkBoxPanel.setBackground(new Color(231, 242, 245));
-                    checkBox.setBackground(new Color(231, 242, 245));
-                }
-            });
+            configureCheckBoxPanel(checkBox, checkBoxPanel);
             adductCheckBoxList.add(checkBox);
             configureTextComponents(checkBox);
             checkBox.setFont(new Font("Arial", Font.BOLD, 16));

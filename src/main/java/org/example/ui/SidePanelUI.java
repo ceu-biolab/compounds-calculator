@@ -20,14 +20,14 @@ import java.net.URL;
 import java.sql.SQLException;
 
 public class SidePanelUI {
-    private static JFrame frame;
-    private static JPanel sidePanel = null;
-    private static LipidCalculatorUI lipidCalculatorUI;
-    private static AdductTransformerUI adductTransformerUI;
-    private static PatternRecognitionUI patternRecognitionUI;
-    private JButton lipidCalculatorButton = new JButton("  Lipid Calculator");
-    private JButton adductTransformerButton = new JButton("  Adduct Transformer");
-    private JButton patternRecognitionButton = new JButton("  Pattern Recognition Finder");
+    public static JFrame frame;
+    public static JPanel sidePanel = null;
+    public static LipidCalculatorUI lipidCalculatorUI;
+    public static AdductTransformerUI adductTransformerUI;
+    public static PatternRecognitionUI patternRecognitionUI;
+    public JButton lipidCalculatorButton = new JButton("  Lipid Calculator");
+    public JButton adductTransformerButton = new JButton("  Adduct Transformer");
+    public JButton patternRecognitionButton = new JButton("  Pattern Recognition Finder");
 
     public SidePanelUI() {
         FlatLightLaf.setup();
@@ -46,7 +46,7 @@ public class SidePanelUI {
             throw new RuntimeException(e);
         }
         adductTransformerUI = new AdductTransformerUI();
-        homeFrame();
+        homePage();
         frame.add(sidePanel, "wrap, align center, grow");
         frame.add(lipidCalculatorUI, "align center, grow");
         frame.getContentPane().setBackground(new Color(195, 224, 229));
@@ -62,7 +62,18 @@ public class SidePanelUI {
         frame.setVisible(true);
     }
 
-    public void homeFrame() {
+    public static void updateUI(Component component) {
+        frame.remove(lipidCalculatorUI);
+        frame.remove(adductTransformerUI);
+        frame.remove(patternRecognitionUI);
+        frame.add(component, "align center, grow");
+        frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    public void homePage() {
         FlatLightLaf.setup();
         try {
             UIManager.setLookAndFeel(new FlatLightLaf());
@@ -83,39 +94,17 @@ public class SidePanelUI {
         configureComponents(lipidCalculatorButton, "src/main/resources/LipidCalculator_Icon.png");
         lipidCalculatorButton.setBackground(new Color(231, 242, 245));
         lipidCalculatorButton.addActionListener(e -> {
-            frame.remove(lipidCalculatorUI);
-            frame.remove(adductTransformerUI);
-            frame.remove(patternRecognitionUI);
-            frame.add(sidePanel, "wrap, align center, grow");
-            frame.add(lipidCalculatorUI, "align center, grow");
-            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-            frame.revalidate();
-            frame.repaint();
+            updateUI(lipidCalculatorUI);
         });
 
         configureComponents(adductTransformerButton, "src/main/resources/Transformer_icon.png");
         adductTransformerButton.addActionListener(e -> {
-            frame.remove(lipidCalculatorUI);
-            frame.remove(adductTransformerUI);
-            frame.remove(patternRecognitionUI);
-            frame.add(adductTransformerUI, "align center, grow");
-            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-            frame.revalidate();
-            frame.repaint();
+            updateUI(adductTransformerUI);
         });
 
         configureComponents(patternRecognitionButton, "src/main/resources/PatternRecognition_Icon.png");
         patternRecognitionButton.addActionListener(e -> {
-            frame.remove(lipidCalculatorUI);
-            frame.remove(adductTransformerUI);
-            frame.remove(patternRecognitionUI);
-            frame.add(patternRecognitionUI, "align center, grow");
-            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-            frame.revalidate();
-            frame.repaint();
+            updateUI(patternRecognitionUI);
         });
 
         JButton helpButton = new JButton("  Github");
@@ -140,7 +129,6 @@ public class SidePanelUI {
                 } catch (MalformedURLException exception) {
                     throw new RuntimeException(exception);
                 }
-
             }
         });
 

@@ -2,31 +2,9 @@ package org.example.adduct;
 
 import ceu.biolab.*;
 
-/**
- * @author: San Pablo-CEU, Alberto Gil de la Fuente
- * @version: 4.0, 20/07/2016
- */
-public class Transformer {
-    private final static double MDA_TO_DA = 0.001d;
-    private final static double PPM_TO_DA = 0.000001d;
+import static org.example.adduct.AdductsLists.MAPADDUCTS;
 
-    /**
-     * Calculate the MZ if the user has introduced the neutral mass based on a
-     * protonated or deprotonated calcuation
-     *
-     * @param inputMass
-     * @param ionizationMode
-     * @return
-     */
-    public static Double calculateMZFromNeutralMass(Double inputMass, int ionizationMode) {
-        Double mzInputMass = inputMass;
-        if (ionizationMode == 1) {
-            mzInputMass = inputMass + Element.elementWeights.get(Element.ElementType.H);
-        } else if (ionizationMode == 2) {
-            mzInputMass = inputMass - Element.elementWeights.get(Element.ElementType.H);
-        }
-        return mzInputMass;
-    }
+public class Transformer {
 
     /**
      * Returns the ppm difference between measured mass and theoretical mass
@@ -79,31 +57,29 @@ public class Transformer {
      * Calculate the delta to search based on the RMT, the RMT Tolerance Mode
      * and the RMT Tolerance
      *
-     * @param ValueToSearch      Mass RMT search to calculate delta based on the RMT
-     *                           tolerance. If null, the delta will be very high (5000) to search into all
-     *                           masses
-     * @param ValueToleranceMode % or abs
-     * @param ValueTolerance     RMTTolerance value
+     * @param valueToSearch  Mass RMT search to calculate delta based on the RMT
+     *                       tolerance. If null, the delta will be very high (5000) to search into all
+     *                       masses
+     * @param toleranceType  % or abs
+     * @param valueTolerance RMTTolerance value
      * @return the mass difference within the tolerance respecting to the
      * Relative migration time
      */
-    public static Double calculateDeltaPercentage(Double ValueToSearch, String ValueToleranceMode,
-                                                  Double ValueTolerance) {
-        if (ValueToSearch == null) {
+    public static Double calculateDeltaPercentage(Double valueToSearch, ToleranceType toleranceType,
+                                                  Double valueTolerance) {
+        if (valueToSearch == null) {
             return 5000d;
         }
         Double delta;
-        switch (ValueToleranceMode) {
-            // Case mDa
-            case "percentage":
-                delta = ValueToSearch * (ValueTolerance / 100);
+        switch (toleranceType) {
+            case Da:
+                delta = valueToSearch * (valueTolerance / 100);
                 break;
-            // Case ppm
-            case "absolute":
-                delta = ValueTolerance;
+            case PPM:
+                delta = valueTolerance;
                 break;
             default:
-                delta = ValueTolerance;
+                delta = valueTolerance;
                 break;
         }
         return delta;
@@ -118,12 +94,13 @@ public class Transformer {
      * massToSearch
      */
     public static Double getMonoisotopicMassFromMZ(Double experimentalMass, String adduct) {
-        Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
-        Double adductValue = adductObj.getAdductMass();
+        Adduct adductObj = MAPADDUCTS.get(adduct);
 
         if (adductObj == null) {
-            return getMonoMassFromSingleChargedMZ(experimentalMass, adductValue);
+            return getMonoMassFromSingleChargedMZ(experimentalMass, org.example.domain.Adduct.getAdductMass(adduct));
         }
+
+        double adductValue = adductObj.getAdductMass();
 
         int charge = adductObj.getAdductCharge();
         int multimer = adductObj.getMultimer();
@@ -183,12 +160,13 @@ public class Transformer {
      * @return the mass difference within the tolerance respecting to the massToSearch
      */
     public static Double getMassOfAdductFromMonoMass(Double monoisotopic_weight, String adduct) {
-        Adduct adductObj = AdductsLists.MAPADDUCTS.get(adduct);
-        Double adductValue = adductObj.getAdductMass();
+        Adduct adductObj = MAPADDUCTS.get(adduct);
 
         if (adductObj == null) { // Adduct not found in map
-            return getMZFromSingleChargedMonoMass(monoisotopic_weight, adductValue);
+            return getMZFromSingleChargedMonoMass(monoisotopic_weight, org.example.domain.Adduct.getAdductMass(adduct));
         }
+
+        double adductValue = adductObj.getAdductMass();
 
         int charge = adductObj.getAdductCharge();
         int multimer = adductObj.getMultimer();

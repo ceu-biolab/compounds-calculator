@@ -1,12 +1,15 @@
 package org.example.databases;
 
+import org.example.adduct.Transformer;
 import org.example.domain.*;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
+import org.example.ui.LipidCalculatorUI;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.swing.*;
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class Database {
@@ -79,50 +82,55 @@ public class Database {
         return new LinkedHashSet<>(Arrays.asList(doubleList));
     }
 
-    // TODO, FIX METHOD
-    public String[][] findLipidsCSVFormat(LipidType lipidType, double precursorIon, Set<Double> neutralLossAssociatedIons, String adduct) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        QueryParameters queryParameters = new QueryParameters();
-        LinkedHashSet<MSLipid> lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(lipidType, precursorIon, neutralLossAssociatedIons, adduct);
-        String[][] lipidData = new String[lipidSet.size()][7];
-        // RE-DO THIS
-        //MainPageUI.createLipidDataForTable(lipidSet, lipidData, adduct);
+    public String[][] findLipidsCSVFormat(double precursorIon, Set<Double> neutralLossAssociatedIons,
+                                          List<LipidType> lipidTypes, List<String> adducts) throws SQLException,
+            InvalidFormula_Exception, FattyAcidCreation_Exception {
+        DecimalFormat numberFormat = new DecimalFormat("#.0000");
+        List<String[]> finalLipidDataList = new ArrayList<>();
+        boolean hasResults = false;
+
+        for (String adduct : adducts) {
+            QueryParameters queryParameters = new QueryParameters();
+            Set<MSLipid> finalLipids = new HashSet<>();
+            for (LipidType lipidType : lipidTypes) {
+                Set<MSLipid> lipidSet = queryParameters.returnSetOfLipidsFoundInDatabase(lipidType,
+                        precursorIon, neutralLossAssociatedIons, adduct);
+                if (!(lipidSet == null)) {
+                    finalLipids.addAll(lipidSet);
+                }
+            }
+
+            hasResults = true;
+            int i = 0;
+            String[][] localLipidData = new String[finalLipids.size()][8];
+
+            for (MSLipid lipid : finalLipids) {
+                localLipidData[i][0] = lipid.getCompoundName();
+                localLipidData[i][1] = lipid.calculateSpeciesShorthand(lipid);
+                localLipidData[i][2] = lipid.getFormula();
+                localLipidData[i][3] = numberFormat.format(lipid.getMass());
+                localLipidData[i][4] = adduct;
+                localLipidData[i][5] = numberFormat.format(Transformer.getMassOfAdductFromMonoMass(lipid.getMass(), adduct));
+                localLipidData[i][6] = lipid.getCompoundID();
+                localLipidData[i][7] = "View";
+                finalLipidDataList.add(localLipidData[i]);
+                i++;
+            }
+        }
+
+        String[][] lipidData = new String[finalLipidDataList.size()][8];
+        for (int j = 0; j < finalLipidDataList.size(); j++) {
+            lipidData[j] = finalLipidDataList.get(j);
+        }
+
+        if (!hasResults) {
+            JOptionPane.showMessageDialog(null, "No results found for any chosen adduct or lipid group. " +
+                    "Please verify your input and try again.");
+            return null;
+        }
         return lipidData;
     }
 
-    public static MSLipid findLipidFromCompoundName(String compoundName) throws SQLException {
-        String[] splitString = compoundName.split("\\s*[()]\\s*");
-        if (splitString.length < 1) {
-            throw new IllegalArgumentException("Invalid compound name format: " + compoundName);
-        }
-
-        LipidType lipidType;
-        try {
-            lipidType = LipidType.valueOf(splitString[0]);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid lipid type: " + splitString[0], e);
-        }
-
-        String query = "SELECT compound_id, formula, mass " +
-                "FROM compounds_view " +
-                "WHERE compound_name = ? ";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, compoundName);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (!resultSet.next()) {
-                    throw new SQLException("No compound found with the name: " + compoundName);
-                }
-
-                String compoundID = resultSet.getString("compound_id");
-                String formula = resultSet.getString("formula");
-                double mass = resultSet.getDouble("mass");
-
-                List<FattyAcid> fattyAcids = new ArrayList<>();
-                LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
-
-                return new MSLipid(fattyAcids, lipidSkeletalStructure, compoundName, compoundID, formula, mass);
-            }
-        }
-    }
 
     public static Double getRetentionTimeOfLipid(String compoundName) throws SQLException {
         String query = "SELECT RT_pred " +
@@ -137,11 +145,6 @@ public class Database {
                 return resultSet.getDouble("RT_pred");
             }
         }
-    }
-
-    public static void main(String[] args) throws SQLException {
-        new Database();
-        System.out.println(getRetentionTimeOfLipid("TG(16:0/16:0/16:0)"));
     }
 
 }
