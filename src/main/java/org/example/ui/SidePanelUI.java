@@ -22,21 +22,33 @@ import java.sql.SQLException;
 public class SidePanelUI {
     private static JFrame frame;
     private static JPanel sidePanel = null;
-    private static MainPageUI interfaceUI;
+    private static LipidCalculatorUI lipidCalculatorUI;
     private static AdductTransformerUI adductTransformerUI;
+    private static PatternRecognitionUI patternRecognitionUI;
+    private JButton lipidCalculatorButton = new JButton("  Lipid Calculator");
+    private JButton adductTransformerButton = new JButton("  Adduct Transformer");
+    private JButton patternRecognitionButton = new JButton("  Pattern Recognition Finder");
 
     public SidePanelUI() {
+        FlatLightLaf.setup();
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (UnsupportedLookAndFeelException e) {
+            throw new RuntimeException(e);
+        }
+
         frame = new JFrame();
         frame.setLayout(new MigLayout("", "[grow,fill]", "[grow, fill][grow, fill]"));
         try {
-            interfaceUI = new MainPageUI();
+            lipidCalculatorUI = new LipidCalculatorUI();
+            patternRecognitionUI = new PatternRecognitionUI();
         } catch (SQLException | InvalidFormula_Exception | FattyAcidCreation_Exception e) {
             throw new RuntimeException(e);
         }
         adductTransformerUI = new AdductTransformerUI();
         homeFrame();
-        frame.add(sidePanel, "wrap, center, grow");
-        frame.add(interfaceUI, "center, grow");
+        frame.add(sidePanel, "wrap, align center, grow");
+        frame.add(lipidCalculatorUI, "align center, grow");
         frame.getContentPane().setBackground(new Color(195, 224, 229));
         frame.setLocationRelativeTo(null);
         frame.addWindowListener(new WindowAdapter() {
@@ -57,31 +69,49 @@ public class SidePanelUI {
         } catch (UnsupportedLookAndFeelException e) {
             throw new RuntimeException(e);
         }
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        double width = screenSize.getWidth();
 
         sidePanel = new JPanel();
-        sidePanel.setLayout(new MigLayout("", "[fill]", "[fill]"));
+        sidePanel.setLayout(new MigLayout("", "", "[fill]"));
         sidePanel.setBackground(Color.WHITE);
-        sidePanel.setMaximumSize(new Dimension(1615, 65));
-        sidePanel.setPreferredSize(new Dimension(1615, 65));
-        sidePanel.setMinimumSize(new Dimension(1615, 65));
+        sidePanel.setMaximumSize(new Dimension((int) width - 70, 65));
+        sidePanel.setPreferredSize(new Dimension((int) width - 70, 65));
+        sidePanel.setMinimumSize(new Dimension((int) width - 70, 65));
         sidePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
-        JButton homeButton = new JButton("  Home");
-        configureComponents(homeButton, "src/main/resources/Home_Icon.png");
-        homeButton.addActionListener(e -> {
+        configureComponents(lipidCalculatorButton, "src/main/resources/LipidCalculator_Icon.png");
+        lipidCalculatorButton.setBackground(new Color(231, 242, 245));
+        lipidCalculatorButton.addActionListener(e -> {
+            frame.remove(lipidCalculatorUI);
             frame.remove(adductTransformerUI);
-            frame.add(interfaceUI);
+            frame.remove(patternRecognitionUI);
+            frame.add(sidePanel, "wrap, align center, grow");
+            frame.add(lipidCalculatorUI, "align center, grow");
             frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
                     (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
             frame.revalidate();
             frame.repaint();
         });
 
-        JButton adductTransformerButton = new JButton("  Adduct Transformer");
         configureComponents(adductTransformerButton, "src/main/resources/Transformer_icon.png");
         adductTransformerButton.addActionListener(e -> {
-            frame.remove(interfaceUI);
-            frame.add(adductTransformerUI);
+            frame.remove(lipidCalculatorUI);
+            frame.remove(adductTransformerUI);
+            frame.remove(patternRecognitionUI);
+            frame.add(adductTransformerUI, "align center, grow");
+            frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                    (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+            frame.revalidate();
+            frame.repaint();
+        });
+
+        configureComponents(patternRecognitionButton, "src/main/resources/PatternRecognition_Icon.png");
+        patternRecognitionButton.addActionListener(e -> {
+            frame.remove(lipidCalculatorUI);
+            frame.remove(adductTransformerUI);
+            frame.remove(patternRecognitionUI);
+            frame.add(patternRecognitionUI, "align center, grow");
             frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
                     (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
             frame.revalidate();
@@ -90,10 +120,8 @@ public class SidePanelUI {
 
         JButton helpButton = new JButton("  Github");
         configureComponents(helpButton, "src/main/resources/Help_Icon.png");
-        helpButton.setBackground(Color.WHITE);
-        helpButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        helpButton.setBorder(new LineBorder(Color.WHITE, 0));
         helpButton.setIcon(new ImageIcon("src/main/resources/Help_Icon.png"));
-        helpButton.setBorder(new LineBorder(Color.white));
         helpButton.setHorizontalAlignment(SwingConstants.LEFT);
         helpButton.addMouseListener(new MouseAdapter() {
             @Override
@@ -123,8 +151,9 @@ public class SidePanelUI {
             frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
         });
 
-        sidePanel.add(homeButton, "gapright 50");
-        sidePanel.add(adductTransformerButton, "gapright 900");
+        sidePanel.add(lipidCalculatorButton, "gapright 50");
+        sidePanel.add(adductTransformerButton, "gapright 50");
+        sidePanel.add(patternRecognitionButton, "gapright 450");
         sidePanel.add(helpButton, "gapleft 50");
         sidePanel.add(exitButton, "gapleft 50");
     }
@@ -133,9 +162,8 @@ public class SidePanelUI {
         component.setFont(new Font("Arial", Font.BOLD, 18));
         component.setBackground(Color.WHITE);
         component.setForeground(new Color(65, 114, 159));
-        component.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         component.setIcon(new ImageIcon(fileName));
-        component.setBorder(new LineBorder(Color.white));
+        component.setBorder(new LineBorder(Color.WHITE, 0));
         component.setHorizontalAlignment(SwingConstants.LEFT);
     }
 }

@@ -89,5 +89,60 @@ public class Database {
         return lipidData;
     }
 
+    public static MSLipid findLipidFromCompoundName(String compoundName) throws SQLException {
+        String[] splitString = compoundName.split("\\s*[()]\\s*");
+        if (splitString.length < 1) {
+            throw new IllegalArgumentException("Invalid compound name format: " + compoundName);
+        }
+
+        LipidType lipidType;
+        try {
+            lipidType = LipidType.valueOf(splitString[0]);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid lipid type: " + splitString[0], e);
+        }
+
+        String query = "SELECT compound_id, formula, mass " +
+                "FROM compounds_view " +
+                "WHERE compound_name = ? ";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, compoundName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new SQLException("No compound found with the name: " + compoundName);
+                }
+
+                String compoundID = resultSet.getString("compound_id");
+                String formula = resultSet.getString("formula");
+                double mass = resultSet.getDouble("mass");
+
+                List<FattyAcid> fattyAcids = new ArrayList<>();
+                LipidSkeletalStructure lipidSkeletalStructure = new LipidSkeletalStructure(lipidType);
+
+                return new MSLipid(fattyAcids, lipidSkeletalStructure, compoundName, compoundID, formula, mass);
+            }
+        }
+    }
+
+    public static Double getRetentionTimeOfLipid(String compoundName) throws SQLException {
+        String query = "SELECT RT_pred " +
+                "FROM compounds_view " +
+                "WHERE compound_name = ? ";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, compoundName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    JOptionPane.showMessageDialog(null, "Retention time not found in database.");
+                }
+                return resultSet.getDouble("RT_pred");
+            }
+        }
+    }
+
+    public static void main(String[] args) throws SQLException {
+        new Database();
+        System.out.println(getRetentionTimeOfLipid("TG(16:0/16:0/16:0)"));
+    }
+
 }
 

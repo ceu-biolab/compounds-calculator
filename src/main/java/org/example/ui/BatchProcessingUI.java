@@ -3,18 +3,12 @@ package org.example.ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
-import org.example.domain.MSLipid;
-import org.example.exceptions.FattyAcidCreation_Exception;
-import org.example.exceptions.InvalidFormula_Exception;
 import org.example.utils.CSVUtils;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
 
 public class BatchProcessingUI {
 
@@ -145,7 +139,7 @@ public class BatchProcessingUI {
         exportButton.setIcon(new ImageIcon("src/main/resources/Download_Icon.png"));
         exportButton.setBorder(new LineBorder(Color.white));
         exportButton.setHorizontalAlignment(SwingConstants.LEFT);
-        MainPageUI.configureComponents(exportButton);
+        LipidCalculatorUI.configureComponents(exportButton);
         exportButton.addActionListener(e -> {
             int choice = JOptionPane.showConfirmDialog(null, "Do you wish to export this information to CSV format?", "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
             if (choice == JOptionPane.YES_OPTION) {

@@ -29,7 +29,7 @@ import java.util.List;
 
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 
-public class MainPageUI extends JPanel {
+public class LipidCalculatorUI extends JPanel {
     private final JButton searchButton;
     private final JButton exportButton;
     private final JButton uploadButton;
@@ -40,7 +40,7 @@ public class MainPageUI extends JPanel {
     private final JPanel searchButtonsPanel;
     private final JPanel lipidHeadGroupsPanel;
     private final JPanel inputSubpanel;
-    public JPanel adductsPanel;
+    public static JPanel adductsPanel;
 
     public JTextArea neutralLossIonsTextPane;
     public JTextField precursorIonTextField;
@@ -61,7 +61,7 @@ public class MainPageUI extends JPanel {
     private final JComboBox<String> ionComboBox;
     private static List<JCheckBox> adductCheckBoxList;
 
-    public MainPageUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
+    public LipidCalculatorUI() throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
         FlatLightLaf.setup();
         try {
             UIManager.setLookAndFeel(new FlatLightLaf());
@@ -101,10 +101,10 @@ public class MainPageUI extends JPanel {
         createButtons();
         createAdductsPanel();
 
-        add(tablePanel, "span 3");
-        add(lipidHeadGroupsPanel, "span 1 2, wrap");
+        add(tablePanel, "span 4, wrap");
         add(inputSubpanel);
         add(adductsPanel);
+        add(lipidHeadGroupsPanel);
         add(searchButtonsPanel);
         setVisible(true);
     }
@@ -506,17 +506,21 @@ public class MainPageUI extends JPanel {
     public void createLipidHeadGroupsPanel() {
         lipidHeadGroupsPanel.setBackground(Color.WHITE);
         lipidHeadGroupsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        lipidHeadGroupsPanel.setLayout(new MigLayout("", "[grow, fill]", ""));
+        lipidHeadGroupsPanel.setLayout(new MigLayout("", "10[grow, fill]10", "10[grow, fill]10"));
+        lipidHeadGroupsPanel.setMinimumSize(new Dimension(200, 340));
+        lipidHeadGroupsPanel.setMaximumSize(new Dimension(200, 340));
 
         JLabel lipidHeadGroupsLabel = new JLabel("Lipid Head Groups");
         configureTextComponents(lipidHeadGroupsLabel);
-        lipidHeadGroupsPanel.add(lipidHeadGroupsLabel, "wrap");
+        lipidHeadGroupsPanel.add(lipidHeadGroupsLabel, "gapleft 3, gaptop 2, wrap");
         JCheckBox selectAllCheckBox = new JCheckBox("Select All");
         configureTextComponents(selectAllCheckBox);
-        lipidHeadGroupsPanel.add(selectAllCheckBox, "gapleft 15, wrap");
+        lipidHeadGroupsPanel.add(selectAllCheckBox, "gapleft 15, gaptop 7, wrap");
         List<JPanel> checkBoxPanels = new ArrayList<>();
 
         String[] lipidHeadGroupsStrings = {"CE", "DG", "MG", "PA", "PC", "PE", "PI", "PG", "PS", "TG", "CL"};
+        JPanel lipidSubPanel = new JPanel(new MigLayout("", "10[grow, fill]10", "[grow, fill]"));
+        lipidSubPanel.setBackground(Color.WHITE);
 
         for (String lipidHeadGroup : lipidHeadGroupsStrings) {
             JCheckBox checkBox = new JCheckBox(lipidHeadGroup);
@@ -527,36 +531,29 @@ public class MainPageUI extends JPanel {
             checkBoxPanel.setBackground(new Color(231, 242, 245));
             checkBoxPanel.add(checkBox);
             checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            checkBox.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        checkBoxPanel.setBackground(new Color(195, 224, 229));
-                        checkBox.setBackground(new Color(195, 224, 229));
-                    } else {
-                        checkBoxPanel.setBackground(new Color(231, 242, 245));
-                        checkBox.setBackground(new Color(231, 242, 245));
-                    }
+            checkBox.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    checkBoxPanel.setBackground(new Color(195, 224, 229));
+                    checkBox.setBackground(new Color(195, 224, 229));
+                } else {
+                    checkBoxPanel.setBackground(new Color(231, 242, 245));
+                    checkBox.setBackground(new Color(231, 242, 245));
                 }
             });
 
-            selectAllCheckBox.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
-                    Color bg = isSelected ? new Color(195, 224, 229) : new Color(231, 242, 245);
+            selectAllCheckBox.addItemListener(e -> {
+                boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
+                Color bg = isSelected ? new Color(195, 224, 229) : new Color(231, 242, 245);
 
-                    for (JPanel panel : checkBoxPanels) {
-                        panel.setBackground(bg);
-                        panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-                        panel.repaint();
+                for (JPanel panel : checkBoxPanels) {
+                    panel.setBackground(bg);
+                    panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+                    panel.repaint();
 
-                        for (Component component : panel.getComponents()) {
-                            if (component instanceof JCheckBox) {
-                                JCheckBox checkBox = (JCheckBox) component;
-                                checkBox.setSelected(isSelected);
-                                checkBox.setBackground(bg);
-                            }
+                    for (Component component : panel.getComponents()) {
+                        if (component instanceof JCheckBox checkBox1) {
+                            checkBox1.setSelected(isSelected);
+                            checkBox1.setBackground(bg);
                         }
                     }
                 }
@@ -565,12 +562,18 @@ public class MainPageUI extends JPanel {
             lipidHeadGroupsCheckBoxList.add(checkBox);
             configureTextComponents(checkBox);
             checkBox.setFont(new Font("Arial", Font.BOLD, 16));
-            lipidHeadGroupsPanel.add(checkBoxPanel, "gapbottom 3, wrap");
+            lipidSubPanel.add(checkBoxPanel, "wrap, gapbottom 3");
         }
+        JScrollPane lipidsScrollPane = new JScrollPane(lipidSubPanel);
+        lipidsScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        lipidsScrollPane.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_NEVER);
+        lipidHeadGroupsPanel.add(lipidsScrollPane);
+        lipidHeadGroupsPanel.revalidate();
+        lipidHeadGroupsPanel.repaint();
     }
 
     public void createAdductsPanel() {
-        adductsPanel.setLayout(new MigLayout("", "[grow, fill]", ""));
+        adductsPanel.setLayout(new MigLayout("", "10[grow, fill]10", "10[grow, fill]10"));
         adductsPanel.setBackground(Color.WHITE);
         adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         adductsPanel.setMinimumSize(new Dimension(360, 340));
@@ -600,6 +603,7 @@ public class MainPageUI extends JPanel {
         for (JCheckBox checkBox : adductCheckBoxList) {
             checkBox.setSelected(false);
         }
+
         if (charge.equals("   View Positive Adducts  ")) {
             String[] string = {"[M+H]+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+H-H2O]+", "[M+C2H6N2+H]+"};
             updateAdductPanel(string);
@@ -608,11 +612,12 @@ public class MainPageUI extends JPanel {
             updateAdductPanel(string);
 
         }
+
         adductsPanel.revalidate();
         adductsPanel.repaint();
     }
 
-    public void updateAdductPanel(String[] adducts) {
+    public static void updateAdductPanel(String[] adducts) {
         for (Component component : adductsPanel.getComponents()) {
             if (component instanceof JPanel || component instanceof JCheckBox || component instanceof JScrollPane) {
                 adductsPanel.remove(component);
@@ -642,16 +647,13 @@ public class MainPageUI extends JPanel {
             checkBoxPanel.setBackground(new Color(231, 242, 245));
             checkBoxPanel.add(checkBox);
             checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            checkBox.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        checkBoxPanel.setBackground(new Color(195, 224, 229));
-                        checkBox.setBackground(new Color(195, 224, 229));
-                    } else {
-                        checkBoxPanel.setBackground(new Color(231, 242, 245));
-                        checkBox.setBackground(new Color(231, 242, 245));
-                    }
+            checkBox.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    checkBoxPanel.setBackground(new Color(195, 224, 229));
+                    checkBox.setBackground(new Color(195, 224, 229));
+                } else {
+                    checkBoxPanel.setBackground(new Color(231, 242, 245));
+                    checkBox.setBackground(new Color(231, 242, 245));
                 }
             });
             adductCheckBoxList.add(checkBox);
@@ -660,29 +662,7 @@ public class MainPageUI extends JPanel {
             subPanel.add(checkBoxPanel, "wrap, gapbottom 3");
         }
 
-        selectAllCheckBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
-                Color bg = isSelected ? new Color(195, 224, 229) : new Color(231, 242, 245);
-
-                for (JPanel panel : checkBoxPanels) {
-                    panel.setBackground(bg);
-                    panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-                    panel.setMaximumSize(new Dimension(280, 30));
-                    panel.revalidate();
-                    panel.repaint();
-
-                    for (Component component : panel.getComponents()) {
-                        if (component instanceof JCheckBox) {
-                            JCheckBox checkBox = (JCheckBox) component;
-                            checkBox.setSelected(isSelected);
-                            checkBox.setBackground(bg);
-                        }
-                    }
-                }
-            }
-        });
+        selectAllCheckBox.addItemListener(e -> PatternRecognitionUI.updatePanelWhenSelected(checkBoxPanels, e));
 
         JScrollPane adductsScrollPane = new JScrollPane(subPanel);
         adductsScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
