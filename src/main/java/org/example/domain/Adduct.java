@@ -12,14 +12,14 @@ public class Adduct {
         adductMap_Pos.put("[M+Na]+", 22.98977d - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+K]+", 38.96371d - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+NH4]+", 18.03437d - PeriodicTable.electronMass);
-        adductMap_Pos.put("[M+H-H2O]+", - 18.01056d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
+        adductMap_Pos.put("[M+H-H2O]+", -18.01056d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
         adductMap_Pos.put("[M+C2H6N2+H]+", 58.05310d + PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.electronMass);
     }
 
     static {
-        adductMap_Neg.put("[M-H]-", - PeriodicTable.elements_Map.get(Element.H) + PeriodicTable.electronMass);
+        adductMap_Neg.put("[M-H]-", -PeriodicTable.elements_Map.get(Element.H) + PeriodicTable.electronMass);
         adductMap_Neg.put("[M+Cl]-", PeriodicTable.elements_Map.get(Element.Cl) + PeriodicTable.electronMass);
-        adductMap_Neg.put("[M-H-H2O]-", - PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.waterMass + PeriodicTable.electronMass);
+        adductMap_Neg.put("[M-H-H2O]-", -PeriodicTable.elements_Map.get(Element.H) - PeriodicTable.waterMass + PeriodicTable.electronMass);
         adductMap_Neg.put("[M+HCOOH-H]-", 46.00548d - PeriodicTable.elements_Map.get(Element.H) + PeriodicTable.electronMass);
         adductMap_Neg.put("[M+CH3COOH-H]-", 60.02113d - PeriodicTable.elements_Map.get(Element.H) + PeriodicTable.electronMass);
     }
@@ -37,14 +37,9 @@ public class Adduct {
         return new ArrayList<>(adductMap_Pos.keySet()).toArray(new String[0]);
     }
 
-    public static String[] getNegativeAdducts() {
-        return new ArrayList<>(adductMap_Neg.keySet()).toArray(new String[0]);
-    }
-
     public static String[] getAllAdducts() {
         adductMap.putAll(adductMap_Pos);
         adductMap.putAll(adductMap_Neg);
         return adductMap.keySet().toArray(new String[0]);
     }
-
 }

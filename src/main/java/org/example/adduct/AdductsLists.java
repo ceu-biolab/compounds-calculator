@@ -16,7 +16,6 @@ public class AdductsLists {
         try {
             MAPADDUCTS = new LinkedHashMap<>();
 
-            // Positive adducts
             MAPADDUCTS.put("[M+H]+", new Adduct("[M+H]+"));
             MAPADDUCTS.put("[M+2H]2+", new Adduct("[M+2H]2+"));
             MAPADDUCTS.put("[2M+H]+", new Adduct("[2M+H]+"));
@@ -64,8 +63,6 @@ public class AdductsLists {
             MAPADDUCTS.put("[M+2H+Na]3+", new Adduct("[M+2H+Na]3+"));
             MAPADDUCTS.put("[M+H+2K]3+", new Adduct("[M+H+2K]3+"));
             MAPADDUCTS.put("[M+H+2Na]3+", new Adduct("[M+H+2Na]3+"));
-
-            // Negative adducts
             MAPADDUCTS.put("[M-H]-", new Adduct("[M-H]-"));
             MAPADDUCTS.put("[M+Cl]-", new Adduct("[M+Cl]-"));
             MAPADDUCTS.put("[M+HCOOH-H]-", new Adduct("[M+HCOOH-H]-"));

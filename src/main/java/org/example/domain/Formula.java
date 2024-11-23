@@ -121,6 +121,19 @@ public class Formula {
         return formula.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Formula formula = (Formula) o;
+        return Objects.equals(mapFormula, formula.mapFormula);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(mapFormula);
+    }
+
     /**
      * Defines formula object as a string.
      *

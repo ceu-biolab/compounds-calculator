@@ -3,6 +3,7 @@ package org.example.domain;
 import java.text.DecimalFormat;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 
 public class MSLipid extends Lipid {
     public String compoundID;
@@ -19,16 +20,6 @@ public class MSLipid extends Lipid {
         this.mass = mass;
     }
 
-    public double calculateTotalMassWithAdduct(String adduct) {
-        double mass = calculateTotalMass();
-        return mass + Adduct.getAdductMass(adduct);
-    }
-
-    public String calculateMZWithAdduct(String adduct, int charge) {
-        DecimalFormat numberFormat = new DecimalFormat("#.0000");
-        return numberFormat.format(calculateTotalMassWithAdduct(adduct) / charge);
-    }
-
     public String getCompoundID() {
         return compoundID;
     }
@@ -43,6 +34,19 @@ public class MSLipid extends Lipid {
 
     public double getMass() {
         return mass;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MSLipid msLipid = (MSLipid) o;
+        return Double.compare(mass, msLipid.mass) == 0 && Objects.equals(compoundID, msLipid.compoundID) && Objects.equals(compoundName, msLipid.compoundName) && Objects.equals(formula, msLipid.formula);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(compoundID, compoundName, formula, mass);
     }
 
     @Override

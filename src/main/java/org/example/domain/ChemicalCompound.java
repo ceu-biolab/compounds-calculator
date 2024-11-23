@@ -1,5 +1,7 @@
 package org.example.domain;
 
+import java.util.Objects;
+
 public class ChemicalCompound {
     protected Formula formula;
     protected double mass;
@@ -32,4 +34,24 @@ public class ChemicalCompound {
         return formula;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChemicalCompound that = (ChemicalCompound) o;
+        return Double.compare(mass, that.mass) == 0 && Objects.equals(formula, that.formula);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(formula, mass);
+    }
+
+    @Override
+    public String toString() {
+        return "ChemicalCompound{" +
+                "formula=" + formula +
+                ", mass=" + mass +
+                '}';
+    }
 }

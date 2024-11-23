@@ -14,7 +14,7 @@ public class MassToleranceCalculator {
     public double calculateDelta(ToleranceType toleranceType, double experimentalMass, double theoreticalMass) {
         switch (toleranceType) {
             case PPM:
-                return Math.abs(theoreticalMass - experimentalMass) / theoreticalMass * Math.pow(10, 6);
+                return (Math.abs(theoreticalMass - experimentalMass) / theoreticalMass) * Math.pow(10, 6);
             case Da:
                 return Math.abs(theoreticalMass - experimentalMass);
             default:

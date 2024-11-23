@@ -1,5 +1,7 @@
 package org.example.domain;
 
+import java.util.Objects;
+
 /**
  * Defines the base skeletal structure of a lipid as the skeleton of the lipid head group defined in LipidTypeCharacteristics.
  * @author pilarbourg
@@ -28,6 +30,18 @@ public class LipidSkeletalStructure extends ChemicalCompound {
         return lipidType;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LipidSkeletalStructure that = (LipidSkeletalStructure) o;
+        return lipidType == that.lipidType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(lipidType);
+    }
 
     /**
      * Returns the lipid's skeletal structure as a string object.

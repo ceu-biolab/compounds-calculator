@@ -14,5 +14,5 @@ public enum Element {
      */
     public static Element toElement(String element) {
         return Element.valueOf(element);
-    } // TODO: CREATE NEW EXCEPTION TO THROW -- InvalidElement_Exception
+    }
 }

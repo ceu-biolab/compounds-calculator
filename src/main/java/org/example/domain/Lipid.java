@@ -4,6 +4,7 @@ import org.example.exceptions.InvalidFormula_Exception;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 
 public class Lipid {
     private final List<FattyAcid> fattyAcids;
@@ -47,9 +48,20 @@ public class Lipid {
             carbonAtoms += fattyAcid.getCarbonAtoms();
             doubleBonds += fattyAcid.getDoubleBonds();
         }
-        System.out.println("Atoms: " + carbonAtoms + " " + doubleBonds);
-
         return lipid.getLipidSkeletalStructure().getLipidType().toString() + " " + carbonAtoms + ":" + doubleBonds;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Lipid lipid = (Lipid) o;
+        return Objects.equals(fattyAcids, lipid.fattyAcids) && Objects.equals(lipidSkeletalStructure, lipid.lipidSkeletalStructure);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fattyAcids, lipidSkeletalStructure);
     }
 
     @Override

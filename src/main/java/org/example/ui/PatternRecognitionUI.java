@@ -27,7 +27,7 @@ public class PatternRecognitionUI extends JPanel {
     public JPanel graphPanel = new JPanel(new MigLayout("", "[grow, fill]", "[grow, fill]"));
     public static List<JCheckBox> adductCheckBoxList = new ArrayList<>();
     public static List<String> chosenAdductCheckBoxes = new ArrayList<>();
-    public static XYChart chart = new XYChartBuilder().width(350).height(400).xAxisTitle("m/z").yAxisTitle("Intensity").build();
+    public static XYChart chart = new XYChartBuilder().width(350).height(400).xAxisTitle("Retention Time").yAxisTitle("Intensity").build();
     public static JTextField lipidTextField = new JTextField();
 
     public PatternRecognitionUI() {

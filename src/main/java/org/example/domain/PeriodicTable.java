@@ -130,5 +130,4 @@ public class PeriodicTable {
         elements_Map.put(Element.Ts, 294.0d);
         elements_Map.put(Element.Uuo, 294.0d);
     }
-
 }

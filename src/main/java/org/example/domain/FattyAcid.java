@@ -3,6 +3,8 @@ package org.example.domain;
 import org.example.exceptions.FattyAcidCreation_Exception;
 import org.example.exceptions.InvalidFormula_Exception;
 
+import java.util.Objects;
+
 public class FattyAcid extends ChemicalCompound {
 
     private final int carbonAtoms;
@@ -60,6 +62,19 @@ public class FattyAcid extends ChemicalCompound {
      */
     public int getDoubleBonds() {
         return doubleBonds;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FattyAcid fattyAcid = (FattyAcid) o;
+        return carbonAtoms == fattyAcid.carbonAtoms && doubleBonds == fattyAcid.doubleBonds;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(carbonAtoms, doubleBonds);
     }
 
     /**

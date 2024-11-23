@@ -1,5 +1,7 @@
 package org.example.domain;
 
+import java.util.Objects;
+
 public class LipidCharacteristics {
     private final Formula formula;
     private final int minFAs;
@@ -25,6 +27,23 @@ public class LipidCharacteristics {
         return maxFAs;
     }
 
+    public Formula getFormula() {
+        return formula;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LipidCharacteristics that = (LipidCharacteristics) o;
+        return minFAs == that.minFAs && maxFAs == that.maxFAs && Objects.equals(formula, that.formula);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(formula, minFAs, maxFAs);
+    }
+
     @Override
     public String toString() {
         return "LipidCharacteristics{" +
@@ -32,7 +51,4 @@ public class LipidCharacteristics {
                 '}';
     }
 
-    public Formula getFormula() {
-        return formula;
-    }
 }
