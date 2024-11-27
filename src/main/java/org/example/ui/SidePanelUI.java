@@ -59,6 +59,7 @@ public class SidePanelUI {
         });
         frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
                 (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
     }
 
@@ -67,8 +68,7 @@ public class SidePanelUI {
         frame.remove(adductTransformerUI);
         frame.remove(patternRecognitionUI);
         frame.add(component, "align center, grow");
-        frame.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.revalidate();
         frame.repaint();
     }
@@ -86,25 +86,30 @@ public class SidePanelUI {
         sidePanel = new JPanel();
         sidePanel.setLayout(new MigLayout("", "", "[fill]"));
         sidePanel.setBackground(Color.WHITE);
-        sidePanel.setMaximumSize(new Dimension((int) width - 70, 65));
         sidePanel.setPreferredSize(new Dimension((int) width - 70, 65));
         sidePanel.setMinimumSize(new Dimension((int) width - 70, 65));
         sidePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
         configureComponents(lipidCalculatorButton, "src/main/resources/LipidCalculator_Icon.png");
         lipidCalculatorButton.setBackground(new Color(231, 242, 245));
-        lipidCalculatorButton.addActionListener(e -> {
+        lipidCalculatorButton.addActionListener(_ -> {
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             updateUI(lipidCalculatorUI);
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         });
 
         configureComponents(adductTransformerButton, "src/main/resources/Transformer_icon.png");
-        adductTransformerButton.addActionListener(e -> {
+        adductTransformerButton.addActionListener(_ -> {
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             updateUI(adductTransformerUI);
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         });
 
         configureComponents(patternRecognitionButton, "src/main/resources/PatternRecognition_Icon.png");
-        patternRecognitionButton.addActionListener(e -> {
+        patternRecognitionButton.addActionListener(_ -> {
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             updateUI(patternRecognitionUI);
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         });
 
         JButton helpButton = new JButton("  Github");

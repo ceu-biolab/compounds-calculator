@@ -142,6 +142,7 @@ public class QueryParameters {
         switch (fattyAcids.size()) {
             case 1:
                 formulaSkeleton.addFattyAcidToFormula(fattyAcids.get(0));
+                fattyAcids.add(fattyAcids.get(0));
                 queryBuilder.append("""
                         WHERE
                             (chains.num_carbons, chains.double_bonds) IN ((:numCarbons1, :doubleBonds1))
@@ -199,6 +200,8 @@ public class QueryParameters {
             case 1:
                 formulaSkeleton.addFattyAcidToFormula(fattyAcids.get(0));
                 formulaSkeleton.addFattyAcidToFormula(fattyAcids.get(0));
+                fattyAcids.add(fattyAcids.get(0));
+                fattyAcids.add(fattyAcids.get(0));
                 queryBuilder.append("""
                         WHERE
                             (chains.num_carbons, chains.double_bonds) IN ((:numCarbons1, :doubleBonds1))
@@ -363,7 +366,6 @@ public class QueryParameters {
         //** Remember to consider cases where there is a minimum and maximum number of fatty acids
 
         // if numexactFAs then combinationLength = X and if not do it for 1 and 2
-
 
         int combinationLength = 3;  // Length of each combination
         List<List<FattyAcid>> finalFattyAcidsList = generateCombinations(lipidType, fattyAcids, combinationLength);

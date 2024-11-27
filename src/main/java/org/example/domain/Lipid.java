@@ -44,10 +44,10 @@ public class Lipid {
         int doubleBonds = 0;
 
         for (FattyAcid fattyAcid : lipid.getFattyAcids()) {
-            System.out.println("FA: " + fattyAcid);
             carbonAtoms += fattyAcid.getCarbonAtoms();
             doubleBonds += fattyAcid.getDoubleBonds();
         }
+
         return lipid.getLipidSkeletalStructure().getLipidType().toString() + " " + carbonAtoms + ":" + doubleBonds;
     }
 

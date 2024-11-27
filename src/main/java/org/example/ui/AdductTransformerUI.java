@@ -5,7 +5,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import net.miginfocom.swing.MigLayout;
 import org.example.adduct.AdductsLists;
 import org.example.adduct.Transformer;
-import org.example.domain.MSLipid;
+import org.example.utils.CSVUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,7 +15,6 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
@@ -31,11 +30,14 @@ public class AdductTransformerUI extends JPanel {
     public static List<JCheckBox> adductCheckBoxList = new ArrayList<>();
     public static List<String> chosenAdductCheckBoxes = new ArrayList<>();
     public JTextField monoMassTextField = new JTextField();
-    public JButton massToMzButton = new JButton();
     public JTextField mzTextField = new JTextField();
-    public JButton mzToMassButton = new JButton();
-    public JScrollPane mzScrollPane = createTableOfMZs();
-    public JScrollPane massScrollPane = createTableOfMonoMasses();
+    public JPanel mzResultsPanel = new JPanel(new MigLayout());
+    public JPanel massResultsPanel = new JPanel(new MigLayout());
+    public DecimalFormat numberFormat = new DecimalFormat("#.0000");
+    public String[][] mzResultsData = null;
+    public String[][] massResultsData = null;
+    public JButton exportButton1 = configureExportButton();
+    public JButton exportButton2 = configureExportButton();
 
     public AdductTransformerUI() {
         FlatLightLaf.setup();
@@ -49,71 +51,17 @@ public class AdductTransformerUI extends JPanel {
                 "25[grow, fill]25[grow, fill]25"));
         setBackground(new Color(195, 224, 229));
 
-        DecimalFormat numberFormat = new DecimalFormat("#.0000");
-
-        JLabel massToMzLabel = new JLabel("   Find mz values from monoisotopic masses");
-        massToMzLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon.png"));
-        configureTextComponents(massToMzLabel);
         massToMZPanel.setMinimumSize(new Dimension(500, 320));
         massToMZPanel.setBackground(Color.WHITE);
         massToMZPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         monoMassTextField.setBorder(new LineBorder(Color.WHITE));
-        massToMzButton.addActionListener(e -> {
-            List<Double> mzValues = new ArrayList<>();
-            if (monoMassTextField != null) {
-                String[] massValues = monoMassTextField.getText().replaceAll("[\\[\\]]", "").split("[\\s,;\\t]+");
-                // TODO: GET FROM ADDUCTS LIST
-                for (String mass : massValues) {
-                    mzValues.add(Double.valueOf(numberFormat.format(Transformer.getMassOfAdductFromMonoMass(Double.parseDouble(mass), "[M+NH4]+"))));
-                }
-            }
-            StringBuilder stringBuilder = new StringBuilder();
 
-            for (Object value : mzValues) {
-                stringBuilder.append(value.toString()).append("\t");
-            }
-        });
-
-        JLabel mzToMassLabel = new JLabel("   Find monoisotopic masses from mz values");
-        JLabel monoMassLabel1 = new JLabel("Monoisotopic mass");
-        configureTextComponents(monoMassLabel1);
-        JLabel mzLabel2 = new JLabel("m/z");
-        configureTextComponents(mzLabel2);
-        monoMassLabel1.setFont(new Font("Arial", Font.BOLD, 16));
-        mzLabel2.setFont(new Font("Arial", Font.BOLD, 16));
-
-        mzToMassLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon copy.png"));
-        configureTextComponents(mzToMassLabel);
         mzToMassPanel.setMinimumSize(new Dimension(500, 320));
         mzToMassPanel.setBackground(Color.WHITE);
         mzToMassPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         mzTextField.setBorder(new LineBorder(Color.WHITE));
-        mzToMassButton.addActionListener(e -> {
-            List<Double> massValues = new ArrayList<>();
-            if (mzTextField != null) {
-                /* TODO String mzValue = mzTextField.getText();
-                for (String adduct : chosenAdductCheckBoxes) {
-                    massValues.add(Double.valueOf(numberFormat.format(Transformer.getMonoisotopicMassFromMZ(Double.parseDouble(mzValue), adduct))));
-
-                }
-                String[][] localLipidData = new String[massValues.size()][8];
-
-                for (double d : massValues) {
-                    localLipidData[i][0] = d;
-                    localLipidData[i][1] = d;
-                }
-                JScrollPane tableScrollPane = configureTable(massValues, 2);*/
-            }
-
-            StringBuilder stringBuilder = new StringBuilder();
-
-            for (Object value : massValues) {
-                stringBuilder.append(value.toString()).append("\t");
-            }
-        });
 
         createAdductsPanel.setMinimumSize(new Dimension(375, 240));
-        createAdductsPanel.setMaximumSize(new Dimension(375, 240));
         createAdductsPanel.setBackground(Color.WHITE);
         createAdductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         JLabel createAdductsLabel = new JLabel("   Create Adduct");
@@ -123,7 +71,7 @@ public class AdductTransformerUI extends JPanel {
         configureTextComponents(createAdductsSubLabel);
         createAdductsSubLabel.setFont(new Font("Arial", Font.ITALIC, 14));
 
-        JLabel adductFormulaLabel = new JLabel("Introduce in [M+X]q+/- Format: ");
+        JLabel adductFormulaLabel = new JLabel("Introduce in [M+X]q+/- format: ");
         configureTextComponents(adductFormulaLabel);
         JPanel adductFormulaPanel = new JPanel(new MigLayout("", "[grow, fill]", "[grow, fill]"));
         JTextField adductFormulaTextField = new JTextField();
@@ -138,35 +86,12 @@ public class AdductTransformerUI extends JPanel {
         configureTextComponents(confirmAdduct);
         confirmAdduct.setBorder(new LineBorder(Color.WHITE, 1));
         List<String> adductsList = new ArrayList<>(List.of("[M+H]+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+H-H2O]+", "[M+C2H6N2+H]+"));
-        confirmAdduct.addActionListener(e -> {
+        confirmAdduct.addActionListener(_ -> {
             adductsList.add(adductFormulaTextField.getText());
             String[] finalArray = adductsList.toArray(new String[0]);
             updateAdductPanel(finalArray);
             JOptionPane.showMessageDialog(null, "Adduct has sucessfully been added to the list of adducts.");
         });
-
-        JPanel testPanel = new JPanel(new MigLayout("", "25[grow, fill][grow, fill]25", "[grow, fill]"));
-        testPanel.setBackground(new Color(231, 242, 245));
-        testPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        JButton goButton1 = new JButton();
-        configureComponents(goButton1);
-        goButton1.setBorder(new LineBorder(Color.WHITE, 0));
-        goButton1.setIcon(new ImageIcon("src/main/resources/Go_Icon.png"));
-        testPanel.add(monoMassLabel1, "gapbottom 10, wrap");
-        testPanel.add(configurePanelForTextField(monoMassTextField), "grow, gapright 10");
-        testPanel.add(goButton1, "gapright 5");
-        testPanel.setMinimumSize(new Dimension(50, 100));
-
-        JPanel testPanel2 = new JPanel(new MigLayout("", "25[grow, fill][grow, fill]25", "[grow, fill]"));
-        testPanel2.setBackground(new Color(231, 242, 245));
-        testPanel2.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        JButton goButton2 = new JButton();
-        configureComponents(goButton2);
-        goButton2.setBorder(new EmptyBorder(0, 0, 0, 0));
-        goButton2.setIcon(new ImageIcon("src/main/resources/Go_Icon.png"));
-        testPanel2.add(mzLabel2, "gapbottom 10, wrap");
-        testPanel2.add(configurePanelForTextField(mzTextField), "grow, gapright 10");
-        testPanel2.add(goButton2);
 
         createAdductsPanel.add(createAdductsLabel, "wrap");
         createAdductsPanel.add(createAdductsSubLabel, "gaptop 5, align center, wrap");
@@ -174,13 +99,38 @@ public class AdductTransformerUI extends JPanel {
         createAdductsPanel.add(adductFormulaPanel, "grow, gaptop 10, wrap");
         createAdductsPanel.add(confirmAdduct, "align center, gaptop 10, gapbottom 25, wrap");
 
-        JPanel panel2 = new JPanel(new MigLayout("", "50[grow, fill]100[grow, fill]50", "50[]25[]25[]25[]25"));
-        panel2.setBackground(Color.WHITE);
-        panel2.setMinimumSize(new Dimension(1200, 800));
-        panel2.putClientProperty(FlatClientProperties.STYLE, "arc:40");
+        createFullAdductsListPanel();
+        add(createAdductsPanel, "grow");
+        add(configureCalculationsPanel(), "grow, span 1 2, wrap");
+        add(adductsPanel, "grow");
+        setVisible(true);
+    }
 
-        JPanel resultsPanel1 = new JPanel(new MigLayout());
-        resultsPanel1.setBackground(Color.WHITE);
+    public JPanel configureCalculationsPanel() {
+        JPanel calculationsPanel = new JPanel(new MigLayout("", "50[grow, fill]100[grow, fill]50", "50[]25[]25[]25[]25"));
+        calculationsPanel.setBackground(Color.WHITE);
+        calculationsPanel.setMinimumSize(new Dimension(1200, 800));
+        calculationsPanel.putClientProperty(FlatClientProperties.STYLE, "arc:40");
+
+        JLabel massToMzLabel = new JLabel("   Find mz values from monoisotopic masses");
+        massToMzLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon.png"));
+        configureTextComponents(massToMzLabel);
+
+        JLabel mzToMassLabel = new JLabel("   Find monoisotopic masses from mz values");
+        mzToMassLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon copy.png"));
+        configureTextComponents(mzToMassLabel);
+
+        calculationsPanel.add(massToMzLabel, "gapbottom 5");
+        calculationsPanel.add(mzToMassLabel, "gapbottom 5, wrap");
+        calculationsPanel.add(configureMassInputPanel(), "gapbottom 15");
+        calculationsPanel.add(configureMzInputPanel(), "gapbottom 15, wrap");
+        calculationsPanel.add(configureMzResultsPanel(), "gapbottom 25");
+        calculationsPanel.add(configureMassResultsPanel(), "gapbottom 25");
+        return calculationsPanel;
+    }
+
+    public JPanel configureMzResultsPanel() {
+        mzResultsPanel.setBackground(Color.WHITE);
         JLabel resultsLabel1 = new JLabel("m/z results");
         configureTextComponents(resultsLabel1);
         JLabel iconLabel = new JLabel();
@@ -189,19 +139,20 @@ public class AdductTransformerUI extends JPanel {
         configureTextComponents(waitingForInputLabel);
         waitingForInputLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
-        JPanel circlePanel = new JPanel(new MigLayout("", "100[]100", "150[]150"));
-        circlePanel.setBackground(new Color(231, 242, 245));
-        circlePanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
-        circlePanel.add(waitingForInputLabel, "align center");
+        JPanel waitingForInputPanel1 = new JPanel(new MigLayout("", "100[]100", "150[]150"));
+        waitingForInputPanel1.setBackground(new Color(231, 242, 245));
+        waitingForInputPanel1.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        waitingForInputPanel1.add(waitingForInputLabel, "align center");
 
-        resultsPanel1.add(resultsLabel1, "gapbottom 15, wrap");
-        resultsPanel1.add(mzScrollPane, "gapbottom 10, wrap");
-        resultsPanel1.add(circlePanel, "align center, gaptop 25, gapbottom 15");
-        resultsPanel1.setMinimumSize(new Dimension(300, 200));
-        resultsPanel1.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        mzResultsPanel.add(resultsLabel1, "gapbottom 15, wrap");
+        mzResultsPanel.add(waitingForInputPanel1, "align center, gaptop 25, gapbottom 15");
+        mzResultsPanel.setMinimumSize(new Dimension(300, 200));
+        mzResultsPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        return mzResultsPanel;
+    }
 
-        JPanel resultsPanel2 = new JPanel(new MigLayout());
-        resultsPanel2.setBackground(Color.WHITE);
+    public JPanel configureMassResultsPanel() {
+        massResultsPanel.setBackground(Color.WHITE);
         JLabel resultsLabel2 = new JLabel("Monoisotopic mass results");
         configureTextComponents(resultsLabel2);
         JLabel iconLabel2 = new JLabel();
@@ -209,65 +160,186 @@ public class AdductTransformerUI extends JPanel {
         JLabel waitingForInputLabel2 = new JLabel("Introduce an m/z value to get started.");
         configureTextComponents(waitingForInputLabel2);
         waitingForInputLabel2.setFont(new Font("Arial", Font.BOLD, 16));
-
-        JPanel circlePanel2 = new JPanel(new MigLayout("", "80[]80", "150[]150"));
-        circlePanel2.setBackground(new Color(231, 242, 245));
-        circlePanel2.putClientProperty(FlatClientProperties.STYLE, "arc:20");
-        circlePanel2.add(waitingForInputLabel2);
-
-        resultsPanel2.add(resultsLabel2, "gapbottom 15, wrap");
-        resultsPanel2.add(massScrollPane, "gapbottom 10, wrap");
-        resultsPanel2.add(circlePanel2, "align center, gaptop 25, gapbottom 15");
-        resultsPanel2.setMinimumSize(new Dimension(300, 200));
-        resultsPanel2.putClientProperty(FlatClientProperties.STYLE, "arc:20");
-
-        panel2.add(massToMzLabel, "gapbottom 5");
-        panel2.add(mzToMassLabel, "gapbottom 5, wrap");
-        panel2.add(testPanel, "gapbottom 15");
-        panel2.add(testPanel2, "gapbottom 15, wrap");
-        panel2.add(resultsPanel1, "gapbottom 25");
-        panel2.add(resultsPanel2, "gapbottom 25");
-
-        createFullAdductsListPanel();
-        add(createAdductsPanel, "grow");
-        add(panel2, "grow, span 1 2, wrap");
-        add(adductsPanel, "grow");
-        setVisible(true);
+        JPanel waitingForInputPanel2 = new JPanel(new MigLayout("", "80[]80", "150[]150"));
+        waitingForInputPanel2.setBackground(new Color(231, 242, 245));
+        waitingForInputPanel2.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        waitingForInputPanel2.add(waitingForInputLabel2);
+        massResultsPanel.add(resultsLabel2, "gapbottom 15, wrap");
+        massResultsPanel.add(waitingForInputPanel2, "align center, gaptop 25, gapbottom 15");
+        massResultsPanel.setMinimumSize(new Dimension(300, 200));
+        massResultsPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20");
+        return massResultsPanel;
     }
 
-    public JScrollPane createTableOfMZs() {
-        String[] tableTitles = new String[]{"m/z", "Adduct"};
-        return getjScrollPane(tableTitles);
+    public JPanel configureMassInputPanel() {
+        JLabel monoMassLabel1 = new JLabel("Monoisotopic mass");
+        configureTextComponents(monoMassLabel1);
+        monoMassLabel1.setFont(new Font("Arial", Font.BOLD, 16));
+        JPanel mzResultsPanel = new JPanel(new MigLayout("", "25[grow, fill][grow, fill]25", "[grow, fill]"));
+        mzResultsPanel.setBackground(new Color(231, 242, 245));
+        mzResultsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        JButton goButton1 = new JButton();
+        configureComponents(goButton1);
+        goButton1.setBorder(new LineBorder(Color.WHITE, 0));
+        goButton1.setIcon(new ImageIcon("src/main/resources/Go_Icon.png"));
+        goButton1.addActionListener(_ -> {
+            List<String[]> finalLipidDataList = new ArrayList<>();
+
+            if (mzTextField != null && !(mzTextField.getText().isEmpty())) {
+                String monoMassValue = monoMassTextField.getText();
+                if (chosenAdductCheckBoxes.isEmpty()) {
+                    JOptionPane.showMessageDialog(this.massResultsPanel, "Please select at least one adduct");
+                    return;
+                }
+
+                chosenAdductCheckBoxes.forEach(adduct -> {
+                    double mass = Transformer.getMassOfAdductFromMonoMass(Double.parseDouble(monoMassValue), adduct);
+                    String[] row = new String[2];
+                    row[0] = numberFormat.format(mass);
+                    row[1] = adduct;
+                    finalLipidDataList.add(row);
+                });
+
+                mzResultsData = new String[finalLipidDataList.size()][2];
+                for (int i = 0; i < finalLipidDataList.size(); i++) {
+                    mzResultsData[i] = finalLipidDataList.get(i);
+                }
+
+                JLabel resultsLabel2 = new JLabel("Mass results");
+                configureTextComponents(resultsLabel2);
+                JTable mzTable = getjTable("m/z", mzResultsData);
+                configureExportAction("m/z", exportButton1, mzResultsData);
+                configureScrollPane(resultsLabel2, exportButton1, mzTable, this.mzResultsPanel);
+            } else {
+                JOptionPane.showMessageDialog(this.mzResultsPanel, "Please enter a valid m/z value");
+            }
+        });
+
+        mzResultsPanel.add(monoMassLabel1, "gapbottom 10, wrap");
+        mzResultsPanel.add(configurePanelForTextField(monoMassTextField), "grow, gapright 10");
+        mzResultsPanel.add(goButton1, "gapright 5");
+        mzResultsPanel.setMinimumSize(new Dimension(50, 100));
+        return mzResultsPanel;
     }
 
-    private JScrollPane getjScrollPane(String[] tableTitles) {
-        DefaultTableModel model = new DefaultTableModel(tableTitles, 0);
-        JTable table = new JTable(model);
-        JScrollPane jScrollPane = new JScrollPane(table);
-        table.getTableHeader().setBackground(Color.WHITE);
-        table.getTableHeader().setForeground(new Color(65, 114, 159));
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-        table.getTableHeader().setReorderingAllowed(false);
-        jScrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        jScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
-        jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        return jScrollPane;
+    public JPanel configureMzInputPanel() {
+        JPanel massResultsPanel = new JPanel(new MigLayout("", "25[grow, fill][grow, fill]25", "[grow, fill]"));
+        massResultsPanel.setBackground(new Color(231, 242, 245));
+        massResultsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+
+        JLabel mzLabel2 = new JLabel("m/z");
+        configureTextComponents(mzLabel2);
+        mzLabel2.setFont(new Font("Arial", Font.BOLD, 16));
+
+        JButton goButton2 = new JButton();
+        configureComponents(goButton2);
+        goButton2.setBorder(new EmptyBorder(0, 0, 0, 0));
+        goButton2.setIcon(new ImageIcon("src/main/resources/Go_Icon.png"));
+        goButton2.addActionListener(_ -> {
+            List<String[]> finalLipidDataList = new ArrayList<>();
+
+            if (mzTextField != null && !(mzTextField.getText().isEmpty())) {
+                String mzValue = mzTextField.getText();
+                if (chosenAdductCheckBoxes.isEmpty()) {
+                    JOptionPane.showMessageDialog(this.massResultsPanel, "Please select at least one adduct");
+                    return;
+                }
+
+                chosenAdductCheckBoxes.forEach(adduct -> {
+                    double mass = Transformer.getMonoisotopicMassFromMZ(Double.parseDouble(mzValue), adduct);
+                    String[] row = new String[2];
+                    row[0] = numberFormat.format(mass);
+                    row[1] = adduct;
+                    finalLipidDataList.add(row);
+                });
+
+                massResultsData = new String[finalLipidDataList.size()][2];
+                for (int i = 0; i < finalLipidDataList.size(); i++) {
+                    massResultsData[i] = finalLipidDataList.get(i);
+                }
+
+                JLabel resultsLabel2 = new JLabel("Mass results");
+                configureTextComponents(resultsLabel2);
+                JTable massTable = getjTable("Monoisotopic Mass", massResultsData);
+                configureExportAction("Monoisotopic Mass", exportButton2, massResultsData);
+                configureScrollPane(resultsLabel2, exportButton2, massTable, this.massResultsPanel);
+            } else {
+                JOptionPane.showMessageDialog(this.massResultsPanel, "Please enter a valid m/z value");
+            }
+        });
+
+        massResultsPanel.add(mzLabel2, "gapbottom 10, wrap");
+        massResultsPanel.add(configurePanelForTextField(mzTextField), "grow, gapright 10");
+        massResultsPanel.add(goButton2);
+        return massResultsPanel;
     }
 
-    public JScrollPane createTableOfMonoMasses() {
-        String[] tableTitles = new String[]{"Monoisotopic Mass", "Adduct"};
-        return getjScrollPane(tableTitles);
+    public static void configureExportAction(String varType, JButton exportButton, String[][] massResultsData) {
+        exportButton.addActionListener(_ -> {
+            int choice = JOptionPane.showConfirmDialog(null,
+                    "Do you wish to export this information to CSV format?",
+                    "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                try {
+                    CSVUtils csvUtils = new CSVUtils();
+                    csvUtils.createAndWriteCSVofTransformerData(varType, massResultsData);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Current data set is empty. Please introduce data before attempting to create a new file.");
+                }
+            } else if (choice == JOptionPane.NO_OPTION || choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) {
+                JOptionPane.showMessageDialog(null, "Operation cancelled.");
+            } else {
+                JOptionPane.showMessageDialog(null, "File already exists.");
+            }
+        });
     }
 
-    public JTable configureTable(String[][] data, int numRows) {
-        TableModel tableModel = new DefaultTableModel(data, numRows) {
+    public JButton configureExportButton() {
+        JButton exportButton = new JButton();
+        configureComponents(exportButton);
+        exportButton.setBackground(Color.WHITE);
+        exportButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
+        exportButton.setIcon(new ImageIcon("src/main/resources/Download_Icon.png"));
+        exportButton.setBorder(new LineBorder(Color.white));
+        exportButton.setHorizontalAlignment(SwingConstants.LEFT);
+        return exportButton;
+    }
+
+    private void configureScrollPane(JLabel resultsLabel, JButton exportButton, JTable massTable, JPanel resultsPanel) {
+        configureTable(massTable);
+        JScrollPane lipidScrollPane = new JScrollPane(massTable);
+        lipidScrollPane.setPreferredSize(new Dimension(500, 400));
+        lipidScrollPane.setBorder(new LineBorder(Color.WHITE, 1));
+        resultsPanel.removeAll();
+        resultsPanel.add(resultsLabel, "gapbottom 15");
+        resultsPanel.add(exportButton, "gapbottom 15, push, al right, wrap");
+        resultsPanel.add(lipidScrollPane);
+        resultsPanel.revalidate();
+        resultsPanel.repaint();
+    }
+
+    static void configureTable(JTable massTable) {
+        massTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        massTable.getTableHeader().setBackground(Color.WHITE);
+        massTable.getTableHeader().setForeground(new Color(65, 114, 159));
+        massTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
+        massTable.setForeground(new Color(65, 114, 159));
+        massTable.setFont(new Font("Arial", Font.BOLD, 15));
+        massTable.getTableHeader().setReorderingAllowed(false);
+        massTable.setRowHeight(massTable.getRowHeight() + 15);
+    }
+
+    private static JTable getjTable(String var, String[][] lipidData) {
+        String[] columnNames = {var, "Adduct"};
+
+        TableModel tableModel = new DefaultTableModel(lipidData, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
 
-        JTable table = new JTable(tableModel) {
+        return new JTable(tableModel) {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component comp = super.prepareRenderer(renderer, row, column);
                 Color alternateColor = new Color(231, 242, 245);
@@ -279,20 +351,7 @@ public class AdductTransformerUI extends JPanel {
                 return comp;
             }
         };
-
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setBackground(Color.WHITE);
-        table.getTableHeader().setForeground(new Color(65, 114, 159));
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-        table.setForeground(new Color(65, 114, 159));
-        table.setFont(new Font("Arial", Font.BOLD, 15));
-        table.getTableHeader().setReorderingAllowed(false);
-        table.setModel(tableModel);
-        table.setRowHeight(table.getRowHeight() + 15);
-        table.setBorder(new LineBorder(Color.WHITE, 1));
-        return table;
     }
-
 
     public JPanel configurePanelForTextField(JTextField textField) {
         JPanel basePanel = new JPanel(new MigLayout("", "[grow, fill]", "[grow, fill]"));
@@ -311,7 +370,6 @@ public class AdductTransformerUI extends JPanel {
         adductsPanel.setBackground(Color.WHITE);
         adductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         adductsPanel.setMinimumSize(new Dimension(375, 535));
-        adductsPanel.setMaximumSize(new Dimension(375, 535));
 
         JLabel adductsLabel = new JLabel("Adducts");
         configureTextComponents(adductsLabel);
@@ -338,25 +396,20 @@ public class AdductTransformerUI extends JPanel {
             checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
 
             checkBoxPanel.setMinimumSize(new Dimension(375, 30));
-            checkBoxPanel.setMaximumSize(new Dimension(375, 30));
             checkBox.setMinimumSize(new Dimension(375, 30));
-            checkBox.setMaximumSize(new Dimension(375, 30));
 
             checkBoxPanel.setBackground(new Color(231, 242, 245));
             checkBoxPanel.add(checkBox);
             checkBoxPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            checkBox.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        checkBoxPanel.setBackground(new Color(195, 224, 229));
-                        checkBox.setBackground(new Color(195, 224, 229));
-                        chosenAdductCheckBoxes.add(checkBox.getText());
-                    } else {
-                        checkBoxPanel.setBackground(new Color(231, 242, 245));
-                        checkBox.setBackground(new Color(231, 242, 245));
-                        chosenAdductCheckBoxes.remove(checkBox.getText());
-                    }
+            checkBox.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    checkBoxPanel.setBackground(new Color(195, 224, 229));
+                    checkBox.setBackground(new Color(195, 224, 229));
+                    chosenAdductCheckBoxes.add(checkBox.getText());
+                } else {
+                    checkBoxPanel.setBackground(new Color(231, 242, 245));
+                    checkBox.setBackground(new Color(231, 242, 245));
+                    chosenAdductCheckBoxes.remove(checkBox.getText());
                 }
             });
             adductCheckBoxList.add(checkBox);
@@ -372,7 +425,6 @@ public class AdductTransformerUI extends JPanel {
             for (JPanel panel : checkBoxPanels) {
                 panel.setBackground(bg);
                 panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-                panel.setMaximumSize(new Dimension(500, 30));
                 panel.revalidate();
                 panel.repaint();
 

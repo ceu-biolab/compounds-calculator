@@ -205,11 +205,14 @@ public class LipidCalculatorUI extends JPanel {
         exportButton.setBorder(new LineBorder(Color.white));
         exportButton.setHorizontalAlignment(SwingConstants.LEFT);
         exportButton.addActionListener(_ -> {
-            int choice = JOptionPane.showConfirmDialog(null, "Do you wish to export this information to CSV format?", "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
+            int choice = JOptionPane.showConfirmDialog(null,
+                    "Do you wish to export this information to CSV format?",
+                    "Export to CSV", JOptionPane.YES_NO_CANCEL_OPTION);
             if (choice == JOptionPane.YES_OPTION) {
                 try {
                     CSVUtils csvUtils = new CSVUtils();
                     csvUtils.createAndWriteCSV(lipidData);
+                    JOptionPane.showMessageDialog(null, "File successfully created!");
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Current data set is empty. Please introduce data before attempting to create a new file.");
                 }

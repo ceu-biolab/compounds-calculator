@@ -101,7 +101,6 @@ public class Transformer {
         }
 
         double adductValue = adductObj.getAdductMass();
-
         int charge = adductObj.getAdductCharge();
         int multimer = adductObj.getMultimer();
 
@@ -120,10 +119,6 @@ public class Transformer {
         return experimentalMass - adductValue;
     }
 
-    public static Double getMZFromSingleChargedMonoMass(Double monoisotopic_weight, Double adductValue) {
-        return monoisotopic_weight + adductValue;
-    }
-
     private static Double getMonoMassFromMultiChargedMZ(double experimentalMass, double adductValue, int charge) {
         double result = experimentalMass;
         result -= adductValue;
@@ -136,6 +131,10 @@ public class Transformer {
         result -= adductValue;
         result /= numberAtoms;
         return result;
+    }
+
+    public static Double getMZFromSingleChargedMonoMass(Double monoisotopic_weight, Double adductValue) {
+        return monoisotopic_weight + adductValue;
     }
 
     private static Double getMZFromMultiChargedMonoMass(double monoisotopicWeight, double adductValue, int charge) {

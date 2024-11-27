@@ -47,7 +47,6 @@ public class PatternRecognitionUI extends JPanel {
         graphPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
         XChartPanel<XYChart> chartPanel = new XChartPanel<>(configureChart());
-        chartPanel.setMaximumSize(new Dimension(1100, 1400));
         chartPanel.setMinimumSize(new Dimension(1100, 550));
 
         JLabel adductPeaksLabel = new JLabel("Likely Adduct Peaks According to Lipid");
@@ -134,7 +133,6 @@ public class PatternRecognitionUI extends JPanel {
             chart.getStyler().setXAxisMin(0.0d);
         }
         chart.getStyler().setXAxisMax(retentionTime + 1);
-        chartPanel.setMaximumSize(new Dimension(1100, 1400));
         chartPanel.setMinimumSize(new Dimension(1100, 550));
         graphPanel.add(chartPanel, "gaptop 30, gapbottom 300, span 2 1, grow");
         graphPanel.revalidate();
@@ -189,9 +187,7 @@ public class PatternRecognitionUI extends JPanel {
             checkBoxPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
 
             checkBoxPanel.setMinimumSize(new Dimension(290, 30));
-            checkBoxPanel.setMaximumSize(new Dimension(290, 30));
             checkBox.setMinimumSize(new Dimension(290, 30));
-            checkBox.setMaximumSize(new Dimension(290, 30));
 
             checkBoxPanel.setBackground(new Color(231, 242, 245));
             checkBoxPanel.add(checkBox);
@@ -236,7 +232,6 @@ public class PatternRecognitionUI extends JPanel {
         for (JPanel panel : checkBoxPanels) {
             panel.setBackground(bg);
             panel.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
-            panel.setMaximumSize(new Dimension(280, 30));
             panel.revalidate();
             panel.repaint();
 

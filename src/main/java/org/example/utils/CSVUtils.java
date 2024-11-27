@@ -1,9 +1,5 @@
 package org.example.utils;
 
-import ceu.biolab.Adduct;
-import ceu.biolab.IncorrectAdduct;
-import ceu.biolab.IncorrectFormula;
-import ceu.biolab.NotFoundElement;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -34,25 +30,41 @@ public class CSVUtils {
         }
     }
 
-    public void createAndWriteCSV(String[][] lipidData) {
-        if (!(lipidData == null) && !(lipidData.length == 0)) {
-            File file = new File(String.valueOf(fileDirectory), "Lipids " + (10000 + (int) (Math.random() * 90000)) + ".csv");
-            writeCSV(lipidData, file);
-            if (Desktop.isDesktopSupported()) {
-                try {
-                    Desktop.getDesktop().open(file);
-                } catch (IOException e) {
-                    JOptionPane.showMessageDialog(null, "Failed to open the file: " + file.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);
+    public void createAndWriteCSV(String[][] data) {
+        if (!(data == null) && !(data.length == 0)) {
+            FileDialog fileDialog = new FileDialog((Frame) null, "Save CSV File", FileDialog.SAVE);
+            fileDialog.setVisible(true);
+
+            String fileName = fileDialog.getFile();
+            String fileDirectory = fileDialog.getDirectory();
+
+            if (fileName != null && fileDirectory != null) {
+                if (!fileName.toLowerCase().endsWith(".csv")) {
+                    fileName += ".csv";
                 }
-            } else {
-                JOptionPane.showMessageDialog(null, "Desktop is not supported. The file was saved at: " + file.getAbsolutePath(), "Info", JOptionPane.INFORMATION_MESSAGE);
+
+                File file = new File(fileDirectory, fileName);
+                writeCSV(data, file);
+
+                if (Desktop.isDesktopSupported()) {
+                    try {
+                        Desktop.getDesktop().open(file);
+                    } catch (IOException e) {
+                        JOptionPane.showMessageDialog(null, "Failed to open the file: "
+                                + file.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Desktop is not supported. " +
+                            "The file was saved at: " + file.getAbsolutePath(), "Info", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
         }
     }
 
     private void writeCSV(String[][] lipidData, File file) {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(file.getAbsolutePath()));
-             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader("Compound Name", "Species Shorthand", "Compound Formula", "Compound Mass", "Adduct", "M/Z", "CAS ID").build())) {
+             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader("Compound Name", "Species Shorthand",
+                     "Compound Formula", "Compound Mass", "Adduct", "M/Z", "CAS ID").build())) {
             for (String[] lipidDataString : lipidData) {
                 csvPrinter.printRecord(Arrays.asList(lipidDataString));
             }
@@ -94,6 +106,49 @@ public class CSVUtils {
                 }
             }
             JOptionPane.showMessageDialog(null, numberOfRecords + " files were created in " + fileDirectory);
+        }
+    }
+
+    public void createAndWriteCSVofTransformerData(String varType, String[][] data) {
+        if (data != null && data.length > 0) {
+            FileDialog fileDialog = new FileDialog((Frame) null, "Save CSV File", FileDialog.SAVE);
+            fileDialog.setVisible(true);
+
+            String fileName = fileDialog.getFile();
+            String fileDirectory = fileDialog.getDirectory();
+
+            if (fileName != null && fileDirectory != null) {
+                if (!fileName.toLowerCase().endsWith(".csv")) {
+                    fileName += ".csv";
+                }
+
+                File file = new File(fileDirectory, fileName);
+                writeCSVofTransformerData(varType, data, file);
+
+                if (Desktop.isDesktopSupported()) {
+                    try {
+                        Desktop.getDesktop().open(file);
+                    } catch (IOException e) {
+                        JOptionPane.showMessageDialog(null, "Failed to open the file: "
+                                + file.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Desktop is not supported. " +
+                            "The file was saved at: " + file.getAbsolutePath());
+                }
+            }
+        }
+    }
+
+    private void writeCSVofTransformerData(String varType, String[][] data, File file) {
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(file.getAbsolutePath()));
+             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader(varType, "Adduct").build())) {
+            for (String[] dataString : data) {
+                csvPrinter.printRecord(Arrays.asList(dataString));
+            }
+        } catch (IOException exception) {
+            JOptionPane.showMessageDialog(null, "An error occurred while writing to the CSV file "
+                    + file.getAbsolutePath() + ". Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
