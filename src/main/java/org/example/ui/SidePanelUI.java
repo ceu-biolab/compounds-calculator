@@ -47,7 +47,7 @@ public class SidePanelUI {
         }
         adductTransformerUI = new AdductTransformerUI();
         homePage();
-        frame.add(sidePanel, "wrap, align center, grow");
+        frame.add(sidePanel, "gapleft 15, gapright 15, wrap, align center, grow");
         frame.add(lipidCalculatorUI, "align center, grow");
         frame.getContentPane().setBackground(new Color(195, 224, 229));
         frame.setLocationRelativeTo(null);
@@ -86,8 +86,8 @@ public class SidePanelUI {
         sidePanel = new JPanel();
         sidePanel.setLayout(new MigLayout("", "", "[fill]"));
         sidePanel.setBackground(Color.WHITE);
-        sidePanel.setPreferredSize(new Dimension((int) width - 70, 65));
-        sidePanel.setMinimumSize(new Dimension((int) width - 70, 65));
+        sidePanel.setPreferredSize(new Dimension((int) width - 100, 65));
+        sidePanel.setMinimumSize(new Dimension((int) width - 100, 65));
         sidePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
         configureComponents(lipidCalculatorButton, "src/main/resources/LipidCalculator_Icon.png");

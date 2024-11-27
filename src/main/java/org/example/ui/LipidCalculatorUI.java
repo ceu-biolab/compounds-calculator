@@ -212,7 +212,6 @@ public class LipidCalculatorUI extends JPanel {
                 try {
                     CSVUtils csvUtils = new CSVUtils();
                     csvUtils.createAndWriteCSV(lipidData);
-                    JOptionPane.showMessageDialog(null, "File successfully created!");
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Current data set is empty. Please introduce data before attempting to create a new file.");
                 }
