@@ -53,7 +53,6 @@ public class Database {
     }
 
     public static Set<FattyAcid> getFattyAcidsFromDatabase(double fattyAcidMass) throws SQLException, InvalidFormula_Exception, FattyAcidCreation_Exception {
-        // TODO: METER TOLERANCIA PARA MASS DELTA
         String query = "SELECT chain_id, num_carbons, double_bonds " +
                 "FROM chains " +
                 "WHERE mass <= ? + 0.05 " +

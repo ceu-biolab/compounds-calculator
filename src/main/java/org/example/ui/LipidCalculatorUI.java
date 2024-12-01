@@ -292,19 +292,18 @@ public class LipidCalculatorUI extends JPanel {
     public JScrollPane createLipidScrollPane() {
         Set<Double> neutralLossAssociatedIonsInput = new LinkedHashSet<>();
 
-        if (neutralLossIonsTextPane != null) {
-            String[] neutralLosses = neutralLossIonsTextPane.getText().split("[\\s,;\\t]");
-            for (String neutralLoss : neutralLosses) {
-                neutralLossAssociatedIonsInput.add(Double.parseDouble(neutralLoss));
-            }
-        }
-
         try {
+            if (neutralLossIonsTextPane != null) {
+                String[] neutralLosses = neutralLossIonsTextPane.getText().replaceAll(" ", "").split("[\\s,;\\t]");
+                for (String neutralLoss : neutralLosses) {
+                    neutralLossAssociatedIonsInput.add(Double.parseDouble(neutralLoss));
+                }
+            }
             if (checkIfTextFieldIsNotEmpty(precursorIonTextField.getText())) {
                 createLipidDataForTable(neutralLossAssociatedIonsInput);
             }
         } catch (SQLException | FattyAcidCreation_Exception | InvalidFormula_Exception |
-                 NullPointerException exception) {
+                 NullPointerException | NumberFormatException exception) {
             JOptionPane.showMessageDialog(null, "Error in searching database.");
         }
 

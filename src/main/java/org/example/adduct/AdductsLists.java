@@ -1,6 +1,5 @@
 package org.example.adduct;
 
-
 import ceu.biolab.Adduct;
 import ceu.biolab.IncorrectAdduct;
 import ceu.biolab.IncorrectFormula;
@@ -15,7 +14,6 @@ public class AdductsLists {
     static {
         try {
             MAPADDUCTS = new LinkedHashMap<>();
-
             MAPADDUCTS.put("[M+H]+", new Adduct("[M+H]+"));
             MAPADDUCTS.put("[M+2H]2+", new Adduct("[M+2H]2+"));
             MAPADDUCTS.put("[2M+H]+", new Adduct("[2M+H]+"));

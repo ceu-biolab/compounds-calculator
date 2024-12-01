@@ -25,9 +25,9 @@ public class SidePanelUI {
     public static LipidCalculatorUI lipidCalculatorUI;
     public static AdductTransformerUI adductTransformerUI;
     public static PatternRecognitionUI patternRecognitionUI;
-    public JButton lipidCalculatorButton = new JButton("  Lipid Calculator");
-    public JButton adductTransformerButton = new JButton("  Adduct Transformer");
-    public JButton patternRecognitionButton = new JButton("  Pattern Recognition Finder");
+    public JButton lipidCalculatorButton = new JButton("  Lipid Recognition");
+    public JButton adductTransformerButton = new JButton("  Adduct Calculator");
+    public JButton patternRecognitionButton = new JButton("  Adduct Pattern Finder");
 
     public SidePanelUI() {
         FlatLightLaf.setup();

@@ -112,7 +112,18 @@ public class PatternRecognitionUI extends JPanel {
                     double[] xData = generateXData(retentionTime);
                     double amplitude = random.nextInt(40, 90);
                     double[] yData = generateGaussianCurve(xData, retentionTime, 1.0 / 3.0, amplitude);
-                    chart.addSeries(adduct, xData, yData);
+
+                    XYSeries series = chart.addSeries(adduct, xData, yData);
+                    series.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
+
+                    int r = random.nextInt(255);
+                    int g = random.nextInt(255);
+                    int b = random.nextInt(255);
+                    Color fillColor = new Color(r, g, b, 15);
+                    Color lineColor = new Color(r, g, b);
+
+                    series.setFillColor(fillColor);
+                    series.setLineColor(lineColor);
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -208,12 +219,6 @@ public class PatternRecognitionUI extends JPanel {
             adductCheckBoxList.add(checkBox);
             configureTextComponents(checkBox);
             checkBox.setFont(new Font("Arial", Font.BOLD, 16));
-            /*if (adduct.equals("[M+H]+") || adduct.equals("[M+Na]+") || adduct.equals("[M+NH4]+")) {
-                checkBox.setSelected(true);
-                checkBoxPanel.setBackground(new Color(195, 224, 229));
-                checkBox.setBackground(new Color(195, 224, 229));
-                chosenAdductCheckBoxes.add(checkBox.getText());
-            }*/
             subPanel.add(checkBoxPanel, "wrap, gapbottom 3");
         }
 

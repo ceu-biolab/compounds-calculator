@@ -1,9 +1,12 @@
 package org.example.domain;
 
 /**
- * Enum class which defines the types of lipids that can be used in the program. Each lipid is defined in shorthand form.
+ * Enum class which defines the types of lipids that can be used in the program.
+ * Each lipid is defined in shorthand form.
  */
+
 public enum LipidType {
+
     /**
      * Cholesteryl esters, CE
      */
