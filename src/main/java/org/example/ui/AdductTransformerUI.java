@@ -65,7 +65,7 @@ public class AdductTransformerUI extends JPanel {
         createAdductsPanel.setBackground(Color.WHITE);
         createAdductsPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
         JLabel createAdductsLabel = new JLabel("   Create Adduct");
-        createAdductsLabel.setIcon(new ImageIcon("src/main/resources/CreateAdduct_Icon.png"));
+        createAdductsLabel.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/CreateAdduct_Icon.png"))));
         configureTextComponents(createAdductsLabel);
         JLabel createAdductsSubLabel = new JLabel("Define an adduct for use in the application.");
         configureTextComponents(createAdductsSubLabel);
@@ -113,11 +113,11 @@ public class AdductTransformerUI extends JPanel {
         calculationsPanel.putClientProperty(FlatClientProperties.STYLE, "arc:40");
 
         JLabel massToMzLabel = new JLabel("   Find mz values from monoisotopic masses");
-        massToMzLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon.png"));
+        massToMzLabel.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/FindValues_Icon.png"))));
         configureTextComponents(massToMzLabel);
 
         JLabel mzToMassLabel = new JLabel("   Find monoisotopic masses from mz values");
-        mzToMassLabel.setIcon(new ImageIcon("src/main/resources/FindValues_Icon copy.png"));
+        mzToMassLabel.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/FindValues_Icon copy.png"))));
         configureTextComponents(mzToMassLabel);
 
         calculationsPanel.add(massToMzLabel, "gapbottom 5");
@@ -134,7 +134,7 @@ public class AdductTransformerUI extends JPanel {
         JLabel resultsLabel1 = new JLabel("m/z results");
         configureTextComponents(resultsLabel1);
         JLabel iconLabel = new JLabel();
-        iconLabel.setIcon(new ImageIcon("src/main/resources/SearchM_Icon.png"));
+        iconLabel.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/SearchM_Icon.png"))));
         JLabel waitingForInputLabel = new JLabel("Introduce a mass to get started.");
         configureTextComponents(waitingForInputLabel);
         waitingForInputLabel.setFont(new Font("Arial", Font.BOLD, 16));
@@ -156,7 +156,7 @@ public class AdductTransformerUI extends JPanel {
         JLabel resultsLabel2 = new JLabel("Monoisotopic mass results");
         configureTextComponents(resultsLabel2);
         JLabel iconLabel2 = new JLabel();
-        iconLabel2.setIcon(new ImageIcon("src/main/resources/SearchMZ_Icon.png"));
+        iconLabel2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/SearchMZ_Icon.png"))));
         JLabel waitingForInputLabel2 = new JLabel("Introduce an m/z value to get started.");
         configureTextComponents(waitingForInputLabel2);
         waitingForInputLabel2.setFont(new Font("Arial", Font.BOLD, 16));
@@ -181,7 +181,7 @@ public class AdductTransformerUI extends JPanel {
         JButton goButton1 = new JButton();
         configureComponents(goButton1);
         goButton1.setBorder(new LineBorder(Color.WHITE, 0));
-        goButton1.setIcon(new ImageIcon("src/main/resources/Go_Icon.png"));
+        goButton1.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Go_Icon.png"))));
         goButton1.addActionListener(_ -> {
             List<String[]> finalLipidDataList = new ArrayList<>();
 
@@ -234,7 +234,7 @@ public class AdductTransformerUI extends JPanel {
         JButton goButton2 = new JButton();
         configureComponents(goButton2);
         goButton2.setBorder(new EmptyBorder(0, 0, 0, 0));
-        goButton2.setIcon(new ImageIcon("src/main/resources/Go_Icon.png"));
+        goButton2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Go_Icon.png"))));
         goButton2.addActionListener(_ -> {
             List<String[]> finalLipidDataList = new ArrayList<>();
 
@@ -299,7 +299,7 @@ public class AdductTransformerUI extends JPanel {
         configureComponents(exportButton);
         exportButton.setBackground(Color.WHITE);
         exportButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        exportButton.setIcon(new ImageIcon("src/main/resources/Download_Icon.png"));
+        exportButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Download_Icon.png"))));
         exportButton.setBorder(new LineBorder(Color.white));
         exportButton.setHorizontalAlignment(SwingConstants.LEFT);
         return exportButton;

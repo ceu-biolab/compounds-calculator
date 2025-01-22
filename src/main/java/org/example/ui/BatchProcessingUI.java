@@ -12,8 +12,6 @@ import java.awt.*;
 
 public class BatchProcessingUI {
 
-    // TODO: Make this a pop-up panel (JPanel) instead, so that it displays all of the different results and can be clicked through.
-
     /**
      * This class should appear when a file is uploaded by the user.
      */

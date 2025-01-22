@@ -135,7 +135,7 @@ public class LipidCalculatorUI extends JPanel {
         emptyTablePanel.setBackground(Color.WHITE);
 
         JLabel emptyIconLabel = new JLabel();
-        emptyIconLabel.setIcon(new ImageIcon("src/main/resources/EmptyTable_Icon.png"));
+        emptyIconLabel.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/EmptyTable_Icon.png"))));
         emptyIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel noResultsLabel = new JLabel("No results yet...");
@@ -166,7 +166,7 @@ public class LipidCalculatorUI extends JPanel {
         configureComponents(searchButton);
         searchButton.setBackground(Color.WHITE);
         searchButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        searchButton.setIcon(new ImageIcon("src/main/resources/Search_Icon.png"));
+        searchButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Search_Icon.png"))));
         searchButton.setBorder(new LineBorder(Color.white));
         searchButton.setHorizontalAlignment(SwingConstants.LEFT);
         searchButton.addActionListener(_ -> {
@@ -190,7 +190,7 @@ public class LipidCalculatorUI extends JPanel {
         configureComponents(clearButton);
         clearButton.setBackground(Color.WHITE);
         clearButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        clearButton.setIcon(new ImageIcon("src/main/resources/Clear_Icon.png"));
+        clearButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Clear_Icon.png"))));
         clearButton.setBorder(new LineBorder(Color.white));
         clearButton.setHorizontalAlignment(SwingConstants.LEFT);
         clearButton.addActionListener(_ -> {
@@ -201,7 +201,7 @@ public class LipidCalculatorUI extends JPanel {
         configureComponents(exportButton);
         exportButton.setBackground(Color.WHITE);
         exportButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        exportButton.setIcon(new ImageIcon("src/main/resources/Download_Icon.png"));
+        exportButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Download_Icon.png"))));
         exportButton.setBorder(new LineBorder(Color.white));
         exportButton.setHorizontalAlignment(SwingConstants.LEFT);
         exportButton.addActionListener(_ -> {
@@ -225,7 +225,7 @@ public class LipidCalculatorUI extends JPanel {
         configureComponents(uploadButton);
         uploadButton.setBackground(Color.WHITE);
         uploadButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        uploadButton.setIcon(new ImageIcon("src/main/resources/Upload_Icon.png"));
+        uploadButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Upload_Icon.png"))));
         uploadButton.setBorder(new LineBorder(Color.white));
         uploadButton.setHorizontalAlignment(SwingConstants.LEFT);
         uploadButton.addActionListener(_ -> {
@@ -247,7 +247,7 @@ public class LipidCalculatorUI extends JPanel {
         configureComponents(getTemplateButton);
         getTemplateButton.setBackground(Color.WHITE);
         getTemplateButton.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
-        getTemplateButton.setIcon(new ImageIcon("src/main/resources/Template_Icon.png"));
+        getTemplateButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Template_Icon.png"))));
         getTemplateButton.setBorder(new LineBorder(Color.white));
         getTemplateButton.setHorizontalAlignment(SwingConstants.LEFT);
         getTemplateButton.addActionListener(_ -> {

@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class SidePanelUI {
     public static JFrame frame;
@@ -90,7 +91,8 @@ public class SidePanelUI {
         sidePanel.setMinimumSize(new Dimension((int) width - 100, 65));
         sidePanel.putClientProperty(FlatClientProperties.STYLE, "arc: 40");
 
-        configureComponents(lipidCalculatorButton, "src/main/resources/LipidCalculator_Icon.png");
+        configureComponents(lipidCalculatorButton);
+        lipidCalculatorButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/LipidCalculator_Icon.png"))));
         lipidCalculatorButton.setBackground(new Color(231, 242, 245));
         lipidCalculatorButton.addActionListener(_ -> {
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -98,14 +100,16 @@ public class SidePanelUI {
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         });
 
-        configureComponents(adductTransformerButton, "src/main/resources/Transformer_icon.png");
+        configureComponents(adductTransformerButton);
+        adductTransformerButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Transformer_Icon.png"))));
         adductTransformerButton.addActionListener(_ -> {
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             updateUI(adductTransformerUI);
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         });
 
-        configureComponents(patternRecognitionButton, "src/main/resources/PatternRecognition_Icon.png");
+        configureComponents(patternRecognitionButton);
+        patternRecognitionButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/PatternRecognition_Icon.png"))));
         patternRecognitionButton.addActionListener(_ -> {
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             updateUI(patternRecognitionUI);
@@ -113,9 +117,9 @@ public class SidePanelUI {
         });
 
         JButton helpButton = new JButton("  Github");
-        configureComponents(helpButton, "src/main/resources/Help_Icon.png");
+        configureComponents(helpButton);
         helpButton.setBorder(new LineBorder(Color.WHITE, 0));
-        helpButton.setIcon(new ImageIcon("src/main/resources/Help_Icon.png"));
+        helpButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Help_Icon.png"))));
         helpButton.setHorizontalAlignment(SwingConstants.LEFT);
         helpButton.addMouseListener(new MouseAdapter() {
             @Override
@@ -138,8 +142,9 @@ public class SidePanelUI {
         });
 
         JButton exitButton = new JButton("  Exit");
-        configureComponents(exitButton, "src/main/resources/Exit_Icon.png");
-        exitButton.addActionListener(e -> {
+        configureComponents(exitButton);
+        exitButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Exit_Icon.png"))));
+        exitButton.addActionListener(_ -> {
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
         });
@@ -151,11 +156,10 @@ public class SidePanelUI {
         sidePanel.add(exitButton, "gapleft 50");
     }
 
-    public static void configureComponents(JButton component, String fileName) {
+    public static void configureComponents(JButton component) {
         component.setFont(new Font("Arial", Font.BOLD, 18));
         component.setBackground(Color.WHITE);
         component.setForeground(new Color(65, 114, 159));
-        component.setIcon(new ImageIcon(fileName));
         component.setBorder(new LineBorder(Color.WHITE, 0));
         component.setHorizontalAlignment(SwingConstants.LEFT);
     }
