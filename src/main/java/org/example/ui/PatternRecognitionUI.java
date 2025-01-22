@@ -29,6 +29,7 @@ public class PatternRecognitionUI extends JPanel {
     public static List<String> chosenAdductCheckBoxes = new ArrayList<>();
     public static XYChart chart = new XYChartBuilder().width(350).height(400).xAxisTitle("Retention Time").yAxisTitle("Intensity").build();
     public static JTextField lipidTextField = new JTextField();
+    public int i = 0;
 
     public PatternRecognitionUI() {
         FlatLightLaf.setup();
@@ -38,8 +39,7 @@ public class PatternRecognitionUI extends JPanel {
             throw new RuntimeException(e);
         }
 
-        setLayout(new MigLayout("", "25[]25[]25",
-                ""));
+        setLayout(new MigLayout("", "25[]25[]25", ""));
         setBackground(new Color(195, 224, 229));
 
         graphPanel.setMinimumSize(new Dimension(1225, 420));
@@ -92,9 +92,8 @@ public class PatternRecognitionUI extends JPanel {
         return chart;
     }
 
-    public void updateChart(String compoundName) throws IncorrectAdduct, NotFoundElement, IncorrectFormula {
+    public void updateChart(String compoundName) throws IncorrectAdduct, NotFoundElement, IncorrectFormula, SQLException {
         Map<String, XYSeries> map = chart.getSeriesMap();
-
         List<String> currentSeries = new ArrayList<>(map.keySet());
         for (String existingAdduct : currentSeries) {
             if (!chosenAdductCheckBoxes.contains(existingAdduct)) {
@@ -107,26 +106,23 @@ public class PatternRecognitionUI extends JPanel {
         for (String adduct : chosenAdductCheckBoxes) {
             if (!map.containsKey(adduct)) {
                 Random random = new Random();
-                try {
-                    retentionTime = Database.getRetentionTimeOfLipid(compoundName);
-                    double[] xData = generateXData(retentionTime);
-                    double amplitude = random.nextInt(40, 90);
-                    double[] yData = generateGaussianCurve(xData, retentionTime, 1.0 / 3.0, amplitude);
+                // todo: retentionTime = Database.getRetentionTimeOfLipid(compoundName);
+                retentionTime = 14.75;
+                double[] xData = generateXData(retentionTime);
+                double amplitude = random.nextInt(5, 50);
+                double[] yData = generateGaussianCurve(xData, retentionTime, 1.0 / 3.0, amplitude);
 
-                    XYSeries series = chart.addSeries(adduct, xData, yData);
-                    series.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
+                XYSeries series = chart.addSeries(adduct, xData, yData);
+                series.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
 
-                    int r = random.nextInt(255);
-                    int g = random.nextInt(255);
-                    int b = random.nextInt(255);
-                    Color fillColor = new Color(r, g, b, 15);
-                    Color lineColor = new Color(r, g, b);
+                int r = random.nextInt(255);
+                int g = random.nextInt(255);
+                int b = random.nextInt(255);
+                Color fillColor = new Color(r, g, b, 5);
+                Color lineColor = new Color(r, g, b);
 
-                    series.setFillColor(fillColor);
-                    series.setLineColor(lineColor);
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
+                series.setFillColor(fillColor);
+                series.setLineColor(lineColor);
             }
         }
 
@@ -135,6 +131,8 @@ public class PatternRecognitionUI extends JPanel {
                 graphPanel.remove(component);
             }
         }
+
+        retentionTime = 14.75; // todo: make sure this is declared outside of the try/catch too, if not the xAxisMin can't read it
 
         XChartPanel<XYChart> chartPanel = new XChartPanel<>(configureChart());
         double minimum = retentionTime - 1;
@@ -252,10 +250,9 @@ public class PatternRecognitionUI extends JPanel {
     private void findLipidMassForChart() {
         try {
             if (!(lipidTextField == null)) {
-                String compoundName = lipidTextField.getText();
-                updateChart(compoundName);
+                updateChart(lipidTextField.getText());
             }
-        } catch (IncorrectAdduct | NotFoundElement | IncorrectFormula ex) {
+        } catch (IncorrectAdduct | NotFoundElement | IncorrectFormula | SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
