@@ -34,22 +34,19 @@ public class Transformer {
     }
 
     /**
-     * Calculate the delta to search based on the mass, the tolerance Mode and
+     * Calculate the delta to search based on the mass and
      * the tolerance
      *
      * @param massToSearch  Mass to search to calculate delta based on the
      *                      tolerance
-     * @param toleranceMode 0 (ppm) or 1 (mDa)
-     * @param tolerance     Tolerance value
+     * @param tolerance     Tolerance value in ppm
      * @return the mass difference within the tolerance respecting to the
-     * massToSearch
+     * experimentalMass
      */
-    public static Double calculateDeltaPPM(Double massToSearch, Integer toleranceMode,
-                                           Double tolerance) {
-        //String toleranceModeString = DataFromInterfacesUtilities.toleranceTypeToString(toleranceMode);
-        //return calculateDeltaPPM(massToSearch, toleranceModeString, tolerance);
-        // TODO
-        return null;
+    public static Double calculateDeltaPPM(Double experimentalMass, Double tolerance) {
+        double deltaPPM;
+        deltaPPM =  Math.round(Math.abs((experimentalMass * ppm) / 1000000));
+        return deltaPPM;
     }
 
 
