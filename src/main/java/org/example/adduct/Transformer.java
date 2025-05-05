@@ -116,10 +116,19 @@ public class Transformer {
         return experimentalMass - adductValue;
     }
 
+    /** 
+     * Calculate the monoisotopicMass for adducts with more than one charge. The adduct Value should be the mass of the adduct directly. 
+     * For example, 2.014552 for the [M+2H]2+
+     *
+     * @param experimentalMass Experimental mass of the compound
+     * @param adduct           adduct name (M+H, 2M+H, M+2H, etc.)
+     * @return the mass difference within the tolerance respecting to the
+     * massToSearch
+     */
     private static Double getMonoMassFromMultiChargedMZ(double experimentalMass, double adductValue, int charge) {
         double result = experimentalMass;
-        result -= adductValue;
         result *= charge;
+        result -= adductValue;
         return result;
     }
 
